@@ -1,0 +1,21 @@
+.page {
+  :global(.TableCell) {
+    &.project {
+      flex-grow: 1.2;
+    }
+
+    &.syncStatus {
+      flex-grow: 0.8;
+    }
+
+    &.healthStatus {
+      flex-grow: 0.8;
+    }
+
+    &.age {
+      flex-grow: 0.3;
+    }
+  }
+}
+
+
