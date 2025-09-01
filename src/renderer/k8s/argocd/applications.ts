@@ -7,6 +7,12 @@ import type { ArgoApplicationKubeObjectCRD } from "../types";
 export type ApplicationSpec = IApplication["spec"];
 export type ApplicationStatus = IApplication["status"];
 
+export interface ArgoApplicationResourceSyncStatus {
+  name: string;
+  status: string;
+  kind: string;
+}
+
 export class ArgoApplication extends Renderer.K8sApi.LensExtensionKubeObject<
   Renderer.K8sApi.KubeObjectMetadata,
   ApplicationStatus,
