@@ -38,34 +38,42 @@ export interface ArgoApplicationsPageProps {
   extension: Renderer.LensExtension;
 }
 
+export const ArgoApplicationsTabContent = observer(() => {
+  return (
+    <>
+      <style>{stylesInline}</style>
+      <KubeObjectListLayout<ArgoApplication, ArgoApplicationApi>
+        tableId={`${ArgoApplication.crd.plural}Table`}
+        className={styles.page}
+        store={getArgoApplicationStore()}
+        sortingCallbacks={sortingCallbacks}
+        searchFilters={[(object: ArgoApplication) => object.getSearchFields()]}
+        renderHeaderTitle={ArgoApplication.crd.title}
+        renderTableHeader={renderTableHeader}
+        renderTableContents={(object: ArgoApplication) => [
+          <WithTooltip>{object.getName()}</WithTooltip>,
+          <Link
+            key="link"
+            to={getDetailsUrl(namespacesApi.formatUrlForNotListing({ name: object.getNs() }))}
+            onClick={stopPropagation}
+          >
+            <WithTooltip>{object.getNs()}</WithTooltip>
+          </Link>,
+          <WithTooltip>{object.spec?.project ?? "N/A"}</WithTooltip>,
+          <WithTooltip>{object.status?.sync?.status ?? "N/A"}</WithTooltip>,
+          <WithTooltip>{object.status?.health?.status ?? "N/A"}</WithTooltip>,
+          <KubeObjectAge object={object} key="age" />,
+        ]}
+      />
+    </>
+  );
+});
+
 export const ArgoApplicationsPage = observer((props: ArgoApplicationsPageProps) =>
   withErrorPage(props, () => {
     return (
       <>
-        <style>{stylesInline}</style>
-        <KubeObjectListLayout<ArgoApplication, ArgoApplicationApi>
-          tableId={`${ArgoApplication.crd.plural}Table`}
-          className={styles.page}
-          store={getArgoApplicationStore()}
-          sortingCallbacks={sortingCallbacks}
-          searchFilters={[(object: ArgoApplication) => object.getSearchFields()]}
-          renderHeaderTitle={ArgoApplication.crd.title}
-          renderTableHeader={renderTableHeader}
-          renderTableContents={(object: ArgoApplication) => [
-            <WithTooltip>{object.getName()}</WithTooltip>,
-            <Link
-              key="link"
-              to={getDetailsUrl(namespacesApi.formatUrlForNotListing({ name: object.getNs() }))}
-              onClick={stopPropagation}
-            >
-              <WithTooltip>{object.getNs()}</WithTooltip>
-            </Link>,
-            <WithTooltip>{object.spec?.project ?? "N/A"}</WithTooltip>,
-            <WithTooltip>{object.status?.sync?.status ?? "N/A"}</WithTooltip>,
-            <WithTooltip>{object.status?.health?.status ?? "N/A"}</WithTooltip>,
-            <KubeObjectAge object={object} key="age" />,
-          ]}
-        />
+        <ArgoApplicationsTabContent />
       </>
     );
   }),

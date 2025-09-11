@@ -1,1 +1,1 @@
-export * from "./example";
+export * from "./argocd-plain-logo";

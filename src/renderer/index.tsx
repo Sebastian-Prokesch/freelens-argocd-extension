@@ -1,16 +1,15 @@
 /**
- * Copyright (c) Freelens Authors. All rights reserved.
+ * Copyright (c) Sebastian Prokesch. All rights reserved.
  * Licensed under MIT License. See LICENSE in root directory for more information.
  */
 
 import { Renderer } from "@freelensapp/extensions";
 import { ArgoPreferencesStore } from "../common/store";
-// import { ExampleDetails } from "./details/example-details";
-import { ExampleIcon } from "./icons";
+import { ArgoPlainLogoIcon } from "./icons";
 import { ArgoApplication } from "./k8s/argocd";
 import { ArgoSyncMenuItem, type ArgoSyncMenuItemProps } from "./menus";
 import { ArgoPreferenceHint, ArgoPreferenceInput } from "./preferences";
-import { ArgoApplicationsPage } from "./pages";
+import { ArgoApplicationsPage, ArgoOverviewPage, ArgoRootPage } from "./pages";
 import { ArgoApplicationDetails } from "./details/argo-application-details";
 
 export default class ArgoRenderer extends Renderer.LensExtension {
@@ -43,7 +42,22 @@ export default class ArgoRenderer extends Renderer.LensExtension {
 
   clusterPages = [
     {
+      id: "argocd-root",
+      routePath: "/argocd",
+      components: {
+        Page: () => <ArgoRootPage />,
+      }
+    },
+    {
+      id: "argocd-overview",
+      routePath: "/argocd/overview",
+      components: {
+        Page: () => <ArgoOverviewPage />,
+      }
+    },
+    {
       id: ArgoApplication.crd.plural,
+      routePath: "/argocd/applications",
       components: {
         Page: () => <ArgoApplicationsPage extension={this} />,
       },
@@ -52,12 +66,26 @@ export default class ArgoRenderer extends Renderer.LensExtension {
 
   clusterPageMenus = [
     {
+      id: "argocd",
+      title: "ArgoCD",
+      target: { pageId: "argocd-root" },
+      components: {
+        Icon: ArgoPlainLogoIcon,
+      },
+    },
+    {
+      id: "argocd-overview-menu",
+      parentId: "argocd",
+      title: "Overview",
+      target: { pageId: "argocd-overview" },
+      components: {},
+    },
+    {
       id: ArgoApplication.crd.plural,
+      parentId: "argocd",
       title: ArgoApplication.crd.title,
       target: { pageId: ArgoApplication.crd.plural },
-      components: {
-        Icon: ExampleIcon,
-      },
+      components: {},
     },
   ];
 

@@ -1,0 +1,37 @@
+@use "../vars";
+
+.page {
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--unit);
+    padding: calc(var(--unit) * 1) calc(var(--unit) * 1.5);
+    background: var(--contentColor);
+    backdrop-filter: saturate(120%);
+
+    h5 {
+      margin: 0;
+    }
+  }
+
+  :global(.TableCell) {
+    &.project {
+      flex-grow: 1.2;
+    }
+
+    &.syncStatus {
+      flex-grow: 0.8;
+    }
+
+    &.healthStatus {
+      flex-grow: 0.8;
+    }
+
+    &.age {
+      flex-grow: 0.3;
+    }
+  }
+}
+
+
