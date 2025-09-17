@@ -1,6 +1,7 @@
 import { Renderer } from "@freelensapp/extensions";
-import { observer } from "mobx-react";
 import { ArgoPreferencesStore } from "../../common/store";
+
+const { observer } = global.MobxReact;
 
 const {
   Component: { Checkbox },
