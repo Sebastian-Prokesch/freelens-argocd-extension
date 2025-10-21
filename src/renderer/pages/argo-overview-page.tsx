@@ -74,12 +74,14 @@ export const ArgoOverviewTabContent = observer(() => {
             </div>
             
             <div className={styles.chartsContainer}>
-                <div className={styles.chart}>
-                    <ArgoApplicationStatusChart applications={applications} />
-                </div>
-                
-                <div className={styles.chart}>
-                    <ArgoApplicationSyncStatusChart applications={applications} />
+                <div className={styles.chartsWrapper}>
+                    <div className={styles.chart}>
+                        <ArgoApplicationStatusChart applications={applications} />
+                    </div>
+                    
+                    <div className={styles.chart}>
+                        <ArgoApplicationSyncStatusChart applications={applications} />
+                    </div>
                 </div>
             </div>
             

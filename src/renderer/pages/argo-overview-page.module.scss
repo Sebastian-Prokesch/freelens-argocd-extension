@@ -62,10 +62,17 @@
 }
 
 .chartsContainer {
+  margin-bottom: calc(var(--unit) * 2);
+}
+
+.chartsWrapper {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 6px;
+  padding: calc(var(--unit) * 2);
+  backdrop-filter: saturate(120%);
   display: flex;
   flex-wrap: wrap;
   gap: calc(var(--unit) * 2);
-  margin-bottom: calc(var(--unit) * 2);
 
   @media (min-width: 768px) {
     flex-wrap: nowrap;

@@ -1,10 +1,6 @@
 @use "../../vars";
 
 .chartContainer {
-  background: rgba(255, 255, 255, 0.04);
-  border-radius: 6px;
-  padding: calc(var(--unit) * 2);
-  backdrop-filter: saturate(120%);
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -25,6 +21,7 @@
   font-size: 14px;
   font-weight: 600;
   color: var(--textColorPrimary);
+  text-align: center;
 }
 
 .chart {

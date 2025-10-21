@@ -66,7 +66,7 @@ export const ArgoApplicationStatusChart = observer(({ className, applications }:
   };
 
   const chartData = {
-    labels: statusesToBeShown.map(([status]) => status),
+    labels: statusesToBeShown.map(([status, count]) => `${status}: ${count}`),
     datasets: [statusDataSet as any],
   };
 

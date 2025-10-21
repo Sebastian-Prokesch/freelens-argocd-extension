@@ -10,5 +10,6 @@ declare const classNames: {
   readonly chart: "chart";
   readonly title: "title";
   readonly chartsContainer: "chartsContainer";
+  readonly chartsWrapper: "chartsWrapper";
 };
 export = classNames;
