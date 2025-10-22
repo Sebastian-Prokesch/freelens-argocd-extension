@@ -5,4 +5,21 @@
     margin-top: vars.$margin * 2;
     margin-bottom: vars.$margin;
   }
+
+  .sourceSection {
+    margin-bottom: vars.$margin;
+    padding-left: vars.$margin;
+    border-left: 2px solid var(--colorBorder);
+  }
+
+  .sourceDetails {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    div {
+      font-size: 0.9em;
+      line-height: 1.4;
+    }
+  }
 }
