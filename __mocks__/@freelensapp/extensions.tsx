@@ -15,9 +15,9 @@ const passthrough =
 
 const textComponent =
   (name: string) =>
-  ({ children }: AnyRecord) => (
+  ({ children, title }: AnyRecord) => (
     <span data-testid={name}>
-      {children}
+      {children ?? title}
     </span>
   );
 
@@ -29,6 +29,7 @@ export const PieChart = jest.fn(({ data }: AnyRecord) => (
 ));
 
 export const Renderer = {
+  LensExtension: class {},
   Component: {
     // charts
     PieChart,
@@ -37,6 +38,8 @@ export const Renderer = {
     Events: passthrough("Events"),
     NamespaceSelectFilter: passthrough("NamespaceSelectFilter"),
     TabLayout: passthrough("TabLayout"),
+    Tabs: ({ children }: AnyRecord) => <div data-testid="Tabs">{children}</div>,
+    Tab: ({ label }: AnyRecord) => <div data-testid="Tab">{label}</div>,
 
     // details page
     BadgeBoolean: ({ value }: { value: boolean }) => (
@@ -61,6 +64,29 @@ export const Renderer = {
     KubeObjectListLayout: passthrough("KubeObjectListLayout"),
     WithTooltip: passthrough("WithTooltip"),
 
+    // dialog & inputs
+    Dialog: ({ children }: AnyRecord) => <div data-testid="Dialog">{children}</div>,
+    Input: ({ value, onChange, ...props }: AnyRecord) => (
+      <input
+        data-testid="Input"
+        value={value ?? ""}
+        onChange={(event) => onChange?.(event.target.value, event)}
+        {...props}
+      />
+    ),
+    Button: ({ onClick, children }: AnyRecord) => (
+      <button type="button" data-testid="Button" onClick={onClick}>
+        {children}
+      </button>
+    ),
+    Notifications: {
+      ok: jest.fn(),
+      error: jest.fn(),
+    },
+    ConfirmDialog: {
+      confirm: jest.fn(async () => true),
+    },
+
     // menu
     MenuItem: ({ onClick, children }: AnyRecord) => (
       <button type="button" data-testid="MenuItem" onClick={onClick}>
@@ -82,6 +108,24 @@ export const Renderer = {
     },
     namespacesApi: {
       formatUrlForNotListing: ({ name }: { name: string }) => `/api/v1/namespaces/${name}`,
+    },
+    configMapStore: {
+      items: [],
+      contextItems: [],
+      loadAll: async () => {},
+      subscribe: () => noop,
+      create: jest.fn(),
+      patch: jest.fn(),
+      remove: jest.fn(),
+    },
+    secretsStore: {
+      items: [],
+      contextItems: [],
+      loadAll: async () => {},
+      subscribe: () => noop,
+      create: jest.fn(),
+      patch: jest.fn(),
+      remove: jest.fn(),
     },
     KubeObjectMetadata: class {},
     LensExtensionKubeObject: class {},

@@ -4,15 +4,27 @@
  */
 
 import { Renderer } from "@freelensapp/extensions";
+
+import { computed } from "mobx";
+
 import { ArgoPreferencesStore } from "../common/store";
+import { ArgoConfigDialog } from "./components/argo-config";
+import { ArgoApplicationDetails } from "./details/argo-application-details";
+import { ArgoConfigDetails } from "./details/argo-config-details";
 import { ArgoPlainLogoIcon } from "./icons";
 import { ArgoApplication } from "./k8s/argocd";
-import { ArgoSyncMenuItem, type ArgoSyncMenuItemProps } from "./menus";
+import { ArgoConfigMenuItem, ArgoSyncMenuItem, type ArgoSyncMenuItemProps } from "./menus";
+import { ArgoApplicationsPage, ArgoConfigPage, ArgoOverviewPage, ArgoRootPage } from "./pages";
 import { ArgoPreferenceHint, ArgoPreferenceInput } from "./preferences";
-import { ArgoApplicationsPage, ArgoOverviewPage, ArgoRootPage } from "./pages";
-import { ArgoApplicationDetails } from "./details/argo-application-details";
 
 export default class ArgoRenderer extends Renderer.LensExtension {
+  clusterFrameComponents = [
+    {
+      id: "argocd-config-dialog",
+      Component: ArgoConfigDialog,
+      shouldRender: computed(() => true),
+    },
+  ];
   async onActivate() {
     ArgoPreferencesStore.getInstanceOrCreate().loadExtension(this);
   }
@@ -35,6 +47,26 @@ export default class ArgoRenderer extends Renderer.LensExtension {
       components: {
         Details: (props: Renderer.Component.KubeObjectDetailsProps<any>) => (
           <ArgoApplicationDetails {...props} extension={this} />
+        ),
+      },
+    },
+    {
+      kind: "Secret",
+      apiVersions: ["v1"],
+      priority: 50,
+      components: {
+        Details: (props: Renderer.Component.KubeObjectDetailsProps<any>) => (
+          <ArgoConfigDetails {...props} extension={this} />
+        ),
+      },
+    },
+    {
+      kind: "ConfigMap",
+      apiVersions: ["v1"],
+      priority: 50,
+      components: {
+        Details: (props: Renderer.Component.KubeObjectDetailsProps<any>) => (
+          <ArgoConfigDetails {...props} extension={this} />
         ),
       },
     },
@@ -62,6 +94,13 @@ export default class ArgoRenderer extends Renderer.LensExtension {
         Page: () => <ArgoApplicationsPage extension={this} />,
       },
     },
+    {
+      id: "argocd-config",
+      routePath: "/argocd/config",
+      components: {
+        Page: () => <ArgoConfigPage extension={this} />,
+      },
+    },
   ];
 
   clusterPageMenus = [
@@ -87,6 +126,13 @@ export default class ArgoRenderer extends Renderer.LensExtension {
       target: { pageId: ArgoApplication.crd.plural },
       components: {},
     },
+    {
+      id: "argocd-config-menu",
+      parentId: "argocd",
+      title: "Config",
+      target: { pageId: "argocd-config" },
+      components: {},
+    },
   ];
 
   kubeObjectMenuItems = [
@@ -96,6 +142,24 @@ export default class ArgoRenderer extends Renderer.LensExtension {
       components: {
         MenuItem: (props: ArgoSyncMenuItemProps) => (
           <ArgoSyncMenuItem {...props} extension={this} />
+        ),
+      },
+    },
+    {
+      kind: "Secret",
+      apiVersions: ["v1"],
+      components: {
+        MenuItem: (props: Renderer.Component.KubeObjectMenuProps<any>) => (
+          <ArgoConfigMenuItem {...props} extension={this} />
+        ),
+      },
+    },
+    {
+      kind: "ConfigMap",
+      apiVersions: ["v1"],
+      components: {
+        MenuItem: (props: Renderer.Component.KubeObjectMenuProps<any>) => (
+          <ArgoConfigMenuItem {...props} extension={this} />
         ),
       },
     },

@@ -1,0 +1,43 @@
+.dialogContent {
+  background: var(--contentBackground, #1e1e1e);
+  color: var(--textColor, #ffffff);
+  border: 1px solid var(--borderColor, rgba(255, 255, 255, 0.1));
+  border-radius: 8px;
+  padding: 16px;
+  min-width: 520px;
+  max-width: 760px;
+  max-height: 80vh;
+  overflow: auto;
+}
+
+.dialogHeader {
+  margin: 0 0 8px;
+}
+
+.dialogActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.dialogError {
+  background: var(--errorBackground, rgba(255, 0, 0, 0.08));
+  border: 1px solid var(--errorColor, #ff6b6b);
+  color: var(--errorColor, #ff6b6b);
+  padding: 8px 10px;
+  border-radius: 6px;
+}
+
+.textArea {
+  width: 100%;
+  min-height: 160px;
+  padding: 8px 10px;
+  font-family: inherit;
+  font-size: 12px;
+  color: var(--textColor, #ffffff);
+  background: var(--contentBackground, #1e1e1e);
+  border: 1px solid var(--borderColor, rgba(255, 255, 255, 0.2));
+  border-radius: 4px;
+  resize: vertical;
+}

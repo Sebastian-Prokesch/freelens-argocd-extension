@@ -1,0 +1,38 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  min-height: 0;
+}
+
+.tabs {
+  margin-bottom: 8px;
+  flex: 0 0 auto;
+}
+
+.listLayout {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+
+  :global(.ItemListLayout) {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  :global(.ItemListLayoutContent) {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+}
+
+.tableCellSmall {
+  flex-grow: 0.6;
+}
+
+.tableCellLarge {
+  flex-grow: 1.4;
+}
+
