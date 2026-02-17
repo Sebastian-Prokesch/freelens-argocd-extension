@@ -69,4 +69,3 @@ describe("argo-config helpers", () => {
     expect(getSecretField(secret, "url")).toBe("https://example.com");
   });
 });
-

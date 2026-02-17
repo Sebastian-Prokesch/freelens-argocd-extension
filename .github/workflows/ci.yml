@@ -1,0 +1,169 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.13.1
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.16.0
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        id: type_check
+        run: pnpm type:check
+
+      - name: Lint (Biome)
+        id: biome_check
+        run: pnpm biome:check
+
+      - name: Unit tests
+        id: unit_tests
+        run: pnpm test:unit
+
+      - name: Explain verify-stage failures
+        if: ${{ always() && (steps.type_check.outcome == 'failure' || steps.biome_check.outcome == 'failure' || steps.unit_tests.outcome == 'failure') }}
+        uses: actions/github-script@v7
+        env:
+          TYPE_CHECK_OUTCOME: ${{ steps.type_check.outcome }}
+          BIOME_CHECK_OUTCOME: ${{ steps.biome_check.outcome }}
+          UNIT_TESTS_OUTCOME: ${{ steps.unit_tests.outcome }}
+        with:
+          script: |
+            const failures = [];
+
+            if (process.env.TYPE_CHECK_OUTCOME === "failure") {
+              failures.push({
+                title: "Type check failed",
+                fixes: [
+                  "Run `pnpm type:check` locally",
+                  "Fix TypeScript errors and commit the changes",
+                ],
+              });
+            }
+
+            if (process.env.BIOME_CHECK_OUTCOME === "failure") {
+              failures.push({
+                title: "Biome check failed",
+                fixes: [
+                  "Run `pnpm biome:fix` locally",
+                  "Verify with `pnpm biome:check`",
+                  "Commit formatting/import-order changes",
+                ],
+              });
+            }
+
+            if (process.env.UNIT_TESTS_OUTCOME === "failure") {
+              failures.push({
+                title: "Unit tests failed",
+                fixes: [
+                  "Run `pnpm test:unit` locally",
+                  "Fix failing tests and commit the changes",
+                ],
+              });
+            }
+
+            for (const failure of failures) {
+              core.error(`${failure.title}. See logs above for details.`);
+            }
+
+            const summary = core.summary.addHeading("Verify stage failed");
+            for (const failure of failures) {
+              summary.addHeading(failure.title, 3).addList(failure.fixes);
+            }
+            await summary.write();
+
+  build:
+    runs-on: ubuntu-latest
+    needs: verify
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.13.1
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.16.0
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build extension
+        run: pnpm build
+
+      - name: Upload build output
+        uses: actions/upload-artifact@v4
+        with:
+          name: extension-build-out
+          path: out/
+          if-no-files-found: error
+
+  pack:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.13.1
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.16.0
+          cache: pnpm
+
+      - name: Download build output
+        uses: actions/download-artifact@v4
+        with:
+          name: extension-build-out
+          path: out/
+
+      - name: Pack extension
+        run: pnpm pack
+
+      - name: Upload packaged artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: extension-artifacts
+          path: |
+            out/
+            *.tgz
+          if-no-files-found: error

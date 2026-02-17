@@ -1,7 +1,5 @@
 import { Renderer } from "@freelensapp/extensions";
-
 import { observer } from "mobx-react";
-
 import { argoConfigDialogStore } from "../components/argo-config";
 import { isArgoConfigMap, isArgoSecret } from "../k8s/argocd";
 
@@ -55,4 +53,3 @@ export const ArgoConfigMenuItem = observer((props: ArgoConfigMenuItemProps) => {
     </>
   );
 });
-

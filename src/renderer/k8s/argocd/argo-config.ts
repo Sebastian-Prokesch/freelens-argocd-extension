@@ -47,4 +47,3 @@ export const decodeBase64 = (value?: string): string | undefined => {
 
 export const getSecretField = (secret: LabeledObject, key: string): string | undefined =>
   secret.stringData?.[key] ?? decodeBase64(secret.data?.[key]);
-

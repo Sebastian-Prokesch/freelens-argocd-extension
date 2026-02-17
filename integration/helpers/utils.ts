@@ -1,6 +1,5 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-
 import { _electron as electron } from "playwright";
 
 import type { ElectronApplication, Page } from "playwright";
@@ -138,4 +137,3 @@ export async function waitForExtensionInstalled(window: Page, extensionName: str
   await window.getByText(extensionName, { exact: true }).waitFor({ state: "visible", timeout: 60_000 });
   await window.waitForSelector(enabledSelector, { timeout: 60_000 });
 }
-

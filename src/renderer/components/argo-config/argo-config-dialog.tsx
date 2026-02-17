@@ -1,18 +1,16 @@
 import { Renderer } from "@freelensapp/extensions";
-
 import React from "react";
-
 import {
   ARGOCD_PART_OF_LABEL,
   ARGOCD_PART_OF_VALUE,
   ARGOCD_SECRET_TYPE_LABEL,
-  getSecretField,
   type ArgoSecretType,
+  getSecretField,
   type LabeledObject,
 } from "../../k8s/argocd";
-import { argoConfigDialogStore, type ArgoConfigKind } from "./argo-config-dialog-store";
 import styles from "./argo-config-dialog.module.scss";
 import stylesInline from "./argo-config-dialog.module.scss?inline";
+import { type ArgoConfigKind, argoConfigDialogStore } from "./argo-config-dialog-store";
 
 const { observer } = global.MobxReact;
 
@@ -57,35 +55,35 @@ interface ConfigMapFormState extends BaseFormState {
 const defaultNamespace = "argocd";
 const defaultClusterConfigJson =
   "{\n" +
-  "  \"username\": \"<basic auth username>\",\n" +
-  "  \"password\": \"<basic auth password>\",\n" +
-  "  \"bearerToken\": \"<authentication token>\",\n" +
-  "  \"awsAuthConfig\": {\n" +
-  "    \"clusterName\": \"<eks cluster name>\",\n" +
-  "    \"roleARN\": \"<arn:aws:iam::<ACCOUNT_ID>:role/<ROLE_NAME>>\",\n" +
-  "    \"profile\": \"<path to aws profile file>\"\n" +
+  '  "username": "<basic auth username>",\n' +
+  '  "password": "<basic auth password>",\n' +
+  '  "bearerToken": "<authentication token>",\n' +
+  '  "awsAuthConfig": {\n' +
+  '    "clusterName": "<eks cluster name>",\n' +
+  '    "roleARN": "<arn:aws:iam::<ACCOUNT_ID>:role/<ROLE_NAME>>",\n' +
+  '    "profile": "<path to aws profile file>"\n' +
   "  },\n" +
-  "  \"execProviderConfig\": {\n" +
-  "    \"command\": \"argocd-k8s-auth\",\n" +
-  "    \"args\": [\"aws\", \"--cluster-name\", \"<eks cluster name>\"],\n" +
-  "    \"env\": {\n" +
-  "      \"AWS_REGION\": \"<region>\",\n" +
-  "      \"AWS_ACCESS_KEY_ID\": \"<access key id>\",\n" +
-  "      \"AWS_SECRET_ACCESS_KEY\": \"<secret access key>\",\n" +
-  "      \"AWS_SESSION_TOKEN\": \"<session token>\"\n" +
+  '  "execProviderConfig": {\n' +
+  '    "command": "argocd-k8s-auth",\n' +
+  '    "args": ["aws", "--cluster-name", "<eks cluster name>"],\n' +
+  '    "env": {\n' +
+  '      "AWS_REGION": "<region>",\n' +
+  '      "AWS_ACCESS_KEY_ID": "<access key id>",\n' +
+  '      "AWS_SECRET_ACCESS_KEY": "<secret access key>",\n' +
+  '      "AWS_SESSION_TOKEN": "<session token>"\n' +
   "    },\n" +
-  "    \"apiVersion\": \"client.authentication.k8s.io/v1beta1\",\n" +
-  "    \"installHint\": \"<install hint>\"\n" +
+  '    "apiVersion": "client.authentication.k8s.io/v1beta1",\n' +
+  '    "installHint": "<install hint>"\n' +
   "  },\n" +
-  "  \"proxyUrl\": \"https://proxy.example.com:8888\",\n" +
-  "  \"tlsClientConfig\": {\n" +
-  "    \"insecure\": false,\n" +
-  "    \"caData\": \"<base64 encoded certificate>\",\n" +
-  "    \"certData\": \"<base64 encoded client cert>\",\n" +
-  "    \"keyData\": \"<base64 encoded client key>\",\n" +
-  "    \"serverName\": \"<tls server name>\"\n" +
+  '  "proxyUrl": "https://proxy.example.com:8888",\n' +
+  '  "tlsClientConfig": {\n' +
+  '    "insecure": false,\n' +
+  '    "caData": "<base64 encoded certificate>",\n' +
+  '    "certData": "<base64 encoded client cert>",\n' +
+  '    "keyData": "<base64 encoded client key>",\n' +
+  '    "serverName": "<tls server name>"\n' +
   "  },\n" +
-  "  \"disableCompression\": false\n" +
+  '  "disableCompression": false\n' +
   "}";
 
 const emptyRepoForm = (): RepoFormState => ({
@@ -117,7 +115,7 @@ const emptyClusterForm = (): ClusterFormState => ({
 const emptyConfigMapForm = (): ConfigMapFormState => ({
   name: "",
   namespace: defaultNamespace,
-  dataJson: "{\n  \"key\": \"value\"\n}",
+  dataJson: '{\n  "key": "value"\n}',
 });
 
 const getAuthMethod = (secret: LabeledObject | undefined): AuthMethod => {
@@ -222,8 +220,8 @@ const buildSecretStringData = (form: RepoFormState | ClusterFormState, secretTyp
   return stringData;
 };
 
-  const getSecretName = (secret: LabeledObject) => secret.metadata?.name ?? secret.getName();
-  const getSecretNamespace = (secret: LabeledObject) => secret.metadata?.namespace ?? secret.getNs();
+const getSecretName = (secret: LabeledObject) => secret.metadata?.name ?? secret.getName();
+const getSecretNamespace = (secret: LabeledObject) => secret.metadata?.namespace ?? secret.getNs();
 
 export const ArgoConfigDialog = observer(() => {
   const { isOpen, mode, target } = argoConfigDialogStore;
@@ -304,10 +302,7 @@ export const ArgoConfigDialog = observer(() => {
       }
 
       if (target.kind === "repository" || target.kind === "repo-creds" || target.kind === "cluster") {
-        const stringData = buildSecretStringData(
-          target.kind === "cluster" ? clusterForm : repoForm,
-          target.kind,
-        );
+        const stringData = buildSecretStringData(target.kind === "cluster" ? clusterForm : repoForm, target.kind);
         const base = {
           apiVersion: "v1",
           kind: "Secret",
@@ -496,9 +491,7 @@ export const ArgoConfigDialog = observer(() => {
         <select
           id="argo-cluster-resources"
           value={clusterForm.clusterResources ? "true" : "false"}
-          onChange={(event) =>
-            setClusterForm({ ...clusterForm, clusterResources: event.target.value === "true" })
-          }
+          onChange={(event) => setClusterForm({ ...clusterForm, clusterResources: event.target.value === "true" })}
         >
           <option value="false">false</option>
           <option value="true">true</option>
@@ -553,10 +546,10 @@ export const ArgoConfigDialog = observer(() => {
           <div className="flex gaps column">
             <h3 className={styles.dialogHeader}>{title}</h3>
             {error && <div className={styles.dialogError}>{error}</div>}
-          {target.kind === "repository" && renderRepoFields(target.kind)}
-          {target.kind === "repo-creds" && renderRepoFields(target.kind)}
-          {target.kind === "cluster" && renderClusterFields()}
-          {target.kind === "configmap" && renderConfigMapFields()}
+            {target.kind === "repository" && renderRepoFields(target.kind)}
+            {target.kind === "repo-creds" && renderRepoFields(target.kind)}
+            {target.kind === "cluster" && renderClusterFields()}
+            {target.kind === "configmap" && renderConfigMapFields()}
             <div className={styles.dialogActions}>
               <Button onClick={closeDialog}>Cancel</Button>
               <Button primary onClick={handleSave}>
@@ -569,4 +562,3 @@ export const ArgoConfigDialog = observer(() => {
     </Dialog>
   );
 });
-

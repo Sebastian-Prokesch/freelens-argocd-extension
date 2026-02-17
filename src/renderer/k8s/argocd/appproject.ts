@@ -38,5 +38,3 @@ export function getArgoAppProjectStore(): ArgoAppProjectStore {
   }
   return _argoAppProjectStore;
 }
-
-

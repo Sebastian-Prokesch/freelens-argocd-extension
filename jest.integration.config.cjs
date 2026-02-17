@@ -14,4 +14,3 @@ module.exports = {
   clearMocks: true,
   testTimeout: 5 * 60 * 1000,
 };
-

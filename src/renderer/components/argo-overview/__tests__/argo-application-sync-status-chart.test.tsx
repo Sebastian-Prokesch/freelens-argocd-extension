@@ -1,8 +1,6 @@
-import { render, screen } from "@testing-library/react";
-
-import { ArgoApplicationSyncStatusChart } from "../argo-application-sync-status-chart";
-
 import { Renderer } from "@freelensapp/extensions";
+import { render, screen } from "@testing-library/react";
+import { ArgoApplicationSyncStatusChart } from "../argo-application-sync-status-chart";
 
 describe("ArgoApplicationSyncStatusChart", () => {
   const consoleLogSpy = jest.spyOn(console, "log").mockImplementation(() => {});
@@ -31,10 +29,7 @@ describe("ArgoApplicationSyncStatusChart", () => {
     expect(pieChart).toHaveBeenCalled();
 
     const callArgs = pieChart.mock.calls[0]?.[0];
-    expect(callArgs.data.labels).toEqual(
-      expect.arrayContaining(["Synced: 2", "OutOfSync: 1", "Unknown: 1"]),
-    );
+    expect(callArgs.data.labels).toEqual(expect.arrayContaining(["Synced: 2", "OutOfSync: 1", "Unknown: 1"]));
     expect(callArgs.data.datasets[0].data).toEqual(expect.arrayContaining([2, 1, 1]));
   });
 });
-

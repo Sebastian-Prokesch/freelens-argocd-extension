@@ -1,6 +1,6 @@
 import { access, mkdir, writeFile } from "node:fs/promises";
-import { join } from "node:path";
 import { homedir } from "node:os";
+import { join } from "node:path";
 
 const templates = [
   {
@@ -127,10 +127,5 @@ export const ensureArgoResourceTemplates = async () => {
 
   await mkdir(templatesDir, { recursive: true });
 
-  await Promise.all(
-    templates.map((template) =>
-      ensureFile(join(templatesDir, template.fileName), template.content),
-    ),
-  );
+  await Promise.all(templates.map((template) => ensureFile(join(templatesDir, template.fileName), template.content)));
 };
-

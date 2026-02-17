@@ -43,4 +43,3 @@ describe("ArgoOverviewTabContent", () => {
     await waitFor(() => expect(screen.getAllByText("No ArgoCD applications found").length).toBeGreaterThan(0));
   });
 });
-
