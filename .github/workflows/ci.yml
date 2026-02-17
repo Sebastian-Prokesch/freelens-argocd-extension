@@ -34,30 +34,68 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Type check
+        id: type_check
         run: pnpm type:check
 
       - name: Lint (Biome)
         id: biome_check
         run: pnpm biome:check
 
-      - name: Explain Biome failure
-        if: ${{ failure() && steps.biome_check.outcome == 'failure' }}
+      - name: Unit tests
+        id: unit_tests
+        run: pnpm test:unit
+
+      - name: Explain verify-stage failures
+        if: ${{ always() && (steps.type_check.outcome == 'failure' || steps.biome_check.outcome == 'failure' || steps.unit_tests.outcome == 'failure') }}
         uses: actions/github-script@v7
+        env:
+          TYPE_CHECK_OUTCOME: ${{ steps.type_check.outcome }}
+          BIOME_CHECK_OUTCOME: ${{ steps.biome_check.outcome }}
+          UNIT_TESTS_OUTCOME: ${{ steps.unit_tests.outcome }}
         with:
           script: |
-            core.error("Biome check failed: formatting or import-order issues were found. Run 'pnpm biome:fix' locally, verify with 'pnpm biome:check', then commit.");
-            await core.summary
-              .addHeading("Biome check failed")
-              .addRaw("Actionable fix:\n")
-              .addList([
-                "Run `pnpm biome:fix` locally",
-                "Verify with `pnpm biome:check`",
-                "Commit formatting/import-order changes",
-              ])
-              .write();
+            const failures = [];
 
-      - name: Unit tests
-        run: pnpm test:unit
+            if (process.env.TYPE_CHECK_OUTCOME === "failure") {
+              failures.push({
+                title: "Type check failed",
+                fixes: [
+                  "Run `pnpm type:check` locally",
+                  "Fix TypeScript errors and commit the changes",
+                ],
+              });
+            }
+
+            if (process.env.BIOME_CHECK_OUTCOME === "failure") {
+              failures.push({
+                title: "Biome check failed",
+                fixes: [
+                  "Run `pnpm biome:fix` locally",
+                  "Verify with `pnpm biome:check`",
+                  "Commit formatting/import-order changes",
+                ],
+              });
+            }
+
+            if (process.env.UNIT_TESTS_OUTCOME === "failure") {
+              failures.push({
+                title: "Unit tests failed",
+                fixes: [
+                  "Run `pnpm test:unit` locally",
+                  "Fix failing tests and commit the changes",
+                ],
+              });
+            }
+
+            for (const failure of failures) {
+              core.error(`${failure.title}. See logs above for details.`);
+            }
+
+            const summary = core.summary.addHeading("Verify stage failed");
+            for (const failure of failures) {
+              summary.addHeading(failure.title, 3).addList(failure.fixes);
+            }
+            await summary.write();
 
   build:
     runs-on: ubuntu-latest
