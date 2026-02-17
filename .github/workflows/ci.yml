@@ -37,7 +37,24 @@ jobs:
         run: pnpm type:check
 
       - name: Lint (Biome)
+        id: biome_check
         run: pnpm biome:check
+
+      - name: Explain Biome failure
+        if: ${{ failure() && steps.biome_check.outcome == 'failure' }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.error("Biome check failed: formatting or import-order issues were found. Run 'pnpm biome:fix' locally, verify with 'pnpm biome:check', then commit.");
+            await core.summary
+              .addHeading("Biome check failed")
+              .addRaw("Actionable fix:\n")
+              .addList([
+                "Run `pnpm biome:fix` locally",
+                "Verify with `pnpm biome:check`",
+                "Commit formatting/import-order changes",
+              ])
+              .write();
 
       - name: Unit tests
         run: pnpm test:unit

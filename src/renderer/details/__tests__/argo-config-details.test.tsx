@@ -1,5 +1,4 @@
 import { render, screen } from "@testing-library/react";
-
 import { ArgoConfigDetails } from "../argo-config-details";
 
 const extension = { name: "argocd-test-extension" } as any;
@@ -91,4 +90,3 @@ describe("ArgoConfigDetails", () => {
     expect(screen.getByText("url, dex.config")).toBeInTheDocument();
   });
 });
-

@@ -1,8 +1,6 @@
-import { render, screen } from "@testing-library/react";
-
-import { ArgoApplicationStatusChart } from "../argo-application-status-chart";
-
 import { Renderer } from "@freelensapp/extensions";
+import { render, screen } from "@testing-library/react";
+import { ArgoApplicationStatusChart } from "../argo-application-status-chart";
 
 describe("ArgoApplicationStatusChart", () => {
   const consoleLogSpy = jest.spyOn(console, "log").mockImplementation(() => {});
@@ -32,10 +30,7 @@ describe("ArgoApplicationStatusChart", () => {
     expect(pieChart).toHaveBeenCalled();
 
     const callArgs = pieChart.mock.calls[0]?.[0];
-    expect(callArgs.data.labels).toEqual(
-      expect.arrayContaining(["Healthy: 2", "Degraded: 1", "Unknown: 1"]),
-    );
+    expect(callArgs.data.labels).toEqual(expect.arrayContaining(["Healthy: 2", "Degraded: 1", "Unknown: 1"]));
     expect(callArgs.data.datasets[0].data).toEqual(expect.arrayContaining([2, 1, 1]));
   });
 });
-

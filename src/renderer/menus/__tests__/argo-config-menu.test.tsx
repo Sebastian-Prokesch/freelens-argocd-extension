@@ -1,7 +1,6 @@
+import { Renderer } from "@freelensapp/extensions";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-
-import { Renderer } from "@freelensapp/extensions";
 import { ArgoConfigMenuItem } from "../argo-config-menu";
 
 const extension = { name: "argocd-test-extension" } as any;
@@ -18,9 +17,7 @@ const makeObject = (labels: Record<string, string>) => ({
 
 describe("ArgoConfigMenuItem", () => {
   it("renders only for labeled resources", () => {
-    const { rerender } = render(
-      <ArgoConfigMenuItem object={makeObject({}) as any} extension={extension} />,
-    );
+    const { rerender } = render(<ArgoConfigMenuItem object={makeObject({}) as any} extension={extension} />);
 
     expect(screen.queryByTestId("MenuItem")).not.toBeInTheDocument();
 
@@ -46,4 +43,3 @@ describe("ArgoConfigMenuItem", () => {
     expect(secretsStore.remove).toHaveBeenCalledWith(object);
   });
 });
-

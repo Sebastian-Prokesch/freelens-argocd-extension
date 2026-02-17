@@ -1,8 +1,11 @@
 import * as utils from "../helpers/utils";
 
 describe("argocd extension smoke tests", () => {
-  const hasFreelensExecutable =
-    !!(process.env.FREELENS_EXECUTABLE_PATH || process.env.FREELENS_PATH || process.env.FREELENS_BINARY);
+  const hasFreelensExecutable = !!(
+    process.env.FREELENS_EXECUTABLE_PATH ||
+    process.env.FREELENS_PATH ||
+    process.env.FREELENS_BINARY
+  );
   const hasExtensionPath = !!process.env.EXTENSION_PATH;
 
   const itIfEnv = hasFreelensExecutable && hasExtensionPath ? it : it.skip;
@@ -49,7 +52,6 @@ describe("argocd extension smoke tests", () => {
         await cleanup();
       }
     },
-    5 * 60 * 1000, 
+    5 * 60 * 1000,
   );
 });
-

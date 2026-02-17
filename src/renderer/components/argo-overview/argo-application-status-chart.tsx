@@ -1,6 +1,6 @@
 import { Renderer } from "@freelensapp/extensions";
 import { observer } from "mobx-react";
-import { useRef, useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArgoApplication } from "../../k8s/argocd";
 import styles from "./argo-application-status-chart.module.scss";
 import stylesInline from "./argo-application-status-chart.module.scss?inline";
@@ -16,27 +16,30 @@ interface ArgoApplicationStatusChartProps {
 
 export const ArgoApplicationStatusChart = observer(({ className, applications }: ArgoApplicationStatusChartProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  
+
   const [resolvedColors, setResolvedColors] = useState<Record<string, string>>({});
 
   // Count applications by health status
-  const statusCounts = applications.reduce((acc, app) => {
-    const healthStatus = app.status?.health?.status || "Unknown";
-    acc[healthStatus] = (acc[healthStatus] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const statusCounts = applications.reduce(
+    (acc, app) => {
+      const healthStatus = app.status?.health?.status || "Unknown";
+      acc[healthStatus] = (acc[healthStatus] || 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>,
+  );
 
   // Resolve theme colors using CSS custom properties
   useEffect(() => {
     if (containerRef.current) {
       const computedStyle = getComputedStyle(containerRef.current);
       const colorMap: Record<string, string> = {
-        Healthy: computedStyle.getPropertyValue('--argo-status-healthy').trim() || '#4caf50',
-        Progressing: computedStyle.getPropertyValue('--argo-status-progressing').trim() || '#2196f3',
-        Degraded: computedStyle.getPropertyValue('--argo-status-degraded').trim() || '#ff9800',
-        Suspended: computedStyle.getPropertyValue('--argo-status-suspended').trim() || '#9c27b0',
-        Missing: computedStyle.getPropertyValue('--argo-status-missing').trim() || '#f44336',
-        Unknown: computedStyle.getPropertyValue('--argo-status-unknown').trim() || '#757575',
+        Healthy: computedStyle.getPropertyValue("--argo-status-healthy").trim() || "#4caf50",
+        Progressing: computedStyle.getPropertyValue("--argo-status-progressing").trim() || "#2196f3",
+        Degraded: computedStyle.getPropertyValue("--argo-status-degraded").trim() || "#ff9800",
+        Suspended: computedStyle.getPropertyValue("--argo-status-suspended").trim() || "#9c27b0",
+        Missing: computedStyle.getPropertyValue("--argo-status-missing").trim() || "#f44336",
+        Unknown: computedStyle.getPropertyValue("--argo-status-unknown").trim() || "#757575",
       };
       console.log("Resolved colors:", colorMap);
       setResolvedColors(colorMap);
@@ -44,9 +47,7 @@ export const ArgoApplicationStatusChart = observer(({ className, applications }:
   }, [applications]); // Re-run when applications change (which might indicate theme change)
 
   // Filter out empty status counts and ensure we have data
-  const filteredStatusCounts = Object.fromEntries(
-    Object.entries(statusCounts).filter(([_, count]) => count > 0)
-  );
+  const filteredStatusCounts = Object.fromEntries(Object.entries(statusCounts).filter(([_, count]) => count > 0));
 
   // Prepare chart data in FreeLens format
   const statusesToBeShown = Object.entries(filteredStatusCounts);
@@ -54,9 +55,7 @@ export const ArgoApplicationStatusChart = observer(({ className, applications }:
   const statusDataSet = {
     label: "Status",
     data: statusesToBeShown.map(([, value]) => value),
-    backgroundColor: statusesToBeShown.map(
-      ([status]) => resolvedColors[status] || resolvedColors.Unknown || '#757575'
-    ),
+    backgroundColor: statusesToBeShown.map(([status]) => resolvedColors[status] || resolvedColors.Unknown || "#757575"),
     tooltipLabels: statusesToBeShown.map(
       ([status]) =>
         (percent: string) =>
@@ -84,9 +83,9 @@ export const ArgoApplicationStatusChart = observer(({ className, applications }:
           padding: 20,
         },
       },
-        tooltip: {
-          enabled: true,
-        },
+      tooltip: {
+        enabled: true,
+      },
     },
   };
 
@@ -111,13 +110,7 @@ export const ArgoApplicationStatusChart = observer(({ className, applications }:
       <div ref={containerRef} className={`ArgoApplicationStatusChart ${styles.chartContainer} ${className || ""}`}>
         <h6 className={styles.title}>Application Health Status</h6>
         <div className={styles.chart}>
-          <PieChart
-            data={chartData}
-            options={chartOptions}
-            height={300}
-            showLegend={true}
-            legendPosition="bottom"
-          />
+          <PieChart data={chartData} options={chartOptions} height={300} showLegend={true} legendPosition="bottom" />
         </div>
       </div>
     </>

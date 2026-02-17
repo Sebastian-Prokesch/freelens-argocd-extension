@@ -1,11 +1,5 @@
 import { action, makeObservable, observable } from "mobx";
-
-import {
-  getArgoSecretType,
-  isArgoConfigMap,
-  type ArgoSecretType,
-  type LabeledObject,
-} from "../../k8s/argocd";
+import { type ArgoSecretType, getArgoSecretType, isArgoConfigMap, type LabeledObject } from "../../k8s/argocd";
 
 export type ArgoConfigKind = ArgoSecretType | "configmap";
 export type ArgoConfigDialogMode = "create" | "edit";
@@ -58,4 +52,3 @@ class ArgoConfigDialogStore {
 }
 
 export const argoConfigDialogStore = new ArgoConfigDialogStore();
-

@@ -4,4 +4,3 @@
     "types": ["jest", "node", "vite/client", "electron-vite/node"]
   }
 }
-

@@ -1,12 +1,10 @@
 import { Renderer } from "@freelensapp/extensions";
-
 import { observer } from "mobx-react";
-
 import {
+  type ArgoSecretType,
   getArgoSecretType,
   getSecretField,
   isArgoConfigMap,
-  type ArgoSecretType,
   type LabeledObject,
 } from "../k8s/argocd";
 
@@ -90,4 +88,3 @@ export const ArgoConfigDetails = observer((props: ArgoConfigDetailsProps) => {
 
   return null;
 });
-

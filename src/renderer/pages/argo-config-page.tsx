@@ -1,8 +1,6 @@
 import { Renderer } from "@freelensapp/extensions";
-
 import { observer } from "mobx-react";
 import React from "react";
-
 import { argoConfigDialogStore } from "../components/argo-config";
 import { withErrorPage } from "../components/error-page";
 import { getArgoSecretType, getSecretField, isArgoConfigMap, type LabeledObject } from "../k8s/argocd";
@@ -61,37 +59,37 @@ const renderRepoList = (secrets: any[], title: string) => {
     <KubeObjectListLayout<any, any>
       tableId={`argocd${safeTitle}Secrets`}
       className={styles.listLayout}
-    store={secretsStore}
-    items={secrets}
-    sortingCallbacks={{
-      name: (object) => object.getName(),
-      namespace: (object) => object.getNs(),
-      url: (object) => getSecretField(object, "url") ?? "",
-      type: (object) => getSecretField(object, "type") ?? "",
-      project: (object) => getSecretField(object, "project") ?? "",
-      age: (object) => object.getCreationTimestamp(),
-    }}
-    searchFilters={[(object) => object.getSearchFields()]}
-    renderHeaderTitle={`ArgoCD ${title}`}
-    renderTableHeader={[
-      { title: "Name", sortBy: "name" },
-      { title: "Namespace", sortBy: "namespace", className: styles.tableCellSmall },
-      { title: "URL", sortBy: "url", className: styles.tableCellLarge },
-      { title: "Type", sortBy: "type", className: styles.tableCellSmall },
-      { title: "Project", sortBy: "project", className: styles.tableCellSmall },
-      { title: "Age", sortBy: "age", className: styles.tableCellSmall },
-    ]}
-    renderTableContents={(object) => [
-      <WithTooltip>{object.getName()}</WithTooltip>,
-      <WithTooltip>{object.getNs()}</WithTooltip>,
-      <WithTooltip>{getSecretField(object, "url") ?? "N/A"}</WithTooltip>,
-      <WithTooltip>{getSecretField(object, "type") ?? "N/A"}</WithTooltip>,
-      <WithTooltip>{getSecretField(object, "project") ?? "N/A"}</WithTooltip>,
-      renderAgeCell(object),
-    ]}
-    addRemoveButtons={{
-      onAdd: () => argoConfigDialogStore.openCreate(title === "Repositories" ? "repository" : "repo-creds"),
-    }}
+      store={secretsStore}
+      items={secrets}
+      sortingCallbacks={{
+        name: (object) => object.getName(),
+        namespace: (object) => object.getNs(),
+        url: (object) => getSecretField(object, "url") ?? "",
+        type: (object) => getSecretField(object, "type") ?? "",
+        project: (object) => getSecretField(object, "project") ?? "",
+        age: (object) => object.getCreationTimestamp(),
+      }}
+      searchFilters={[(object) => object.getSearchFields()]}
+      renderHeaderTitle={`ArgoCD ${title}`}
+      renderTableHeader={[
+        { title: "Name", sortBy: "name" },
+        { title: "Namespace", sortBy: "namespace", className: styles.tableCellSmall },
+        { title: "URL", sortBy: "url", className: styles.tableCellLarge },
+        { title: "Type", sortBy: "type", className: styles.tableCellSmall },
+        { title: "Project", sortBy: "project", className: styles.tableCellSmall },
+        { title: "Age", sortBy: "age", className: styles.tableCellSmall },
+      ]}
+      renderTableContents={(object) => [
+        <WithTooltip>{object.getName()}</WithTooltip>,
+        <WithTooltip>{object.getNs()}</WithTooltip>,
+        <WithTooltip>{getSecretField(object, "url") ?? "N/A"}</WithTooltip>,
+        <WithTooltip>{getSecretField(object, "type") ?? "N/A"}</WithTooltip>,
+        <WithTooltip>{getSecretField(object, "project") ?? "N/A"}</WithTooltip>,
+        renderAgeCell(object),
+      ]}
+      addRemoveButtons={{
+        onAdd: () => argoConfigDialogStore.openCreate(title === "Repositories" ? "repository" : "repo-creds"),
+      }}
     />
   );
 };
@@ -144,15 +142,9 @@ export const ArgoConfigTabContent = observer(() => {
   const secretItems = secretsStore.contextItems as any[];
   const configMapItems = configMapStore.contextItems as any[];
 
-  const repositorySecrets = secretItems.filter(
-    (item) => getArgoSecretType(item as LabeledObject) === "repository",
-  );
-  const repoCredsSecrets = secretItems.filter(
-    (item) => getArgoSecretType(item as LabeledObject) === "repo-creds",
-  );
-  const clusterSecrets = secretItems.filter(
-    (item) => getArgoSecretType(item as LabeledObject) === "cluster",
-  );
+  const repositorySecrets = secretItems.filter((item) => getArgoSecretType(item as LabeledObject) === "repository");
+  const repoCredsSecrets = secretItems.filter((item) => getArgoSecretType(item as LabeledObject) === "repo-creds");
+  const clusterSecrets = secretItems.filter((item) => getArgoSecretType(item as LabeledObject) === "cluster");
   const configMaps = configMapItems.filter((item) => isArgoConfigMap(item as LabeledObject));
 
   return (
@@ -176,4 +168,3 @@ export const ArgoConfigTabContent = observer(() => {
 export const ArgoConfigPage = observer((props: ArgoConfigPageProps) =>
   withErrorPage(props, () => <ArgoConfigTabContent />),
 );
-

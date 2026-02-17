@@ -15,7 +15,7 @@ export const ArgoSyncMenuItem = (props: ArgoSyncMenuItemProps) =>
     const { object, toolbar } = props;
 
     if (!object) return <></>;
-    
+
     const store = getArgoApplicationStore();
 
     // const sync = async () => {
@@ -37,27 +37,26 @@ export const ArgoSyncMenuItem = (props: ArgoSyncMenuItemProps) =>
     const sync = async () => {
       await store.patch(
         object,
-        { 
+        {
           operation: {
             initiatedBy: {
               username: "LensApp",
             },
             sync: {
               syncStrategy: {
-                hook: {}
-              }
+                hook: {},
+              },
             },
-          }
-      },
+          },
+        },
         "merge",
       );
     };
-    
+
     return (
       <MenuItem onClick={sync}>
         <Icon material="sync" interactive={toolbar} title="Sync" />
         <span className="title">Sync</span>
       </MenuItem>
     );
-
-})
+  });
