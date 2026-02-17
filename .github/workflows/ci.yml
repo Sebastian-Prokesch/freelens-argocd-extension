@@ -36,8 +36,8 @@ jobs:
       - name: Type check
         run: pnpm type:check
 
-      - name: Lint
-        run: pnpm lint:check
+      - name: Lint (Biome)
+        run: pnpm biome:check
 
       - name: Unit tests
         run: pnpm test:unit
