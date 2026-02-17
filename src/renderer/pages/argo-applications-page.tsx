@@ -39,21 +39,33 @@ export interface ArgoApplicationsPageProps {
 }
 
 export const ArgoApplicationsTabContent = observer(() => {
+  const applicationStore = getArgoApplicationStore();
+
+  const getApplicationDetailsUrl = (object: ArgoApplication) =>
+    getDetailsUrl(
+      applicationStore.api.formatUrlForNotListing({
+        namespace: object.getNs(),
+        name: object.getName(),
+      }),
+    );
+
   return (
     <>
       <style>{stylesInline}</style>
       <KubeObjectListLayout<ArgoApplication, ArgoApplicationApi>
         tableId={`${ArgoApplication.crd.plural}Table`}
         className={styles.page}
-        store={getArgoApplicationStore()}
+        store={applicationStore}
         sortingCallbacks={sortingCallbacks}
         searchFilters={[(object: ArgoApplication) => object.getSearchFields()]}
         renderHeaderTitle={ArgoApplication.crd.title}
         renderTableHeader={renderTableHeader}
         renderTableContents={(object: ArgoApplication) => [
-          <WithTooltip>{object.getName()}</WithTooltip>,
+          <Link key="name-link" to={getApplicationDetailsUrl(object)} onClick={stopPropagation}>
+            <WithTooltip>{object.getName()}</WithTooltip>
+          </Link>,
           <Link
-            key="link"
+            key="namespace-link"
             to={getDetailsUrl(namespacesApi.formatUrlForNotListing({ name: object.getNs() }))}
             onClick={stopPropagation}
           >

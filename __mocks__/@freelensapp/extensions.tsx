@@ -7,19 +7,29 @@ const noop = () => {};
 // Component helpers
 const passthrough =
   (name: string) =>
-  ({ children }: AnyRecord) => (
-    <div data-testid={name}>
-      {children}
-    </div>
-  );
+  ({ children }: AnyRecord) => <div data-testid={name}>{children}</div>;
 
 const textComponent =
   (name: string) =>
-  ({ children, title }: AnyRecord) => (
-    <span data-testid={name}>
-      {children ?? title}
-    </span>
+  ({ children, title }: AnyRecord) => <span data-testid={name}>{children ?? title}</span>;
+
+const KubeObjectListLayout = ({ store, items, renderTableContents }: AnyRecord) => {
+  const rows = items ?? store?.items ?? [];
+
+  return (
+    <div data-testid="KubeObjectListLayout">
+      {rows.map((row: AnyRecord, rowIndex: number) => (
+        <div data-testid="KubeObjectListLayoutRow" key={`${row?.getName?.() ?? rowIndex}-${rowIndex}`}>
+          {(renderTableContents?.(row) ?? []).map((cell: React.ReactNode, cellIndex: number) => (
+            <div data-testid="KubeObjectListLayoutCell" key={`${rowIndex}-${cellIndex}`}>
+              {cell}
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
   );
+};
 
 // Jest-callable components we want to introspect in tests if needed
 export const PieChart = jest.fn(({ data }: AnyRecord) => (
@@ -42,9 +52,7 @@ export const Renderer = {
     Tab: ({ label }: AnyRecord) => <div data-testid="Tab">{label}</div>,
 
     // details page
-    BadgeBoolean: ({ value }: { value: boolean }) => (
-      <span data-testid="BadgeBoolean">{value ? "true" : "false"}</span>
-    ),
+    BadgeBoolean: ({ value }: { value: boolean }) => <span data-testid="BadgeBoolean">{value ? "true" : "false"}</span>,
     DrawerTitle: textComponent("DrawerTitle"),
     DrawerItem: ({ name, children }: { name: string; children: React.ReactNode }) => (
       <div data-testid="DrawerItem">
@@ -61,7 +69,7 @@ export const Renderer = {
 
     // list page (not currently tested, but harmless to include)
     KubeObjectAge: passthrough("KubeObjectAge"),
-    KubeObjectListLayout: passthrough("KubeObjectListLayout"),
+    KubeObjectListLayout,
     WithTooltip: passthrough("WithTooltip"),
 
     // dialog & inputs
@@ -146,4 +154,3 @@ export const Common = {
     stopPropagation: noop,
   },
 } as const;
-

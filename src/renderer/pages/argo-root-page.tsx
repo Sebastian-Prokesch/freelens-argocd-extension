@@ -1,6 +1,7 @@
 import { Renderer } from "@freelensapp/extensions";
 import { observer } from "mobx-react";
 import { ArgoApplicationsTabContent } from "./argo-applications-page";
+import { ArgoAppProjectsTabContent } from "./argo-appprojects-page";
 import { ArgoConfigTabContent } from "./argo-config-page";
 import { ArgoOverviewTabContent } from "./argo-overview-page";
 
@@ -25,6 +26,13 @@ export const ArgoRootPage = observer(() => {
       exact: true,
     },
     {
+      id: "appprojects",
+      title: "AppProjects",
+      routePath: "/argocd/appprojects",
+      component: ArgoAppProjectsTabContent,
+      exact: true,
+    },
+    {
       id: "config",
       title: "Config",
       routePath: "/argocd/config",
@@ -33,7 +41,5 @@ export const ArgoRootPage = observer(() => {
     },
   ];
 
-  return (
-    <TabLayout tabs={tabs} />
-  );
+  return <TabLayout tabs={tabs} />;
 });

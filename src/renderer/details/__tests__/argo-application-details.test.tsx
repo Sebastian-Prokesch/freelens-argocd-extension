@@ -1,5 +1,4 @@
 import { render, screen } from "@testing-library/react";
-
 import { ArgoApplicationDetails } from "../argo-application-details";
 
 const extension = { name: "argocd-test-extension" } as any;
@@ -171,5 +170,69 @@ describe("ArgoApplicationDetails", () => {
     expect(screen.getByText("db")).toBeInTheDocument();
     expect(screen.getByText("Unknown")).toBeInTheDocument();
   });
-});
 
+  it("renders operation state and last sync information", () => {
+    renderDetails({
+      spec: {
+        source: { repoURL: "https://github.com/org/repo.git" },
+        destination: { namespace: "apps" },
+      },
+      status: {
+        observedAt: "2025-01-01T10:00:00.000Z",
+        sync: {
+          status: "OutOfSync",
+          revision: "rev-current",
+        },
+        operationState: {
+          phase: "Running",
+          message: "Sync in progress",
+          startedAt: "2025-01-01T09:00:00.000Z",
+        },
+        history: [
+          {
+            id: 2,
+            revision: "rev-prev",
+            deployedAt: "2025-01-01T08:00:00.000Z",
+            initiatedBy: { automated: true },
+            source: { repoURL: "https://github.com/org/repo.git" },
+          },
+        ],
+        resources: [],
+      },
+    });
+
+    expect(screen.getByText("Operation State")).toBeInTheDocument();
+    expect(screen.getByText("Running")).toBeInTheDocument();
+    expect(screen.getByText("Sync in progress")).toBeInTheDocument();
+
+    expect(screen.getByText("Last Sync Information")).toBeInTheDocument();
+    expect(screen.getByText("rev-current")).toBeInTheDocument();
+    expect(screen.getByText("OutOfSync")).toBeInTheDocument();
+    expect(screen.getAllByText("rev-prev").length).toBeGreaterThan(0);
+  });
+
+  it("renders sync history table entries", () => {
+    renderDetails({
+      spec: {
+        source: { repoURL: "https://github.com/org/repo.git" },
+        destination: { namespace: "apps" },
+      },
+      status: {
+        history: [
+          {
+            id: 10,
+            revision: "abc123",
+            deployedAt: "2025-01-01T08:00:00.000Z",
+            initiatedBy: { username: "admin" },
+            source: { repoURL: "https://github.com/org/repo.git" },
+          },
+        ],
+        resources: [],
+      },
+    });
+
+    expect(screen.getByText("Sync History")).toBeInTheDocument();
+    expect(screen.getAllByText("abc123").length).toBeGreaterThan(0);
+    expect(screen.getByText("admin")).toBeInTheDocument();
+  });
+});

@@ -7,16 +7,7 @@ import styles from "./argo-application-details.module.scss";
 import stylesInline from "./argo-application-details.module.scss?inline";
 
 const {
-  Component: { 
-    BadgeBoolean,
-    DrawerTitle, 
-    DrawerItem, 
-    Gutter, 
-    Table,
-    TableHead,
-    TableRow,
-    TableCell
-   },
+  Component: { BadgeBoolean, DrawerTitle, DrawerItem, Gutter, Table, TableHead, TableRow, TableCell },
 } = Renderer;
 
 const resourcesSortable = {
@@ -28,6 +19,18 @@ const resourcesSortable = {
 const resourcesSortByNames = createEnumFromKeys(resourcesSortable);
 const resourcesSortByDefault: { sortBy: keyof typeof resourcesSortable; orderBy: Renderer.Component.TableOrderBy } = {
   sortBy: resourcesSortByNames.kind,
+  orderBy: "desc",
+};
+
+const historySortable = {
+  id: (entry: any) => entry?.id ?? 0,
+  revision: (entry: any) => entry?.revision ?? "",
+  deployedAt: (entry: any) => entry?.deployedAt ?? "",
+};
+
+const historySortByNames = createEnumFromKeys(historySortable);
+const historySortByDefault: { sortBy: keyof typeof historySortable; orderBy: Renderer.Component.TableOrderBy } = {
+  sortBy: historySortByNames.id,
   orderBy: "desc",
 };
 
@@ -54,6 +57,11 @@ const formatRetryBackoff = (backoff?: any): string => {
   return parts.length > 0 ? parts.join(", ") : "Default";
 };
 
+const formatDateTime = (dateString?: string): string => {
+  if (!dateString) return "N/A";
+  return new Date(dateString).toLocaleString();
+};
+
 export interface ArgoApplicationDetailsProps extends Renderer.Component.KubeObjectDetailsProps<ArgoApplication> {
   extension: Renderer.LensExtension;
 }
@@ -66,48 +74,28 @@ export const ArgoApplicationDetails = observer((props: ArgoApplicationDetailsPro
       <>
         <style>{stylesInline}</style>
         <div className={styles.argoApplicationDetails}>
-          <Gutter size="md"/>
-          
+          <Gutter size="md" />
+
           {/* Section 1: Source Configuration */}
           <DrawerTitle>Source Configuration</DrawerTitle>
           {object.spec.source ? (
             // Single source
             <>
-              <DrawerItem name="Repository URL">
-                {object.spec.source.repoURL || "Not specified"}
-              </DrawerItem>
-              <DrawerItem name="Source Type">
-                {getSourceType(object.spec.source)}
-              </DrawerItem>
+              <DrawerItem name="Repository URL">{object.spec.source.repoURL || "Not specified"}</DrawerItem>
+              <DrawerItem name="Source Type">{getSourceType(object.spec.source)}</DrawerItem>
               {object.spec.source.targetRevision && (
-                <DrawerItem name="Target Revision">
-                  {object.spec.source.targetRevision}
-                </DrawerItem>
+                <DrawerItem name="Target Revision">{object.spec.source.targetRevision}</DrawerItem>
               )}
-              {object.spec.source.path && (
-                <DrawerItem name="Path">
-                  {object.spec.source.path}
-                </DrawerItem>
-              )}
-              {object.spec.source.chart && (
-                <DrawerItem name="Chart">
-                  {object.spec.source.chart}
-                </DrawerItem>
-              )}
+              {object.spec.source.path && <DrawerItem name="Path">{object.spec.source.path}</DrawerItem>}
+              {object.spec.source.chart && <DrawerItem name="Chart">{object.spec.source.chart}</DrawerItem>}
               {object.spec.source.helm && (
                 <>
-                  <DrawerItem name="Helm Version">
-                    {object.spec.source.helm.version || "Not specified"}
-                  </DrawerItem>
+                  <DrawerItem name="Helm Version">{object.spec.source.helm.version || "Not specified"}</DrawerItem>
                   {object.spec.source.helm.releaseName && (
-                    <DrawerItem name="Release Name">
-                      {object.spec.source.helm.releaseName}
-                    </DrawerItem>
+                    <DrawerItem name="Release Name">{object.spec.source.helm.releaseName}</DrawerItem>
                   )}
                   {object.spec.source.helm.valueFiles && object.spec.source.helm.valueFiles.length > 0 && (
-                    <DrawerItem name="Value Files">
-                      {object.spec.source.helm.valueFiles.join(", ")}
-                    </DrawerItem>
+                    <DrawerItem name="Value Files">{object.spec.source.helm.valueFiles.join(", ")}</DrawerItem>
                   )}
                 </>
               )}
@@ -117,32 +105,30 @@ export const ArgoApplicationDetails = observer((props: ArgoApplicationDetailsPro
                     {object.spec.source.kustomize.version || "Not specified"}
                   </DrawerItem>
                   {object.spec.source.kustomize.namePrefix && (
-                    <DrawerItem name="Name Prefix">
-                      {object.spec.source.kustomize.namePrefix}
-                    </DrawerItem>
+                    <DrawerItem name="Name Prefix">{object.spec.source.kustomize.namePrefix}</DrawerItem>
                   )}
                   {object.spec.source.kustomize.nameSuffix && (
-                    <DrawerItem name="Name Suffix">
-                      {object.spec.source.kustomize.nameSuffix}
-                    </DrawerItem>
+                    <DrawerItem name="Name Suffix">{object.spec.source.kustomize.nameSuffix}</DrawerItem>
                   )}
                 </>
               )}
               {object.spec.source.plugin && (
                 <>
-                  <DrawerItem name="Plugin Name">
-                    {object.spec.source.plugin.name || "Not specified"}
-                  </DrawerItem>
+                  <DrawerItem name="Plugin Name">{object.spec.source.plugin.name || "Not specified"}</DrawerItem>
                   {object.spec.source.plugin.env && object.spec.source.plugin.env.length > 0 && (
                     <DrawerItem name="Environment Variables">
-                      {object.spec.source.plugin.env.map(env => `${env.name}=${env.value}`).join(", ")}
+                      {object.spec.source.plugin.env.map((env) => `${env.name}=${env.value}`).join(", ")}
                     </DrawerItem>
                   )}
                   {object.spec.source.plugin.parameters && object.spec.source.plugin.parameters.length > 0 && (
                     <DrawerItem name="Parameters">
-                      {object.spec.source.plugin.parameters.map(param => 
-                        param.name ? `${param.name}: ${param.string || param.array?.join(",") || param.map ? JSON.stringify(param.map) : "Not set"}` : "Unnamed parameter"
-                      ).join(", ")}
+                      {object.spec.source.plugin.parameters
+                        .map((param) =>
+                          param.name
+                            ? `${param.name}: ${param.string || param.array?.join(",") || param.map ? JSON.stringify(param.map) : "Not set"}`
+                            : "Unnamed parameter",
+                        )
+                        .join(", ")}
                     </DrawerItem>
                   )}
                 </>
@@ -154,12 +140,32 @@ export const ArgoApplicationDetails = observer((props: ArgoApplicationDetailsPro
               <div key={idx} className={styles.sourceSection}>
                 <DrawerItem name={`Source ${idx + 1}${source.name ? ` (${source.name})` : ""}`}>
                   <div className={styles.sourceDetails}>
-                    <div><strong>Repository:</strong> {source.repoURL || "Not specified"}</div>
-                    <div><strong>Type:</strong> {getSourceType(source)}</div>
-                    {source.targetRevision && <div><strong>Revision:</strong> {source.targetRevision}</div>}
-                    {source.path && <div><strong>Path:</strong> {source.path}</div>}
-                    {source.chart && <div><strong>Chart:</strong> {source.chart}</div>}
-                    {source.plugin && <div><strong>Plugin:</strong> {source.plugin.name || "Not specified"}</div>}
+                    <div>
+                      <strong>Repository:</strong> {source.repoURL || "Not specified"}
+                    </div>
+                    <div>
+                      <strong>Type:</strong> {getSourceType(source)}
+                    </div>
+                    {source.targetRevision && (
+                      <div>
+                        <strong>Revision:</strong> {source.targetRevision}
+                      </div>
+                    )}
+                    {source.path && (
+                      <div>
+                        <strong>Path:</strong> {source.path}
+                      </div>
+                    )}
+                    {source.chart && (
+                      <div>
+                        <strong>Chart:</strong> {source.chart}
+                      </div>
+                    )}
+                    {source.plugin && (
+                      <div>
+                        <strong>Plugin:</strong> {source.plugin.name || "Not specified"}
+                      </div>
+                    )}
                   </div>
                 </DrawerItem>
               </div>
@@ -168,20 +174,30 @@ export const ArgoApplicationDetails = observer((props: ArgoApplicationDetailsPro
             <DrawerItem name="Source">Not configured</DrawerItem>
           )}
 
-          <Gutter size="md"/>
+          <Gutter size="md" />
 
           {/* Section 2: Destination */}
           <DrawerTitle>Destination</DrawerTitle>
           <DrawerItem name="Cluster">
             {object.spec.destination?.server || object.spec.destination?.name || "Not specified"}
           </DrawerItem>
-          <DrawerItem name="Namespace">
-            {object.spec.destination?.namespace || "Not specified"}
-          </DrawerItem>
+          <DrawerItem name="Namespace">{object.spec.destination?.namespace || "Not specified"}</DrawerItem>
 
-          <Gutter size="md"/>
+          <Gutter size="md" />
 
-          {/* Section 3: Sync Policy */}
+          {/* Section 3: Operation State */}
+          {object.status?.operationState && (
+            <>
+              <DrawerTitle>Operation State</DrawerTitle>
+              <DrawerItem name="Phase">{object.status.operationState.phase ?? "Unknown"}</DrawerItem>
+              <DrawerItem name="Message">{object.status.operationState.message ?? "N/A"}</DrawerItem>
+              <DrawerItem name="Started At">{formatDateTime(object.status.operationState.startedAt)}</DrawerItem>
+              <DrawerItem name="Finished At">{formatDateTime(object.status.operationState.finishedAt)}</DrawerItem>
+              <Gutter size="md" />
+            </>
+          )}
+
+          {/* Section 4: Sync Policy */}
           {object.spec.syncPolicy && (
             <>
               <DrawerTitle>Sync Policy</DrawerTitle>
@@ -202,32 +218,28 @@ export const ArgoApplicationDetails = observer((props: ArgoApplicationDetailsPro
                 </>
               )}
               {object.spec.syncPolicy.syncOptions && object.spec.syncPolicy.syncOptions.length > 0 && (
-                <DrawerItem name="Sync Options">
-                  {formatSyncOptions(object.spec.syncPolicy.syncOptions)}
-                </DrawerItem>
+                <DrawerItem name="Sync Options">{formatSyncOptions(object.spec.syncPolicy.syncOptions)}</DrawerItem>
               )}
               {object.spec.syncPolicy.retry && (
                 <>
-                  <DrawerItem name="Retry Limit">
-                    {object.spec.syncPolicy.retry.limit || "Not set"}
-                  </DrawerItem>
+                  <DrawerItem name="Retry Limit">{object.spec.syncPolicy.retry.limit || "Not set"}</DrawerItem>
                   <DrawerItem name="Retry Backoff">
                     {formatRetryBackoff(object.spec.syncPolicy.retry.backoff)}
                   </DrawerItem>
                 </>
               )}
-              <Gutter size="md"/>
+              <Gutter size="md" />
             </>
           )}
 
-          {/* Section 4: Advanced Settings */}
-          {(object.spec.ignoreDifferences && object.spec.ignoreDifferences.length > 0) && (
+          {/* Section 5: Advanced Settings */}
+          {object.spec.ignoreDifferences && object.spec.ignoreDifferences.length > 0 && (
             <>
               <DrawerTitle>Advanced Settings</DrawerTitle>
               <DrawerItem name="Ignore Differences">
-                <Table 
+                <Table
                   tableId="ignore-differences"
-                  key="argo-application-details-ignore-differences-table" 
+                  key="argo-application-details-ignore-differences-table"
                   scrollable={false}
                   sortSyncWithUrl={false}
                 >
@@ -247,33 +259,78 @@ export const ArgoApplicationDetails = observer((props: ArgoApplicationDetailsPro
                   ))}
                 </Table>
               </DrawerItem>
-              <Gutter size="md"/>
+              <Gutter size="md" />
             </>
           )}
 
-          {/* Section 5: Resources Sync Status (existing table) */}
+          {/* Section 6: Last Sync Information */}
+          <DrawerTitle>Last Sync Information</DrawerTitle>
+          <DrawerItem name="Current Revision">{object.status?.sync?.revision ?? "N/A"}</DrawerItem>
+          <DrawerItem name="Current Sync Status">{object.status?.sync?.status ?? "N/A"}</DrawerItem>
+          <DrawerItem name="Last Synced Revision">{object.status?.history?.[0]?.revision ?? "N/A"}</DrawerItem>
+          <DrawerItem name="Observed At">{formatDateTime(object.status?.observedAt)}</DrawerItem>
+
+          <Gutter size="md" />
+
+          {/* Section 7: Resources Sync Status (existing table) */}
           <DrawerTitle>Resources Sync Status</DrawerTitle>
-          <Table 
+          <Table
             tableId="resources"
-            key="argo-application-details-ressources-table" 
+            key="argo-application-details-ressources-table"
             sortable={resourcesSortable}
             sortByDefault={resourcesSortByDefault}
             scrollable={false}
             sortSyncWithUrl={false}
           >
-              <TableHead flat sticky={false}>
-                    <TableCell sortBy={resourcesSortByNames.name}>Name</TableCell>
-                    <TableCell sortBy={resourcesSortByNames.status}>Sync Status</TableCell>
-                    <TableCell sortBy={resourcesSortByNames.kind}>Kind</TableCell>
-              </TableHead>
+            <TableHead flat sticky={false}>
+              <TableCell sortBy={resourcesSortByNames.name}>Name</TableCell>
+              <TableCell sortBy={resourcesSortByNames.status}>Sync Status</TableCell>
+              <TableCell sortBy={resourcesSortByNames.kind}>Kind</TableCell>
+            </TableHead>
             {object.status?.resources?.map((resource, index) => (
-                <TableRow key={`${resource.name}-${resource.kind}-${index}`}sortItem={resource}>
-                    <TableCell>{resource.name}</TableCell>
-                    <TableCell>{resource.status || 'Unknown'}</TableCell>
-                    <TableCell>{resource.kind}</TableCell>
-                </TableRow>
-              ))}
+              <TableRow key={`${resource.name}-${resource.kind}-${index}`} sortItem={resource}>
+                <TableCell>{resource.name}</TableCell>
+                <TableCell>{resource.status || "Unknown"}</TableCell>
+                <TableCell>{resource.kind}</TableCell>
+              </TableRow>
+            ))}
           </Table>
+
+          <Gutter size="md" />
+
+          {/* Section 8: Sync History */}
+          {object.status?.history && object.status.history.length > 0 && (
+            <>
+              <DrawerTitle>Sync History</DrawerTitle>
+              <Table
+                tableId="sync-history"
+                key="argo-application-details-sync-history-table"
+                sortable={historySortable}
+                sortByDefault={historySortByDefault}
+                scrollable={false}
+                sortSyncWithUrl={false}
+              >
+                <TableHead flat sticky={false}>
+                  <TableCell sortBy={historySortByNames.id}>ID</TableCell>
+                  <TableCell sortBy={historySortByNames.revision}>Revision</TableCell>
+                  <TableCell sortBy={historySortByNames.deployedAt}>Deployed At</TableCell>
+                  <TableCell>Initiated By</TableCell>
+                  <TableCell>Source</TableCell>
+                </TableHead>
+                {object.status.history.map((entry, index) => (
+                  <TableRow key={`history-${entry.id ?? index}`} sortItem={entry}>
+                    <TableCell>{entry.id ?? "N/A"}</TableCell>
+                    <TableCell>{entry.revision ?? "N/A"}</TableCell>
+                    <TableCell>{formatDateTime(entry.deployedAt)}</TableCell>
+                    <TableCell>
+                      {entry.initiatedBy?.username ?? (entry.initiatedBy?.automated ? "Automated" : "Unknown")}
+                    </TableCell>
+                    <TableCell>{entry.source?.repoURL ?? entry.source?.chart ?? "N/A"}</TableCell>
+                  </TableRow>
+                ))}
+              </Table>
+            </>
+          )}
         </div>
       </>
     );

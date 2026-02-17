@@ -1,0 +1,11 @@
+.page {
+  :global(.TableCell) {
+    &.description {
+      flex-grow: 1.2;
+    }
+
+    &.age {
+      flex-grow: 0.3;
+    }
+  }
+}

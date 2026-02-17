@@ -50,5 +50,31 @@ describe("ArgoRenderer registrations", () => {
     expect(components[0]?.Component).toBeDefined();
     expect(typeof components[0]?.shouldRender?.get).toBe("function");
   });
-});
 
+  it("registers AppProject page and menu entries", () => {
+    const renderer = createRenderer();
+
+    const pageIds = renderer.clusterPages.map((page: any) => page.id);
+    const pageRoutes = renderer.clusterPages.map((page: any) => page.routePath);
+    const menuIds = renderer.clusterPageMenus.map((menu: any) => menu.id);
+
+    expect(pageIds).toContain("appprojects");
+    expect(pageRoutes).toContain("/argocd/appprojects");
+    expect(menuIds).toContain("appprojects");
+  });
+
+  it("registers Application and AppProject detail items", () => {
+    const renderer = createRenderer();
+    const detailKinds = renderer.kubeObjectDetailItems.map((item: any) => item.kind);
+
+    expect(detailKinds).toContain("Application");
+    expect(detailKinds).toContain("AppProject");
+  });
+
+  it("registers sync, terminate and rollback menu items for applications", () => {
+    const renderer = createRenderer();
+    const applicationMenuItems = renderer.kubeObjectMenuItems.filter((item: any) => item.kind === "Application");
+
+    expect(applicationMenuItems.length).toBeGreaterThanOrEqual(3);
+  });
+});
