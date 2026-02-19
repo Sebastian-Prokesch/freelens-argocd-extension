@@ -112,6 +112,86 @@ data:
   policy.default: role:readonly
 `,
   },
+  {
+    fileName: "argo-appproject.yaml",
+    content: `apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: example-project
+  namespace: argocd
+spec:
+  description: Example ArgoCD AppProject
+  sourceRepos:
+    - "*"
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: "*"
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+  namespaceResourceWhitelist:
+    - group: "apps"
+      kind: Deployment
+    - group: ""
+      kind: Service
+`,
+  },
+  {
+    fileName: "argo-application.yaml",
+    content: `apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: example-application
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/argoproj/argocd-example-apps.git
+    targetRevision: HEAD
+    path: guestbook
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
+`,
+  },
+  {
+    fileName: "argo-appset.yaml",
+    content: `apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: example-appset
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - name: guestbook
+            namespace: default
+            repoURL: https://github.com/argoproj/argocd-example-apps.git
+            path: guestbook
+            targetRevision: HEAD
+  template:
+    metadata:
+      name: "{{name}}"
+    spec:
+      project: default
+      source:
+        repoURL: "{{repoURL}}"
+        targetRevision: "{{targetRevision}}"
+        path: "{{path}}"
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "{{namespace}}"
+      syncPolicy:
+        automated:
+          prune: false
+          selfHeal: true
+`,
+  },
 ];
 
 const ensureFile = async (filePath: string, content: string) => {
