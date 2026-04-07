@@ -138,6 +138,36 @@ export interface ArgoConfigPageProps {
 
 export const ArgoConfigTabContent = observer(() => {
   const [activeTab, setActiveTab] = React.useState<ArgoConfigTab>("repositories");
+  const [isLoaded, setIsLoaded] = React.useState(false);
+  const watches = React.useRef<(() => void)[]>([]);
+
+  React.useEffect(() => {
+    let isMounted = true;
+
+    (async () => {
+      const { namespaceStore } = Renderer.K8sApi;
+      await namespaceStore.loadAll({ namespaces: [] });
+      watches.current.push(namespaceStore.subscribe());
+
+      const namespaces = namespaceStore.items.map((ns) => ns.getName());
+      await Promise.all([secretsStore.loadAll({ namespaces }), configMapStore.loadAll({ namespaces })]);
+
+      watches.current.push(secretsStore.subscribe());
+      watches.current.push(configMapStore.subscribe());
+
+      if (isMounted) {
+        setIsLoaded(true);
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+      for (const unsubscribe of watches.current) {
+        unsubscribe();
+      }
+      watches.current = [];
+    };
+  }, []);
 
   const secretItems = secretsStore.contextItems as any[];
   const configMapItems = configMapStore.contextItems as any[];
@@ -156,10 +186,16 @@ export const ArgoConfigTabContent = observer(() => {
             <Tab key={tab.id} value={tab.id} label={tab.label} />
           ))}
         </Tabs>
-        {activeTab === "repositories" && renderRepoList(repositorySecrets, "Repositories")}
-        {activeTab === "repo-creds" && renderRepoList(repoCredsSecrets, "Repo Credentials")}
-        {activeTab === "clusters" && renderClusterList(clusterSecrets)}
-        {activeTab === "configmaps" && renderConfigMapList(configMaps)}
+        {!isLoaded ? (
+          <WithTooltip>Loading ArgoCD config resources...</WithTooltip>
+        ) : (
+          <>
+            {activeTab === "repositories" && renderRepoList(repositorySecrets, "Repositories")}
+            {activeTab === "repo-creds" && renderRepoList(repoCredsSecrets, "Repo Credentials")}
+            {activeTab === "clusters" && renderClusterList(clusterSecrets)}
+            {activeTab === "configmaps" && renderConfigMapList(configMaps)}
+          </>
+        )}
       </div>
     </>
   );

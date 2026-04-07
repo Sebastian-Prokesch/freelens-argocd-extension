@@ -59,6 +59,7 @@ describe("ArgoRenderer registrations", () => {
     const menuIds = renderer.clusterPageMenus.map((menu: any) => menu.id);
 
     expect(pageIds).toContain("appprojects");
+    expect(pageRoutes).toContain("/argo/argocd/appprojects");
     expect(pageRoutes).toContain("/argocd/appprojects");
     expect(menuIds).toContain("appprojects");
   });
