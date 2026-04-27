@@ -12,14 +12,13 @@ const preferences = ArgoPreferencesStore.getInstanceOrCreate<ArgoPreferencesStor
 export const ArgoPreferenceInput = observer(() => {
   return (
     <Checkbox
-      label="Argo checkbox"
+      label="Enable Argo extension features"
       value={preferences.enabled}
       onChange={(v) => {
-        console.log(`[ARGO-PREFERENCES-STORE] onChange ${v}`);
         preferences.enabled = v;
       }}
     />
   );
 });
 
-export const ArgoPreferenceHint = () => <span>This is an example of an preference for extensions.</span>;
+export const ArgoPreferenceHint = () => <span>Controls extension-level Argo features and integration toggles.</span>;

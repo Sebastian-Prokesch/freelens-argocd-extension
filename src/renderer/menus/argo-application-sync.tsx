@@ -3,7 +3,7 @@ import { withErrorPage } from "../components/error-page";
 import { ArgoApplication, getArgoApplicationStore } from "../k8s/argocd";
 
 const {
-  Component: { MenuItem, Icon },
+  Component: { MenuItem, Icon, Notifications },
 } = Renderer;
 
 export interface ArgoSyncMenuItemProps extends Renderer.Component.KubeObjectMenuProps<ArgoApplication> {
@@ -35,22 +35,29 @@ export const ArgoSyncMenuItem = (props: ArgoSyncMenuItemProps) =>
     //   );
     // };
     const sync = async () => {
-      await store.patch(
-        object,
-        {
-          operation: {
-            initiatedBy: {
-              username: "LensApp",
-            },
-            sync: {
-              syncStrategy: {
-                hook: {},
+      const appName = object.getName?.() ?? object.metadata?.name ?? "application";
+      try {
+        await store.patch(
+          object,
+          {
+            operation: {
+              initiatedBy: {
+                username: "LensApp",
+              },
+              sync: {
+                syncStrategy: {
+                  hook: {},
+                },
               },
             },
           },
-        },
-        "merge",
-      );
+          "merge",
+        );
+        Notifications.ok(`Sync started for ${appName}`);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Failed to start sync.";
+        Notifications.error(message);
+      }
     };
 
     return (

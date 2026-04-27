@@ -1,59 +1,44 @@
-@use "../vars";
+// Layout aligned with Freelens WorkloadsOverview + OverviewStatuses
+// (packages/core/src/renderer/components/workloads-overview/overview.scss,
+//  overview-statuses.scss).
 
-.page {
-  height: 100%;
-  overflow-y: auto;
-  padding: calc(var(--unit) * 2);
-
-  :global(.TableCell) {
-    &.project {
-      flex-grow: 1.2;
-    }
-
-    &.syncStatus {
-      flex-grow: 0.8;
-    }
-
-    &.healthStatus {
-      flex-grow: 0.8;
-    }
-
-    &.age {
-      flex-grow: 0.3;
-    }
-  }
-}
-
-.headerBox {
-  background: rgba(255, 255, 255, 0.04);
-  border-radius: 6px;
-  padding: calc(var(--unit) * 2);
-  margin-bottom: calc(var(--unit) * 2);
-  backdrop-filter: saturate(120%);
+.root {
+  --flex-gap: calc(var(--unit) * 2);
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: calc(var(--unit) * 2);
-
-  @media (max-width: 767px) {
-    flex-direction: column;
-    align-items: stretch;
-  }
+  flex-direction: column;
+  gap: var(--flex-gap);
+  height: 100%;
+  min-height: 0;
+  overflow: visible;
 }
 
-.title {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--textColorPrimary);
-  flex: 1;
+.header {
+  background: var(--contentColor);
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(var(--unit) * 2);
+  padding: calc(var(--unit) * 2);
+  flex-shrink: 0;
+
+  .title {
+    margin: 0;
+    flex: 1;
+    min-width: 0;
+    color: var(--textColorPrimary);
+    font-size: var(--fontSizeHeading, 15px);
+    font-weight: 600;
+    line-height: 1.2;
+  }
 }
 
 .namespaceFilter {
   display: flex;
   align-items: center;
-  min-width: 200px;
+  flex-shrink: 0;
+  min-width: min(100%, 220px);
+  max-width: 100%;
 
   @media (max-width: 767px) {
     min-width: auto;
@@ -61,33 +46,45 @@
   }
 }
 
-.chartsContainer {
-  margin-bottom: calc(var(--unit) * 2);
+.scrollBody {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
-.chartsWrapper {
-  background: rgba(255, 255, 255, 0.04);
-  border-radius: 6px;
+.loadingMessage,
+.errorMessage {
   padding: calc(var(--unit) * 2);
-  backdrop-filter: saturate(120%);
-  display: flex;
-  flex-wrap: wrap;
-  gap: calc(var(--unit) * 2);
+  background: var(--contentColor);
+}
 
-  @media (min-width: 768px) {
-    flex-wrap: nowrap;
-  }
+.loadingMessage {
+  color: var(--textColorSecondary);
+}
+
+.errorMessage {
+  color: var(--colorError);
+}
+
+.statuses {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  background: var(--contentColor);
+}
+
+.chartsRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  justify-content: space-evenly;
+  gap: calc(var(--unit) * 2);
+  padding: calc(var(--unit) * 2);
 }
 
 .chart {
-  flex: 1;
-  min-width: 300px;
-  max-width: 500px;
-
-  @media (max-width: 767px) {
-    flex: 1 1 100%;
-    max-width: none;
-  }
+  min-width: 0;
 }
-
-

@@ -2,12 +2,12 @@ import { Renderer } from "@freelensapp/extensions";
 import { observer } from "mobx-react";
 import { useEffect, useRef, useState } from "react";
 import { ArgoApplicationStatusChart, ArgoApplicationSyncStatusChart } from "../components/argo-overview";
-import { ArgoApplication, ArgoAppProject } from "../k8s/argocd";
+import { type ArgoApplication, getArgoApplicationStore, getArgoAppProjectStore } from "../k8s/argocd";
 import styles from "./argo-overview-page.module.scss";
 import stylesInline from "./argo-overview-page.module.scss?inline";
 
 const {
-  Component: { Events, NamespaceSelectFilter, TabLayout },
+  Component: { Events, NamespaceSelectFilter },
 } = Renderer;
 
 export interface ArgoOverviewPageProps {
@@ -23,73 +23,82 @@ function filterItems(items: Renderer.K8sApi.KubeEvent[]): Renderer.K8sApi.KubeEv
 
 export const ArgoOverviewTabContent = observer(() => {
   const watches = useRef<(() => void)[]>([]);
-  const [applications, setApplications] = useState<ArgoApplication[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const applicationStore = getArgoApplicationStore();
+  const appProjectStore = getArgoAppProjectStore();
 
   useEffect(() => {
+    let isMounted = true;
+
     (async () => {
       const namespaceStore = Renderer.K8sApi.namespaceStore;
-      await namespaceStore.loadAll({ namespaces: [] });
-      watches.current.push(namespaceStore.subscribe());
+      try {
+        setLoadError(null);
+        await namespaceStore.loadAll({ namespaces: [] });
+        watches.current.push(namespaceStore.subscribe());
 
-      const namespaces = namespaceStore.items.map((ns) => ns.getName());
+        const namespaces = namespaceStore.items.map((ns) => ns.getName());
 
-      for (const object of [ArgoApplication, ArgoAppProject]) {
-        try {
-          const store = object.getStore();
-          if (!store) continue;
-          await store.loadAll({ namespaces });
-          watches.current.push(store.subscribe());
+        await Promise.all([applicationStore.loadAll({ namespaces }), appProjectStore.loadAll({ namespaces })]);
+        watches.current.push(applicationStore.subscribe());
+        watches.current.push(appProjectStore.subscribe());
 
-          // Update applications state when ArgoApplication store changes
-          if (object === ArgoApplication) {
-            setApplications(store.items);
-          }
-        } catch (_) {
-          continue;
+        if (isMounted) {
+          setIsLoaded(true);
+        }
+      } catch (error) {
+        if (isMounted) {
+          const message = error instanceof Error ? error.message : "Failed to load ArgoCD overview data.";
+          setLoadError(message);
         }
       }
     })();
+
+    return () => {
+      isMounted = false;
+      for (const unsubscribe of watches.current) {
+        unsubscribe();
+      }
+      watches.current = [];
+    };
   }, []);
 
-  // The NamespaceSelectFilter automatically filters the applications
-  // through the store, so we can use the applications directly
+  const applications = (applicationStore.contextItems as ArgoApplication[]) ?? [];
 
   return (
     <>
       <style>{stylesInline}</style>
-      <div className={styles.page}>
-        <div className={styles.headerBox}>
-          <h2 className={styles.title}>ArgoCD Overview</h2>
+      <div className={styles.root}>
+        <div className={styles.header}>
+          <h5 className={styles.title}>ArgoCD Overview</h5>
           <div className={styles.namespaceFilter}>
             <NamespaceSelectFilter id="overview-namespace-select-filter-input" />
           </div>
         </div>
 
-        <div className={styles.chartsContainer}>
-          <div className={styles.chartsWrapper}>
-            <div className={styles.chart}>
-              <ArgoApplicationStatusChart applications={applications} />
-            </div>
+        <div className={styles.scrollBody}>
+          {!isLoaded ? <div className={styles.loadingMessage}>Loading ArgoCD overview resources...</div> : null}
+          {loadError ? <div className={styles.errorMessage}>{loadError}</div> : null}
+          <div className={styles.statuses}>
+            <div className={styles.chartsRow}>
+              <div className={styles.chart}>
+                <ArgoApplicationStatusChart applications={applications} isLoading={!isLoaded && !loadError} />
+              </div>
 
-            <div className={styles.chart}>
-              <ArgoApplicationSyncStatusChart applications={applications} />
+              <div className={styles.chart}>
+                <ArgoApplicationSyncStatusChart applications={applications} isLoading={!isLoaded && !loadError} />
+              </div>
             </div>
           </div>
-        </div>
 
-        <Events compact hideFilters filterItems={[filterItems]} compactLimit={1000} />
+          <Events compact hideFilters filterItems={[filterItems]} compactLimit={1000} />
+        </div>
       </div>
     </>
   );
 });
 
 export const ArgoOverviewPage = observer(() => {
-  return (
-    <>
-      <style>{stylesInline}</style>
-      <TabLayout>
-        <ArgoOverviewTabContent />
-      </TabLayout>
-    </>
-  );
+  return <ArgoOverviewTabContent />;
 });

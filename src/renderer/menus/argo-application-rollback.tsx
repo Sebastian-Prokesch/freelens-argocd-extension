@@ -3,7 +3,7 @@ import { withErrorPage } from "../components/error-page";
 import { ArgoApplication, getArgoApplicationStore } from "../k8s/argocd";
 
 const {
-  Component: { Icon, MenuItem, Notifications },
+  Component: { ConfirmDialog, Icon, MenuItem, Notifications },
 } = Renderer;
 
 type RevisionHistory = any;
@@ -45,6 +45,7 @@ export const ArgoRollbackMenuItem = (props: ArgoRollbackMenuItemProps) =>
     const store = getArgoApplicationStore();
 
     const rollback = async () => {
+      const appName = object.getName?.() ?? object.metadata?.name ?? "application";
       const selectedHistoryEntry = pickHistoryEntry(history as RevisionHistory[]);
 
       if (selectedHistoryEntry === undefined) {
@@ -60,22 +61,35 @@ export const ArgoRollbackMenuItem = (props: ArgoRollbackMenuItemProps) =>
         return;
       }
 
-      await store.patch(
-        object,
-        {
-          operation: {
-            initiatedBy: {
-              username: "LensApp",
-            },
-            sync: {
-              revision: selectedRevision,
+      const confirmed = await ConfirmDialog.confirm({
+        message: `Rollback ${appName} to revision ${selectedRevision}?`,
+      });
+
+      if (!confirmed) {
+        return;
+      }
+
+      try {
+        await store.patch(
+          object,
+          {
+            operation: {
+              initiatedBy: {
+                username: "LensApp",
+              },
+              sync: {
+                revision: selectedRevision,
+              },
             },
           },
-        },
-        "merge",
-      );
+          "merge",
+        );
 
-      Notifications.ok(`Rollback started for revision ${selectedRevision}`);
+        Notifications.ok(`Rollback started for revision ${selectedRevision}`);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Failed to start rollback.";
+        Notifications.error(message);
+      }
     };
 
     return (

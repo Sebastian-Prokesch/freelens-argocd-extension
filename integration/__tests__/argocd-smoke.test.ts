@@ -31,7 +31,7 @@ describe("argocd extension smoke tests", () => {
 
         // Best-effort navigation: cluster-pages are registered on this route.
         await window.evaluate(() => {
-          globalThis.location.hash = "#/argocd/overview";
+          globalThis.location.hash = "#/argo/argocd/overview";
         });
 
         const overviewTitle = window.getByText("ArgoCD Overview");

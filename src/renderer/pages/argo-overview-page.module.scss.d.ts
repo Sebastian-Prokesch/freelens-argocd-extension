@@ -1,15 +1,13 @@
 declare const classNames: {
-  readonly page: "page";
-  readonly tableCell: "tableCell";
-  readonly project: "project";
-  readonly syncStatus: "syncStatus";
-  readonly healthStatus: "healthStatus";
-  readonly age: "age";
-  readonly headerBox: "headerBox";
-  readonly namespaceFilter: "namespaceFilter";
-  readonly chart: "chart";
+  readonly root: "root";
+  readonly header: "header";
   readonly title: "title";
-  readonly chartsContainer: "chartsContainer";
-  readonly chartsWrapper: "chartsWrapper";
+  readonly namespaceFilter: "namespaceFilter";
+  readonly scrollBody: "scrollBody";
+  readonly loadingMessage: "loadingMessage";
+  readonly errorMessage: "errorMessage";
+  readonly statuses: "statuses";
+  readonly chartsRow: "chartsRow";
+  readonly chart: "chart";
 };
 export = classNames;

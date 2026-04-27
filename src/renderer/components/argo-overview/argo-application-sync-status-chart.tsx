@@ -12,10 +12,11 @@ const {
 interface ArgoApplicationSyncStatusChartProps {
   className?: string;
   applications: ArgoApplication[];
+  isLoading?: boolean;
 }
 
 export const ArgoApplicationSyncStatusChart = observer(
-  ({ className, applications }: ArgoApplicationSyncStatusChartProps) => {
+  ({ className, applications, isLoading }: ArgoApplicationSyncStatusChartProps) => {
     const containerRef = useRef<HTMLDivElement>(null);
 
     const [resolvedColors, setResolvedColors] = useState<Record<string, string>>({});
@@ -39,7 +40,6 @@ export const ArgoApplicationSyncStatusChart = observer(
           OutOfSync: computedStyle.getPropertyValue("--argo-sync-outofsync").trim() || "#ff9800",
           Unknown: computedStyle.getPropertyValue("--argo-sync-unknown").trim() || "#757575",
         };
-        console.log("Resolved sync colors:", colorMap);
         setResolvedColors(colorMap);
       }
     }, [applications]); // Re-run when applications change (which might indicate theme change)
@@ -69,9 +69,6 @@ export const ArgoApplicationSyncStatusChart = observer(
       datasets: [statusDataSet as any],
     };
 
-    console.log("Sync Chart Data:", chartData);
-    console.log("Resolved Sync Colors:", resolvedColors);
-
     const chartOptions = {
       responsive: true,
       maintainAspectRatio: false,
@@ -96,8 +93,7 @@ export const ArgoApplicationSyncStatusChart = observer(
           <div className={`${styles.chartContainer} ${className || ""}`}>
             <h6 className={styles.title}>Application Sync Status</h6>
             <div className={styles.noData}>
-              <div>No ArgoCD applications found</div>
-              <div className={styles.loadingText}>Loading applications...</div>
+              <div>{isLoading ? "Loading ArgoCD applications..." : "No ArgoCD applications found"}</div>
             </div>
           </div>
         </>

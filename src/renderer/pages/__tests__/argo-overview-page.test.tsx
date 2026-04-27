@@ -4,23 +4,15 @@ import { render, screen, waitFor } from "@testing-library/react";
 jest.mock("../../k8s/argocd", () => {
   const makeStore = () => ({
     items: [],
+    contextItems: [],
     loadAll: async () => {},
     subscribe: () => () => {},
   });
 
-  class ArgoApplication {
-    static getStore() {
-      return makeStore();
-    }
-  }
-
-  class ArgoAppProject {
-    static getStore() {
-      return makeStore();
-    }
-  }
-
-  return { ArgoApplication, ArgoAppProject };
+  return {
+    getArgoApplicationStore: () => makeStore(),
+    getArgoAppProjectStore: () => makeStore(),
+  };
 });
 
 import { ArgoOverviewTabContent } from "../argo-overview-page";

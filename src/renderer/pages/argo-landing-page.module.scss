@@ -1,0 +1,29 @@
+.root {
+  padding: 1.5rem;
+  max-width: 42rem;
+}
+
+.title {
+  margin: 0 0 0.5rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.lead {
+  margin: 0 0 1rem;
+  color: var(--muted);
+}
+
+.list {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.list li {
+  margin-bottom: 0.5rem;
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 0.875rem;
+}

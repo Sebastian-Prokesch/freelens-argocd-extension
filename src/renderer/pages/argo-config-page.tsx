@@ -26,7 +26,7 @@ const renderAgeCell = (object: LabeledObject) => <KubeObjectAge object={object a
 const renderConfigMapList = (configMaps: any[]) => (
   <KubeObjectListLayout<any, any>
     tableId="argocdConfigMaps"
-    className={styles.listLayout}
+    className={styles.page}
     store={configMapStore}
     items={configMaps}
     sortingCallbacks={{
@@ -58,7 +58,7 @@ const renderRepoList = (secrets: any[], title: string) => {
   return (
     <KubeObjectListLayout<any, any>
       tableId={`argocd${safeTitle}Secrets`}
-      className={styles.listLayout}
+      className={styles.page}
       store={secretsStore}
       items={secrets}
       sortingCallbacks={{
@@ -97,7 +97,7 @@ const renderRepoList = (secrets: any[], title: string) => {
 const renderClusterList = (secrets: any[]) => (
   <KubeObjectListLayout<any, any>
     tableId="argocdClusterSecrets"
-    className={styles.listLayout}
+    className={styles.page}
     store={secretsStore}
     items={secrets}
     sortingCallbacks={{
@@ -138,6 +138,36 @@ export interface ArgoConfigPageProps {
 
 export const ArgoConfigTabContent = observer(() => {
   const [activeTab, setActiveTab] = React.useState<ArgoConfigTab>("repositories");
+  const [isLoaded, setIsLoaded] = React.useState(false);
+  const watches = React.useRef<(() => void)[]>([]);
+
+  React.useEffect(() => {
+    let isMounted = true;
+
+    (async () => {
+      const { namespaceStore } = Renderer.K8sApi;
+      await namespaceStore.loadAll({ namespaces: [] });
+      watches.current.push(namespaceStore.subscribe());
+
+      const namespaces = namespaceStore.items.map((ns) => ns.getName());
+      await Promise.all([secretsStore.loadAll({ namespaces }), configMapStore.loadAll({ namespaces })]);
+
+      watches.current.push(secretsStore.subscribe());
+      watches.current.push(configMapStore.subscribe());
+
+      if (isMounted) {
+        setIsLoaded(true);
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+      for (const unsubscribe of watches.current) {
+        unsubscribe();
+      }
+      watches.current = [];
+    };
+  }, []);
 
   const secretItems = secretsStore.contextItems as any[];
   const configMapItems = configMapStore.contextItems as any[];
@@ -150,16 +180,35 @@ export const ArgoConfigTabContent = observer(() => {
   return (
     <>
       <style>{stylesInline}</style>
-      <div className={styles.page}>
-        <Tabs className={styles.tabs} value={activeTab} onChange={(value) => setActiveTab(value as ArgoConfigTab)}>
-          {tabOptions.map((tab) => (
-            <Tab key={tab.id} value={tab.id} label={tab.label} />
-          ))}
-        </Tabs>
-        {activeTab === "repositories" && renderRepoList(repositorySecrets, "Repositories")}
-        {activeTab === "repo-creds" && renderRepoList(repoCredsSecrets, "Repo Credentials")}
-        {activeTab === "clusters" && renderClusterList(clusterSecrets)}
-        {activeTab === "configmaps" && renderConfigMapList(configMaps)}
+      <div className={styles.root}>
+        <div className={styles.header}>
+          <Tabs
+            className={styles.tabs}
+            withBorder
+            wrap
+            value={activeTab}
+            onChange={(value) => setActiveTab(value as ArgoConfigTab)}
+          >
+            {tabOptions.map((tab) => (
+              <Tab key={tab.id} value={tab.id} label={tab.label} />
+            ))}
+          </Tabs>
+        </div>
+
+        <div className={styles.scrollBody}>
+          {!isLoaded ? (
+            <div className={styles.loading}>
+              <WithTooltip>Loading ArgoCD config resources...</WithTooltip>
+            </div>
+          ) : (
+            <>
+              {activeTab === "repositories" && renderRepoList(repositorySecrets, "Repositories")}
+              {activeTab === "repo-creds" && renderRepoList(repoCredsSecrets, "Repo Credentials")}
+              {activeTab === "clusters" && renderClusterList(clusterSecrets)}
+              {activeTab === "configmaps" && renderConfigMapList(configMaps)}
+            </>
+          )}
+        </div>
       </div>
     </>
   );

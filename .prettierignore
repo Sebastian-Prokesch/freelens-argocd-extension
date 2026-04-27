@@ -9,6 +9,7 @@
 *.md
 *.mjs
 *.mts
+*.cjs
 *.ts
 *.tsx
 *.xml

@@ -1,6 +1,6 @@
 # Freelens ArgoCD Extension
 
-Freelens extension that adds **ArgoCD views** for GitOps workflows, including an **Overview** page and **Application Details**.
+Freelens extension that adds **Argo** cluster pages: **ArgoCD** views for GitOps workflows (overview, applications, AppProjects, config) plus placeholder pages for **Argo Workflows** and **Argo Rollouts** (full UIs planned in later phases).
 
 ## Requirements
 
@@ -11,11 +11,32 @@ Freelens extension that adds **ArgoCD views** for GitOps workflows, including an
 
 - `argoproj.io/v1alpha1`:
   - `Application`
+  - `ApplicationSet`
   - `AppProject`
+
+## Navigation and routes
+
+The sidebar shows a top-level **Argo** entry. Under it:
+
+| Area | Cluster page routes |
+| --- | --- |
+| Landing (hub) | `/argo` |
+| ArgoCD (tabs + standalone pages) | `/argo/argocd`, `/argo/argocd/overview`, `/argo/argocd/applications`, `/argo/argocd/applicationsets`, `/argo/argocd/appprojects`, `/argo/argocd/config` |
+| Argo Workflows (placeholders) | `/argo/workflows`, `/argo/workflows/cron-workflows` |
+| Argo Rollouts (placeholders) | `/argo/rollouts`, `/argo/rollouts/analysis-runs` |
+
+**Backward compatibility:** The previous default paths under `/argocd/*` are still registered with the same UI, so old bookmarks and deep links keep working.
 
 ## Install
 
 Open Freelens and go to Extensions (`ctrl`+`shift`+`E` or `cmd`+`shift`+`E`), then install `@sebastian-prokesch/freelens-argocd-extension`.
+
+## Adding another Argo product (for contributors)
+
+1. Add route segments in [`src/renderer/routes/argo-routes.ts`](src/renderer/routes/argo-routes.ts).
+2. Add Kubernetes resource types/stores under `src/renderer/k8s/<product>/` (see [`src/renderer/k8s/argocd/`](src/renderer/k8s/argocd/) and stubs in [`src/renderer/k8s/workflows/`](src/renderer/k8s/workflows/), [`src/renderer/k8s/rollouts/`](src/renderer/k8s/rollouts/)).
+3. Add pages, optional details, and context menus under `src/renderer/pages/`, `src/renderer/details/`, `src/renderer/menus/`.
+4. Register cluster pages and sidebar items in [`src/renderer/registration/cluster-registration.tsx`](src/renderer/registration/cluster-registration.tsx) (wired from [`src/renderer/index.tsx`](src/renderer/index.tsx)).
 
 ## Build from source
 
@@ -49,6 +70,18 @@ extensions.
 ```sh
 pnpm lint:check
 ```
+
+### Keep SCSS typings in sync
+
+SCSS module typings (`*.module.scss.d.ts`) are generated files. When changing module SCSS:
+
+```sh
+pnpm clean:dts
+pnpm build
+pnpm type:check
+```
+
+Commit regenerated `*.module.scss.d.ts` alongside the SCSS changes.
 
 ### Testing
 

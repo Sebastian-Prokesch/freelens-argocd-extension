@@ -1,0 +1,7 @@
+.page {
+  :global(.TableCell) {
+    &.age {
+      flex-grow: 0.3;
+    }
+  }
+}

@@ -297,7 +297,22 @@ export const ArgoConfigDialog = observer(() => {
         if (mode === "create") {
           await configMapStore.create({ name: configMapForm.name, namespace: configMapForm.namespace }, base);
         } else if (target.object) {
-          await configMapStore.patch(target.object as any, base as any, "merge");
+          await configMapStore.patch(
+            target.object as any,
+            [
+              {
+                op: "add",
+                path: "/metadata/labels",
+                value: labels,
+              },
+              {
+                op: "add",
+                path: "/data",
+                value: data,
+              },
+            ],
+            "json",
+          );
         }
       }
 
@@ -330,19 +345,43 @@ export const ArgoConfigDialog = observer(() => {
           const secretNamespace = getSecretNamespace(target.object);
           await secretsStore.patch(
             target.object as any,
-            {
-              metadata: {
-                name: secretName,
-                namespace: secretNamespace,
-                labels: {
+            [
+              {
+                op: "add",
+                path: "/metadata/name",
+                value: secretName,
+              },
+              {
+                op: "add",
+                path: "/metadata/namespace",
+                value: secretNamespace,
+              },
+              {
+                op: "add",
+                path: "/metadata/labels",
+                value: {
                   ...(target.object.metadata?.labels ?? {}),
                   [ARGOCD_SECRET_TYPE_LABEL]: target.kind,
                 },
               },
-              type: "Opaque" as any,
-              stringData,
-            } as any,
-            "merge",
+              {
+                op: "add",
+                path: "/type",
+                value: "Opaque",
+              },
+              {
+                // clear previous key material to avoid stale credentials after auth-method changes
+                op: "add",
+                path: "/data",
+                value: {},
+              },
+              {
+                op: "add",
+                path: "/stringData",
+                value: stringData,
+              },
+            ],
+            "json",
           );
         }
       }
