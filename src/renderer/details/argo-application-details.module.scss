@@ -1,14 +1,12 @@
-@use "../vars.scss";
-
 .argoApplicationDetails {
   .title {
-    margin-top: vars.$margin * 2;
-    margin-bottom: vars.$margin;
+    margin-top: calc(var(--unit) * 2);
+    margin-bottom: var(--unit);
   }
 
   .sourceSection {
-    margin-bottom: vars.$margin;
-    padding-left: vars.$margin;
+    margin-bottom: var(--unit);
+    padding-left: var(--unit);
     border-left: 2px solid var(--colorBorder);
   }
 

@@ -1,5 +1,3 @@
-@use "../../vars";
-
 .chartContainer {
   height: 100%;
   display: flex;
@@ -15,10 +13,10 @@
 
 .title {
   margin: 0 0 calc(var(--unit) * 1.5) 0;
-  font-size: 14px;
+  font-size: 18px;
   font-weight: 600;
   color: var(--textColorPrimary);
-  text-align: center;
+  text-align: left;
 }
 
 .chart {

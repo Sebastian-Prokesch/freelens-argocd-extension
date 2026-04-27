@@ -59,9 +59,13 @@ describe("ArgoRenderer registrations", () => {
     const menuIds = renderer.clusterPageMenus.map((menu: any) => menu.id);
 
     expect(pageIds).toContain("appprojects");
+    expect(pageIds).toContain("applicationsets");
     expect(pageRoutes).toContain("/argo/argocd/appprojects");
+    expect(pageRoutes).toContain("/argo/argocd/applicationsets");
     expect(pageRoutes).toContain("/argocd/appprojects");
+    expect(pageRoutes).toContain("/argocd/applicationsets");
     expect(menuIds).toContain("appprojects");
+    expect(menuIds).toContain("applicationsets");
   });
 
   it("registers Application and AppProject detail items", () => {
@@ -69,6 +73,7 @@ describe("ArgoRenderer registrations", () => {
     const detailKinds = renderer.kubeObjectDetailItems.map((item: any) => item.kind);
 
     expect(detailKinds).toContain("Application");
+    expect(detailKinds).toContain("ApplicationSet");
     expect(detailKinds).toContain("AppProject");
   });
 

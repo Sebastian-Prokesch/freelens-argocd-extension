@@ -37,20 +37,20 @@ jobs:
         id: type_check
         run: pnpm type:check
 
-      - name: Lint (Biome)
-        id: biome_check
-        run: pnpm biome:check
+      - name: Lint (Biome + Prettier)
+        id: lint_check
+        run: pnpm lint:check
 
       - name: Unit tests
         id: unit_tests
         run: pnpm test:unit
 
       - name: Explain verify-stage failures
-        if: ${{ always() && (steps.type_check.outcome == 'failure' || steps.biome_check.outcome == 'failure' || steps.unit_tests.outcome == 'failure') }}
+        if: ${{ always() && (steps.type_check.outcome == 'failure' || steps.lint_check.outcome == 'failure' || steps.unit_tests.outcome == 'failure') }}
         uses: actions/github-script@v7
         env:
           TYPE_CHECK_OUTCOME: ${{ steps.type_check.outcome }}
-          BIOME_CHECK_OUTCOME: ${{ steps.biome_check.outcome }}
+          LINT_CHECK_OUTCOME: ${{ steps.lint_check.outcome }}
           UNIT_TESTS_OUTCOME: ${{ steps.unit_tests.outcome }}
         with:
           script: |
@@ -66,12 +66,12 @@ jobs:
               });
             }
 
-            if (process.env.BIOME_CHECK_OUTCOME === "failure") {
+            if (process.env.LINT_CHECK_OUTCOME === "failure") {
               failures.push({
-                title: "Biome check failed",
+                title: "Lint check failed",
                 fixes: [
-                  "Run `pnpm biome:fix` locally",
-                  "Verify with `pnpm biome:check`",
+                  "Run `pnpm lint:fix` locally",
+                  "Verify with `pnpm lint:check`",
                   "Commit formatting/import-order changes",
                 ],
               });

@@ -57,6 +57,26 @@ const formatRetryBackoff = (backoff?: any): string => {
   return parts.length > 0 ? parts.join(", ") : "Default";
 };
 
+const formatPluginParameter = (parameter: any): string => {
+  if (!parameter?.name) {
+    return "Unnamed parameter";
+  }
+
+  if (parameter.string) {
+    return `${parameter.name}: ${parameter.string}`;
+  }
+
+  if (parameter.array?.length) {
+    return `${parameter.name}: ${parameter.array.join(",")}`;
+  }
+
+  if (parameter.map && Object.keys(parameter.map).length > 0) {
+    return `${parameter.name}: ${JSON.stringify(parameter.map)}`;
+  }
+
+  return `${parameter.name}: Not set`;
+};
+
 const formatDateTime = (dateString?: string): string => {
   if (!dateString) return "N/A";
   return new Date(dateString).toLocaleString();
@@ -122,13 +142,7 @@ export const ArgoApplicationDetails = observer((props: ArgoApplicationDetailsPro
                   )}
                   {object.spec.source.plugin.parameters && object.spec.source.plugin.parameters.length > 0 && (
                     <DrawerItem name="Parameters">
-                      {object.spec.source.plugin.parameters
-                        .map((param) =>
-                          param.name
-                            ? `${param.name}: ${param.string || param.array?.join(",") || param.map ? JSON.stringify(param.map) : "Not set"}`
-                            : "Unnamed parameter",
-                        )
-                        .join(", ")}
+                      {object.spec.source.plugin.parameters.map((param) => formatPluginParameter(param)).join(", ")}
                     </DrawerItem>
                   )}
                 </>

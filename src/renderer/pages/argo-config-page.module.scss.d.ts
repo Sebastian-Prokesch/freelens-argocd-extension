@@ -1,7 +1,10 @@
 declare const classNames: {
-  readonly page: "page";
+  readonly root: "root";
+  readonly header: "header";
   readonly tabs: "tabs";
-  readonly listLayout: "listLayout";
+  readonly scrollBody: "scrollBody";
+  readonly loading: "loading";
+  readonly page: "page";
   readonly itemListLayout: "itemListLayout";
   readonly itemListLayoutContent: "itemListLayoutContent";
   readonly tableCellSmall: "tableCellSmall";

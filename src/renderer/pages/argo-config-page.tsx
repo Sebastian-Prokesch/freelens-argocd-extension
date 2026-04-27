@@ -26,7 +26,7 @@ const renderAgeCell = (object: LabeledObject) => <KubeObjectAge object={object a
 const renderConfigMapList = (configMaps: any[]) => (
   <KubeObjectListLayout<any, any>
     tableId="argocdConfigMaps"
-    className={styles.listLayout}
+    className={styles.page}
     store={configMapStore}
     items={configMaps}
     sortingCallbacks={{
@@ -58,7 +58,7 @@ const renderRepoList = (secrets: any[], title: string) => {
   return (
     <KubeObjectListLayout<any, any>
       tableId={`argocd${safeTitle}Secrets`}
-      className={styles.listLayout}
+      className={styles.page}
       store={secretsStore}
       items={secrets}
       sortingCallbacks={{
@@ -97,7 +97,7 @@ const renderRepoList = (secrets: any[], title: string) => {
 const renderClusterList = (secrets: any[]) => (
   <KubeObjectListLayout<any, any>
     tableId="argocdClusterSecrets"
-    className={styles.listLayout}
+    className={styles.page}
     store={secretsStore}
     items={secrets}
     sortingCallbacks={{
@@ -180,22 +180,35 @@ export const ArgoConfigTabContent = observer(() => {
   return (
     <>
       <style>{stylesInline}</style>
-      <div className={styles.page}>
-        <Tabs className={styles.tabs} value={activeTab} onChange={(value) => setActiveTab(value as ArgoConfigTab)}>
-          {tabOptions.map((tab) => (
-            <Tab key={tab.id} value={tab.id} label={tab.label} />
-          ))}
-        </Tabs>
-        {!isLoaded ? (
-          <WithTooltip>Loading ArgoCD config resources...</WithTooltip>
-        ) : (
-          <>
-            {activeTab === "repositories" && renderRepoList(repositorySecrets, "Repositories")}
-            {activeTab === "repo-creds" && renderRepoList(repoCredsSecrets, "Repo Credentials")}
-            {activeTab === "clusters" && renderClusterList(clusterSecrets)}
-            {activeTab === "configmaps" && renderConfigMapList(configMaps)}
-          </>
-        )}
+      <div className={styles.root}>
+        <div className={styles.header}>
+          <Tabs
+            className={styles.tabs}
+            withBorder
+            wrap
+            value={activeTab}
+            onChange={(value) => setActiveTab(value as ArgoConfigTab)}
+          >
+            {tabOptions.map((tab) => (
+              <Tab key={tab.id} value={tab.id} label={tab.label} />
+            ))}
+          </Tabs>
+        </div>
+
+        <div className={styles.scrollBody}>
+          {!isLoaded ? (
+            <div className={styles.loading}>
+              <WithTooltip>Loading ArgoCD config resources...</WithTooltip>
+            </div>
+          ) : (
+            <>
+              {activeTab === "repositories" && renderRepoList(repositorySecrets, "Repositories")}
+              {activeTab === "repo-creds" && renderRepoList(repoCredsSecrets, "Repo Credentials")}
+              {activeTab === "clusters" && renderClusterList(clusterSecrets)}
+              {activeTab === "configmaps" && renderConfigMapList(configMaps)}
+            </>
+          )}
+        </div>
       </div>
     </>
   );

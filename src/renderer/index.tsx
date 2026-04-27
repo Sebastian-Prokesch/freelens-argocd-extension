@@ -8,9 +8,10 @@ import { computed } from "mobx";
 import { ArgoPreferencesStore } from "../common/store";
 import { ArgoConfigDialog } from "./components/argo-config";
 import { ArgoApplicationDetails } from "./details/argo-application-details";
+import { ArgoApplicationSetDetails } from "./details/argo-applicationset-details";
 import { ArgoAppProjectDetails } from "./details/argo-appproject-details";
 import { ArgoConfigDetails } from "./details/argo-config-details";
-import { ArgoApplication, ArgoAppProject } from "./k8s/argocd";
+import { ArgoApplication, ArgoApplicationSet, ArgoAppProject } from "./k8s/argocd";
 import {
   ArgoConfigMenuItem,
   ArgoRollbackMenuItem,
@@ -53,6 +54,16 @@ export default class ArgoRenderer extends Renderer.LensExtension {
       components: {
         Details: (props: Renderer.Component.KubeObjectDetailsProps<any>) => (
           <ArgoApplicationDetails {...props} extension={this} />
+        ),
+      },
+    },
+    {
+      kind: ArgoApplicationSet.kind,
+      apiVersions: ArgoApplicationSet.crd.apiVersions,
+      priority: 10,
+      components: {
+        Details: (props: Renderer.Component.KubeObjectDetailsProps<any>) => (
+          <ArgoApplicationSetDetails {...props} extension={this} />
         ),
       },
     },

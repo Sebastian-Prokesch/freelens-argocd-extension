@@ -7,8 +7,9 @@
 
 import { Renderer } from "@freelensapp/extensions";
 import { ArgoPlainLogoIcon } from "../icons";
-import { ArgoApplication, ArgoAppProject } from "../k8s/argocd";
+import { ArgoApplication, ArgoApplicationSet, ArgoAppProject } from "../k8s/argocd";
 import {
+  ArgoApplicationSetsPage,
   ArgoApplicationsPage,
   ArgoAppProjectsPage,
   ArgoConfigPage,
@@ -41,7 +42,7 @@ export function buildClusterPages(extension: Renderer.LensExtension) {
       },
     },
     {
-      id: "argocd-overview",
+      id: ArgoPageIds.argocdOverview,
       routePath: ArgoRoutes.argocd.overview,
       components: {
         Page: () => <ArgoOverviewPage />,
@@ -55,6 +56,13 @@ export function buildClusterPages(extension: Renderer.LensExtension) {
       },
     },
     {
+      id: ArgoApplicationSet.crd.plural,
+      routePath: ArgoRoutes.argocd.applicationsets,
+      components: {
+        Page: () => <ArgoApplicationSetsPage extension={extension} />,
+      },
+    },
+    {
       id: ArgoAppProject.crd.plural,
       routePath: ArgoRoutes.argocd.appprojects,
       components: {
@@ -62,7 +70,7 @@ export function buildClusterPages(extension: Renderer.LensExtension) {
       },
     },
     {
-      id: "argocd-config",
+      id: ArgoPageIds.argocdConfig,
       routePath: ArgoRoutes.argocd.config,
       components: {
         Page: () => <ArgoConfigPage extension={extension} />,
@@ -105,7 +113,7 @@ export function buildClusterPages(extension: Renderer.LensExtension) {
       },
     },
     {
-      id: "argocd-overview-legacy",
+      id: ArgoPageIds.legacyArgocdOverview,
       routePath: LegacyArgoCdRoutes.overview,
       components: {
         Page: () => <ArgoOverviewPage />,
@@ -119,6 +127,13 @@ export function buildClusterPages(extension: Renderer.LensExtension) {
       },
     },
     {
+      id: `${ArgoApplicationSet.crd.plural}-legacy`,
+      routePath: LegacyArgoCdRoutes.applicationsets,
+      components: {
+        Page: () => <ArgoApplicationSetsPage extension={extension} />,
+      },
+    },
+    {
       id: `${ArgoAppProject.crd.plural}-legacy`,
       routePath: LegacyArgoCdRoutes.appprojects,
       components: {
@@ -126,7 +141,7 @@ export function buildClusterPages(extension: Renderer.LensExtension) {
       },
     },
     {
-      id: "argocd-config-legacy",
+      id: ArgoPageIds.legacyArgocdConfig,
       routePath: LegacyArgoCdRoutes.config,
       components: {
         Page: () => <ArgoConfigPage extension={extension} />,
@@ -149,14 +164,14 @@ export function buildClusterPageMenus() {
       id: "argo-argocd",
       parentId: "argo",
       title: "ArgoCD",
-      target: { pageId: "argocd-overview" },
+      target: { pageId: ArgoPageIds.argocdOverview },
       components: {},
     },
     {
       id: "argocd-overview-menu",
       parentId: "argo-argocd",
       title: "Overview",
-      target: { pageId: "argocd-overview" },
+      target: { pageId: ArgoPageIds.argocdOverview },
       components: {},
     },
     {
@@ -164,6 +179,13 @@ export function buildClusterPageMenus() {
       parentId: "argo-argocd",
       title: ArgoApplication.crd.title,
       target: { pageId: ArgoApplication.crd.plural },
+      components: {},
+    },
+    {
+      id: ArgoApplicationSet.crd.plural,
+      parentId: "argo-argocd",
+      title: ArgoApplicationSet.crd.title,
+      target: { pageId: ArgoApplicationSet.crd.plural },
       components: {},
     },
     {
@@ -177,7 +199,7 @@ export function buildClusterPageMenus() {
       id: "argocd-config-menu",
       parentId: "argo-argocd",
       title: "Config",
-      target: { pageId: "argocd-config" },
+      target: { pageId: ArgoPageIds.argocdConfig },
       components: {},
     },
     {

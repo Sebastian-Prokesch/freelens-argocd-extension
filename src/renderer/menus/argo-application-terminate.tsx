@@ -3,7 +3,7 @@ import { withErrorPage } from "../components/error-page";
 import { ArgoApplication, getArgoApplicationStore } from "../k8s/argocd";
 
 const {
-  Component: { Icon, MenuItem },
+  Component: { Icon, MenuItem, Notifications },
 } = Renderer;
 
 const terminalPhases = new Set(["Succeeded", "Failed", "Error"]);
@@ -26,7 +26,14 @@ export const ArgoTerminateMenuItem = (props: ArgoTerminateMenuItemProps) =>
     const store = getArgoApplicationStore();
 
     const terminateOperation = async () => {
-      await store.patch(object, [{ op: "remove", path: "/operation" }], "json");
+      const appName = object.getName?.() ?? object.metadata?.name ?? "application";
+      try {
+        await store.patch(object, [{ op: "remove", path: "/operation" }], "json");
+        Notifications.ok(`Terminate requested for ${appName}`);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Failed to terminate operation.";
+        Notifications.error(message);
+      }
     };
 
     return (

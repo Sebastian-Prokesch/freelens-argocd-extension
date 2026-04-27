@@ -11,6 +11,7 @@ Freelens extension that adds **Argo** cluster pages: **ArgoCD** views for GitOps
 
 - `argoproj.io/v1alpha1`:
   - `Application`
+  - `ApplicationSet`
   - `AppProject`
 
 ## Navigation and routes
@@ -20,7 +21,7 @@ The sidebar shows a top-level **Argo** entry. Under it:
 | Area | Cluster page routes |
 | --- | --- |
 | Landing (hub) | `/argo` |
-| ArgoCD (tabs + standalone pages) | `/argo/argocd`, `/argo/argocd/overview`, `/argo/argocd/applications`, `/argo/argocd/appprojects`, `/argo/argocd/config` |
+| ArgoCD (tabs + standalone pages) | `/argo/argocd`, `/argo/argocd/overview`, `/argo/argocd/applications`, `/argo/argocd/applicationsets`, `/argo/argocd/appprojects`, `/argo/argocd/config` |
 | Argo Workflows (placeholders) | `/argo/workflows`, `/argo/workflows/cron-workflows` |
 | Argo Rollouts (placeholders) | `/argo/rollouts`, `/argo/rollouts/analysis-runs` |
 
@@ -69,6 +70,18 @@ extensions.
 ```sh
 pnpm lint:check
 ```
+
+### Keep SCSS typings in sync
+
+SCSS module typings (`*.module.scss.d.ts`) are generated files. When changing module SCSS:
+
+```sh
+pnpm clean:dts
+pnpm build
+pnpm type:check
+```
+
+Commit regenerated `*.module.scss.d.ts` alongside the SCSS changes.
 
 ### Testing
 
