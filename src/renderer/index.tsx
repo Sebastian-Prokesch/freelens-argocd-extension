@@ -11,11 +11,25 @@ import { ArgoApplicationDetails } from "./details/argo-application-details";
 import { ArgoApplicationSetDetails } from "./details/argo-applicationset-details";
 import { ArgoAppProjectDetails } from "./details/argo-appproject-details";
 import { ArgoConfigDetails } from "./details/argo-config-details";
+import { ArgoRolloutDetails } from "./details/argo-rollout-details";
 import { ArgoApplication, ArgoApplicationSet, ArgoAppProject } from "./k8s/argocd";
+import { ArgoRollout } from "./k8s/rollouts";
 import {
   ArgoConfigMenuItem,
   ArgoRollbackMenuItem,
   type ArgoRollbackMenuItemProps,
+  ArgoRolloutAbortMenuItem,
+  type ArgoRolloutAbortMenuItemProps,
+  ArgoRolloutPromoteFullMenuItem,
+  type ArgoRolloutPromoteFullMenuItemProps,
+  ArgoRolloutPromoteMenuItem,
+  type ArgoRolloutPromoteMenuItemProps,
+  ArgoRolloutPromoteSkipAllMenuItem,
+  type ArgoRolloutPromoteSkipAllMenuItemProps,
+  ArgoRolloutPromoteSkipCurrentMenuItem,
+  type ArgoRolloutPromoteSkipCurrentMenuItemProps,
+  ArgoRolloutRetryMenuItem,
+  type ArgoRolloutRetryMenuItemProps,
   ArgoSyncMenuItem,
   type ArgoSyncMenuItemProps,
   ArgoTerminateMenuItem,
@@ -78,6 +92,16 @@ export default class ArgoRenderer extends Renderer.LensExtension {
       },
     },
     {
+      kind: ArgoRollout.kind,
+      apiVersions: ArgoRollout.crd.apiVersions,
+      priority: 10,
+      components: {
+        Details: (props: Renderer.Component.KubeObjectDetailsProps<any>) => (
+          <ArgoRolloutDetails {...props} extension={this} />
+        ),
+      },
+    },
+    {
       kind: "Secret",
       apiVersions: ["v1"],
       priority: 50,
@@ -123,6 +147,56 @@ export default class ArgoRenderer extends Renderer.LensExtension {
       apiVersions: ArgoApplication.crd.apiVersions,
       components: {
         MenuItem: (props: ArgoRollbackMenuItemProps) => <ArgoRollbackMenuItem {...props} extension={this} />,
+      },
+    },
+    {
+      kind: ArgoRollout.kind,
+      apiVersions: ArgoRollout.crd.apiVersions,
+      components: {
+        MenuItem: (props: ArgoRolloutPromoteMenuItemProps) => (
+          <ArgoRolloutPromoteMenuItem {...props} extension={this} />
+        ),
+      },
+    },
+    {
+      kind: ArgoRollout.kind,
+      apiVersions: ArgoRollout.crd.apiVersions,
+      components: {
+        MenuItem: (props: ArgoRolloutPromoteFullMenuItemProps) => (
+          <ArgoRolloutPromoteFullMenuItem {...props} extension={this} />
+        ),
+      },
+    },
+    {
+      kind: ArgoRollout.kind,
+      apiVersions: ArgoRollout.crd.apiVersions,
+      components: {
+        MenuItem: (props: ArgoRolloutPromoteSkipCurrentMenuItemProps) => (
+          <ArgoRolloutPromoteSkipCurrentMenuItem {...props} extension={this} />
+        ),
+      },
+    },
+    {
+      kind: ArgoRollout.kind,
+      apiVersions: ArgoRollout.crd.apiVersions,
+      components: {
+        MenuItem: (props: ArgoRolloutPromoteSkipAllMenuItemProps) => (
+          <ArgoRolloutPromoteSkipAllMenuItem {...props} extension={this} />
+        ),
+      },
+    },
+    {
+      kind: ArgoRollout.kind,
+      apiVersions: ArgoRollout.crd.apiVersions,
+      components: {
+        MenuItem: (props: ArgoRolloutAbortMenuItemProps) => <ArgoRolloutAbortMenuItem {...props} extension={this} />,
+      },
+    },
+    {
+      kind: ArgoRollout.kind,
+      apiVersions: ArgoRollout.crd.apiVersions,
+      components: {
+        MenuItem: (props: ArgoRolloutRetryMenuItemProps) => <ArgoRolloutRetryMenuItem {...props} extension={this} />,
       },
     },
     {

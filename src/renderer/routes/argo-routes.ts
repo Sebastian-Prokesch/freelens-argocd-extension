@@ -18,7 +18,6 @@ export const ArgoRoutes = {
   },
   rollouts: {
     rollouts: "/argo/rollouts",
-    analysisRuns: "/argo/rollouts/analysis-runs",
   },
 } as const;
 

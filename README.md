@@ -1,6 +1,6 @@
 # Freelens ArgoCD Extension
 
-Freelens extension that adds **Argo** cluster pages: **ArgoCD** views for GitOps workflows (overview, applications, AppProjects, config) plus placeholder pages for **Argo Workflows** and **Argo Rollouts** (full UIs planned in later phases).
+Freelens extension that adds **Argo** cluster pages: **ArgoCD** views for GitOps workflows (overview, applications, AppProjects, config), **Argo Rollouts** listing and Rollout details, plus placeholder pages for **Argo Workflows** (full UI planned in a later phase).
 
 ## Requirements
 
@@ -14,6 +14,11 @@ Freelens extension that adds **Argo** cluster pages: **ArgoCD** views for GitOps
   - `ApplicationSet`
   - `AppProject`
 
+## Supported Argo Rollouts resources
+
+- `argoproj.io/v1alpha1`:
+  - `Rollout` (cluster list page + details drawer)
+
 ## Navigation and routes
 
 The sidebar shows a top-level **Argo** entry. Under it:
@@ -23,7 +28,7 @@ The sidebar shows a top-level **Argo** entry. Under it:
 | Landing (hub) | `/argo` |
 | ArgoCD (tabs + standalone pages) | `/argo/argocd`, `/argo/argocd/overview`, `/argo/argocd/applications`, `/argo/argocd/applicationsets`, `/argo/argocd/appprojects`, `/argo/argocd/config` |
 | Argo Workflows (placeholders) | `/argo/workflows`, `/argo/workflows/cron-workflows` |
-| Argo Rollouts (placeholders) | `/argo/rollouts`, `/argo/rollouts/analysis-runs` |
+| Argo Rollouts | `/argo/rollouts` |
 
 **Backward compatibility:** The previous default paths under `/argocd/*` are still registered with the same UI, so old bookmarks and deep links keep working.
 
@@ -34,7 +39,7 @@ Open Freelens and go to Extensions (`ctrl`+`shift`+`E` or `cmd`+`shift`+`E`), th
 ## Adding another Argo product (for contributors)
 
 1. Add route segments in [`src/renderer/routes/argo-routes.ts`](src/renderer/routes/argo-routes.ts).
-2. Add Kubernetes resource types/stores under `src/renderer/k8s/<product>/` (see [`src/renderer/k8s/argocd/`](src/renderer/k8s/argocd/) and stubs in [`src/renderer/k8s/workflows/`](src/renderer/k8s/workflows/), [`src/renderer/k8s/rollouts/`](src/renderer/k8s/rollouts/)).
+2. Add Kubernetes resource types/stores under `src/renderer/k8s/<product>/` (see [`src/renderer/k8s/argocd/`](src/renderer/k8s/argocd/), [`src/renderer/k8s/rollouts/`](src/renderer/k8s/rollouts/), and stubs in [`src/renderer/k8s/workflows/`](src/renderer/k8s/workflows/)).
 3. Add pages, optional details, and context menus under `src/renderer/pages/`, `src/renderer/details/`, `src/renderer/menus/`.
 4. Register cluster pages and sidebar items in [`src/renderer/registration/cluster-registration.tsx`](src/renderer/registration/cluster-registration.tsx) (wired from [`src/renderer/index.tsx`](src/renderer/index.tsx)).
 

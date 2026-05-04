@@ -8,8 +8,6 @@ export const ArgoPageIds = {
   argocdConfig: "argocd-config",
   workflowsRoot: "argo-workflows-root",
   workflowsCron: "argo-workflows-cron-workflows",
-  rolloutsRoot: "argo-rollouts-root",
-  rolloutsAnalysis: "argo-rollouts-analysis-runs",
   legacyArgocdRoot: "argocd-root-legacy",
   legacyArgocdOverview: "argocd-overview-legacy",
   legacyArgocdConfig: "argocd-config-legacy",

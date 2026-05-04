@@ -70,7 +70,11 @@ export const Renderer = {
     // list page (not currently tested, but harmless to include)
     KubeObjectAge: passthrough("KubeObjectAge"),
     KubeObjectListLayout,
-    WithTooltip: passthrough("WithTooltip"),
+    WithTooltip: ({ children, tooltip }: AnyRecord) => (
+      <div data-testid="WithTooltip" data-tooltip={tooltip}>
+        {children}
+      </div>
+    ),
 
     // dialog & inputs
     Dialog: ({ children }: AnyRecord) => <div data-testid="Dialog">{children}</div>,
