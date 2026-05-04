@@ -8,6 +8,7 @@
 import { Renderer } from "@freelensapp/extensions";
 import { ArgoPlainLogoIcon } from "../icons";
 import { ArgoApplication, ArgoApplicationSet, ArgoAppProject } from "../k8s/argocd";
+import { ArgoRollout } from "../k8s/rollouts";
 import {
   ArgoApplicationSetsPage,
   ArgoApplicationsPage,
@@ -15,7 +16,6 @@ import {
   ArgoConfigPage,
   ArgoLandingPage,
   ArgoOverviewPage,
-  ArgoRolloutsAnalysisRunsPage,
   ArgoRolloutsRolloutsPage,
   ArgoWorkflowsCronWorkflowsPage,
   ArgoWorkflowsWorkflowsPage,
@@ -91,17 +91,10 @@ export function buildClusterPages(extension: Renderer.LensExtension) {
       },
     },
     {
-      id: ArgoPageIds.rolloutsRoot,
+      id: ArgoRollout.crd.plural,
       routePath: ArgoRoutes.rollouts.rollouts,
       components: {
-        Page: () => <ArgoRolloutsRolloutsPage />,
-      },
-    },
-    {
-      id: ArgoPageIds.rolloutsAnalysis,
-      routePath: ArgoRoutes.rollouts.analysisRuns,
-      components: {
-        Page: () => <ArgoRolloutsAnalysisRunsPage />,
+        Page: () => <ArgoRolloutsRolloutsPage extension={extension} />,
       },
     },
     // Legacy `/argocd/*` — same UI as above; keeps old bookmarks working.
@@ -227,21 +220,14 @@ export function buildClusterPageMenus() {
       id: "argo-rollouts",
       parentId: "argo",
       title: "Argo Rollouts",
-      target: { pageId: ArgoPageIds.rolloutsRoot },
+      target: { pageId: ArgoRollout.crd.plural },
       components: {},
     },
     {
       id: "argo-rollouts-rollouts-menu",
       parentId: "argo-rollouts",
       title: "Rollouts",
-      target: { pageId: ArgoPageIds.rolloutsRoot },
-      components: {},
-    },
-    {
-      id: "argo-rollouts-analysis-menu",
-      parentId: "argo-rollouts",
-      title: "AnalysisRuns",
-      target: { pageId: ArgoPageIds.rolloutsAnalysis },
+      target: { pageId: ArgoRollout.crd.plural },
       components: {},
     },
   ];

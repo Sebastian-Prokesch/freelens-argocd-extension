@@ -1,0 +1,190 @@
+import { Renderer } from "@freelensapp/extensions";
+import { observer } from "mobx-react";
+import { withErrorPage } from "../components/error-page";
+import {
+  type ArgoRollout,
+  canAbortRollout,
+  canRetryRollout,
+  canShowPromoteFullAction,
+  canShowPromoteSkipAllStepsAction,
+  canShowPromoteSkipCurrentStepAction,
+  deriveRolloutState,
+  getAbortMergePatch,
+  getArgoRolloutStore,
+  getBlueGreenPromotionLabel,
+  getBlueGreenPromotionState,
+  getRetryMergePatch,
+  getRolloutStateLabel,
+  getRolloutStateReason,
+  getRolloutStrategyLabel,
+  requestRolloutPromotion,
+} from "../k8s/rollouts";
+
+const {
+  Component: { Button, DrawerItem, DrawerTitle, Gutter, Notifications, WithTooltip },
+} = Renderer;
+
+export interface ArgoRolloutDetailsProps extends Renderer.Component.KubeObjectDetailsProps<ArgoRollout> {
+  extension: Renderer.LensExtension;
+}
+
+const formatOptional = (value: unknown): string => {
+  if (value === undefined || value === null || value === "") {
+    return "N/A";
+  }
+  return String(value);
+};
+
+export const ArgoRolloutDetails = observer((props: ArgoRolloutDetailsProps) =>
+  withErrorPage(props, () => {
+    const { object } = props;
+    const spec = object.spec;
+    const status = object.status;
+    const rolloutStore = getArgoRolloutStore();
+
+    const paused =
+      spec?.paused === true || (status?.pauseConditions?.length ?? 0) > 0 || status?.controllerPause === true;
+    const derivedState = deriveRolloutState(object);
+    const rolloutStateLabel = getRolloutStateLabel(object);
+    const rolloutStateReason = getRolloutStateReason(object);
+    const showPromoteAction = derivedState === "paused_promotable";
+    const showPromoteFullAction = canShowPromoteFullAction(object);
+    const showPromoteSkipCurrent = canShowPromoteSkipCurrentStepAction(object);
+    const showPromoteSkipAll = canShowPromoteSkipAllStepsAction(object);
+    const showAbortAction = canAbortRollout(object);
+    const showRetryAction = canRetryRollout(object);
+    const blueGreenState = getBlueGreenPromotionState(object);
+    const isBlueGreen = blueGreenState !== "not_bluegreen";
+
+    const rolloutDisplayName = object.getName?.() ?? object.metadata?.name ?? "rollout";
+
+    const promoteRollout = async () => {
+      try {
+        await requestRolloutPromotion(rolloutStore, object, {});
+        Notifications.ok(`Promote requested for ${rolloutDisplayName}`);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Failed to promote rollout.";
+        Notifications.error(message);
+      }
+    };
+
+    const promoteFullRollout = async () => {
+      try {
+        await requestRolloutPromotion(rolloutStore, object, { full: true });
+        Notifications.ok(`Full promote requested for ${rolloutDisplayName}`);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Failed to fully promote rollout.";
+        Notifications.error(message);
+      }
+    };
+
+    const promoteSkipCurrentRollout = async () => {
+      try {
+        await requestRolloutPromotion(rolloutStore, object, { skipCurrentStep: true });
+        Notifications.ok(`Skip current step requested for ${rolloutDisplayName}`);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Failed to skip current step.";
+        Notifications.error(message);
+      }
+    };
+
+    const promoteSkipAllRollout = async () => {
+      try {
+        await requestRolloutPromotion(rolloutStore, object, { skipAllSteps: true });
+        Notifications.ok(`Skip all steps requested for ${rolloutDisplayName}`);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Failed to skip all steps.";
+        Notifications.error(message);
+      }
+    };
+
+    const abortRollout = async () => {
+      try {
+        await rolloutStore.patch(object, getAbortMergePatch(object), "merge");
+        Notifications.ok(`Abort requested for ${object.getName?.() ?? object.metadata?.name ?? "rollout"}`);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Failed to abort rollout.";
+        Notifications.error(message);
+      }
+    };
+
+    const retryRollout = async () => {
+      try {
+        await rolloutStore.patch(object, getRetryMergePatch(object), "merge");
+        Notifications.ok(`Retry requested for ${object.getName?.() ?? object.metadata?.name ?? "rollout"}`);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Failed to retry rollout.";
+        Notifications.error(message);
+      }
+    };
+
+    return (
+      <>
+        <DrawerTitle>Rollout</DrawerTitle>
+        <DrawerItem name="Strategy">
+          <WithTooltip>{getRolloutStrategyLabel(spec?.strategy)}</WithTooltip>
+        </DrawerItem>
+        <DrawerItem name="Replicas (spec)">{formatOptional(spec?.replicas)}</DrawerItem>
+        <DrawerItem name="Replicas (status)">{formatOptional(status?.replicas)}</DrawerItem>
+        <DrawerItem name="Updated">{formatOptional(status?.updatedReplicas)}</DrawerItem>
+        <DrawerItem name="Ready">{formatOptional(status?.readyReplicas)}</DrawerItem>
+        <DrawerItem name="Available">{formatOptional(status?.availableReplicas)}</DrawerItem>
+        <DrawerItem name="Phase">{formatOptional(status?.phase)}</DrawerItem>
+        <DrawerItem name="State">{rolloutStateLabel}</DrawerItem>
+        <DrawerItem name="State reason">
+          <WithTooltip>{rolloutStateReason}</WithTooltip>
+        </DrawerItem>
+        <DrawerItem name="Paused">{paused ? "Yes" : "No"}</DrawerItem>
+        {showPromoteAction ||
+        showPromoteFullAction ||
+        showPromoteSkipCurrent ||
+        showPromoteSkipAll ||
+        showAbortAction ||
+        showRetryAction ? (
+          <DrawerItem name="Actions">
+            {showPromoteAction ? <Button onClick={promoteRollout}>Promote</Button> : null}
+            {showPromoteFullAction ? <Button onClick={promoteFullRollout}>Promote full</Button> : null}
+            {showPromoteSkipCurrent ? <Button onClick={promoteSkipCurrentRollout}>Skip current step</Button> : null}
+            {showPromoteSkipAll ? <Button onClick={promoteSkipAllRollout}>Skip all steps</Button> : null}
+            {showAbortAction ? <Button onClick={abortRollout}>Abort</Button> : null}
+            {showRetryAction ? <Button onClick={retryRollout}>Retry</Button> : null}
+          </DrawerItem>
+        ) : null}
+        <DrawerItem name="Current pod hash">{formatOptional(status?.currentPodHash)}</DrawerItem>
+        <DrawerItem name="Stable RS">{formatOptional(status?.stableRS)}</DrawerItem>
+        <DrawerItem name="Current step index">{formatOptional(status?.currentStepIndex)}</DrawerItem>
+        <DrawerItem name="Observed generation">{formatOptional(status?.observedGeneration)}</DrawerItem>
+        <DrawerItem name="Message">
+          <WithTooltip>{formatOptional(status?.message)}</WithTooltip>
+        </DrawerItem>
+
+        {isBlueGreen ? (
+          <>
+            <Gutter size="md" />
+            <DrawerTitle>BlueGreen Status</DrawerTitle>
+            <DrawerItem name="Promotion state">{getBlueGreenPromotionLabel(object)}</DrawerItem>
+            <DrawerItem name="Active selector">{formatOptional(status?.blueGreen?.activeSelector)}</DrawerItem>
+            <DrawerItem name="Preview selector">{formatOptional(status?.blueGreen?.previewSelector)}</DrawerItem>
+            <DrawerItem name="Stable RS">{formatOptional(status?.stableRS)}</DrawerItem>
+            <DrawerItem name="Current pod hash">{formatOptional(status?.currentPodHash)}</DrawerItem>
+          </>
+        ) : null}
+
+        <Gutter size="md" />
+
+        <DrawerTitle>Conditions</DrawerTitle>
+        {(status?.conditions?.length ?? 0) === 0 ? (
+          <DrawerItem name="Summary">None</DrawerItem>
+        ) : (
+          status?.conditions?.map((condition, index) => (
+            <DrawerItem key={`${condition.type}-${index}`} name={condition.type ?? `Condition ${index + 1}`}>
+              <WithTooltip>
+                {condition.status} — {condition.reason ?? condition.message ?? "no details"}
+              </WithTooltip>
+            </DrawerItem>
+          ))
+        )}
+      </>
+    );
+  }),
+);

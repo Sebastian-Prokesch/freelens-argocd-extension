@@ -60,6 +60,7 @@ describe("ArgoRenderer registrations", () => {
 
     expect(pageIds).toContain("appprojects");
     expect(pageIds).toContain("applicationsets");
+    expect(pageIds).toContain("rollouts");
     expect(pageRoutes).toContain("/argo/argocd/appprojects");
     expect(pageRoutes).toContain("/argo/argocd/applicationsets");
     expect(pageRoutes).toContain("/argocd/appprojects");
@@ -75,6 +76,7 @@ describe("ArgoRenderer registrations", () => {
     expect(detailKinds).toContain("Application");
     expect(detailKinds).toContain("ApplicationSet");
     expect(detailKinds).toContain("AppProject");
+    expect(detailKinds).toContain("Rollout");
   });
 
   it("registers sync, terminate and rollback menu items for applications", () => {
@@ -82,5 +84,12 @@ describe("ArgoRenderer registrations", () => {
     const applicationMenuItems = renderer.kubeObjectMenuItems.filter((item: any) => item.kind === "Application");
 
     expect(applicationMenuItems.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("registers promote, abort and retry menu items for rollouts", () => {
+    const renderer = createRenderer();
+    const rolloutMenuItems = renderer.kubeObjectMenuItems.filter((item: any) => item.kind === "Rollout");
+
+    expect(rolloutMenuItems.length).toBeGreaterThanOrEqual(6);
   });
 });
