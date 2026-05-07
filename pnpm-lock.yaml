@@ -26,6 +26,9 @@ importers:
       '@kubernetes-models/argo-rollouts':
         specifier: ^1.0.0
         version: 1.0.0
+      '@kubernetes-models/argo-workflows':
+        specifier: ^1.0.0
+        version: 1.0.0
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
@@ -860,6 +863,10 @@ packages:
 
   '@kubernetes-models/argo-rollouts@1.0.0':
     resolution: {integrity: sha512-9A8Y6QXZeJ48MoIR3dANHWpctzkZqOhnjSqdRrXcTX6WJ3HsQTM8EzgYjDqVqNszyirVeTLdXWoaPNn7Y2IWQA==}
+    engines: {node: '>=22'}
+
+  '@kubernetes-models/argo-workflows@1.0.0':
+    resolution: {integrity: sha512-p0JTbgaQUJL+Q4ZfDJWbVoG/ofbaPBroG6e/UnrhtrSK5HzT3ab3J1HyNLEFbICfSl8B64XuFc5vGmxeputGQA==}
     engines: {node: '>=22'}
 
   '@kubernetes-models/base@5.0.1':
@@ -5765,6 +5772,12 @@ snapshots:
       '@swc/helpers': 0.5.17
 
   '@kubernetes-models/argo-rollouts@1.0.0':
+    dependencies:
+      '@kubernetes-models/apimachinery': 3.0.0
+      '@kubernetes-models/base': 6.0.0
+      '@kubernetes-models/validate': 5.0.0
+
+  '@kubernetes-models/argo-workflows@1.0.0':
     dependencies:
       '@kubernetes-models/apimachinery': 3.0.0
       '@kubernetes-models/base': 6.0.0

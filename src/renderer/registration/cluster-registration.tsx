@@ -17,7 +17,9 @@ import {
   ArgoLandingPage,
   ArgoOverviewPage,
   ArgoRolloutsRolloutsPage,
+  ArgoWorkflowsClusterTemplatesPage,
   ArgoWorkflowsCronWorkflowsPage,
+  ArgoWorkflowsTemplatesPage,
   ArgoWorkflowsWorkflowsPage,
 } from "../pages";
 import { ArgoPageIds } from "../routes/argo-page-ids";
@@ -80,14 +82,28 @@ export function buildClusterPages(extension: Renderer.LensExtension) {
       id: ArgoPageIds.workflowsRoot,
       routePath: ArgoRoutes.workflows.workflows,
       components: {
-        Page: () => <ArgoWorkflowsWorkflowsPage />,
+        Page: () => <ArgoWorkflowsWorkflowsPage extension={extension} />,
       },
     },
     {
       id: ArgoPageIds.workflowsCron,
       routePath: ArgoRoutes.workflows.cronWorkflows,
       components: {
-        Page: () => <ArgoWorkflowsCronWorkflowsPage />,
+        Page: () => <ArgoWorkflowsCronWorkflowsPage extension={extension} />,
+      },
+    },
+    {
+      id: ArgoPageIds.workflowsTemplates,
+      routePath: ArgoRoutes.workflows.workflowTemplates,
+      components: {
+        Page: () => <ArgoWorkflowsTemplatesPage extension={extension} />,
+      },
+    },
+    {
+      id: ArgoPageIds.workflowsClusterTemplates,
+      routePath: ArgoRoutes.workflows.clusterWorkflowTemplates,
+      components: {
+        Page: () => <ArgoWorkflowsClusterTemplatesPage extension={extension} />,
       },
     },
     {
@@ -214,6 +230,20 @@ export function buildClusterPageMenus() {
       parentId: "argo-workflows",
       title: "CronWorkflows",
       target: { pageId: ArgoPageIds.workflowsCron },
+      components: {},
+    },
+    {
+      id: "argo-workflows-templates-menu",
+      parentId: "argo-workflows",
+      title: "WorkflowTemplates",
+      target: { pageId: ArgoPageIds.workflowsTemplates },
+      components: {},
+    },
+    {
+      id: "argo-workflows-cluster-templates-menu",
+      parentId: "argo-workflows",
+      title: "ClusterWorkflowTemplates",
+      target: { pageId: ArgoPageIds.workflowsClusterTemplates },
       components: {},
     },
     {

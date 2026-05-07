@@ -8,6 +8,8 @@ export const ArgoPageIds = {
   argocdConfig: "argocd-config",
   workflowsRoot: "argo-workflows-root",
   workflowsCron: "argo-workflows-cron-workflows",
+  workflowsTemplates: "argo-workflows-templates",
+  workflowsClusterTemplates: "argo-workflows-cluster-templates",
   legacyArgocdRoot: "argocd-root-legacy",
   legacyArgocdOverview: "argocd-overview-legacy",
   legacyArgocdConfig: "argocd-config-legacy",
