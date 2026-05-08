@@ -7,7 +7,6 @@ import { Renderer } from "@freelensapp/extensions";
 import { computed } from "mobx";
 import { ArgoPreferencesStore } from "../common/store";
 import { ArgoConfigDialog } from "./components/argo-config";
-import { ArgoWorkflowResubmitOptionsDialog } from "./components/workflow-resubmit-options";
 import { ArgoApplicationDetails } from "./details/argo-application-details";
 import { ArgoApplicationSetDetails } from "./details/argo-applicationset-details";
 import { ArgoAppProjectDetails } from "./details/argo-appproject-details";
@@ -22,9 +21,6 @@ import { ArgoRollout } from "./k8s/rollouts";
 import { ArgoClusterWorkflowTemplate, ArgoCronWorkflow, ArgoWorkflow, ArgoWorkflowTemplate } from "./k8s/workflows";
 import {
   ArgoConfigMenuItem,
-  type ArgoCronWorkflowMenuItemProps,
-  ArgoCronWorkflowResumeMenuItem,
-  ArgoCronWorkflowSuspendMenuItem,
   ArgoRollbackMenuItem,
   type ArgoRollbackMenuItemProps,
   ArgoRolloutAbortMenuItem,
@@ -43,12 +39,6 @@ import {
   type ArgoSyncMenuItemProps,
   ArgoTerminateMenuItem,
   type ArgoTerminateMenuItemProps,
-  type ArgoWorkflowMenuItemProps,
-  ArgoWorkflowResubmitMenuItem,
-  ArgoWorkflowResumeMenuItem,
-  ArgoWorkflowRetryMenuItem,
-  ArgoWorkflowSuspendMenuItem,
-  ArgoWorkflowTerminateMenuItem,
 } from "./menus";
 import { ArgoPreferenceHint, ArgoPreferenceInput } from "./preferences";
 import { buildClusterPageMenus, buildClusterPages } from "./registration/cluster-registration";
@@ -58,11 +48,6 @@ export default class ArgoRenderer extends Renderer.LensExtension {
     {
       id: "argocd-config-dialog",
       Component: ArgoConfigDialog,
-      shouldRender: computed(() => true),
-    },
-    {
-      id: "argocd-workflow-resubmit-options-dialog",
-      Component: ArgoWorkflowResubmitOptionsDialog,
       shouldRender: computed(() => true),
     },
   ];
@@ -257,59 +242,6 @@ export default class ArgoRenderer extends Renderer.LensExtension {
       apiVersions: ArgoRollout.crd.apiVersions,
       components: {
         MenuItem: (props: ArgoRolloutRetryMenuItemProps) => <ArgoRolloutRetryMenuItem {...props} extension={this} />,
-      },
-    },
-    {
-      kind: ArgoWorkflow.kind,
-      apiVersions: ArgoWorkflow.crd.apiVersions,
-      components: {
-        MenuItem: (props: ArgoWorkflowMenuItemProps) => <ArgoWorkflowSuspendMenuItem {...props} extension={this} />,
-      },
-    },
-    {
-      kind: ArgoWorkflow.kind,
-      apiVersions: ArgoWorkflow.crd.apiVersions,
-      components: {
-        MenuItem: (props: ArgoWorkflowMenuItemProps) => <ArgoWorkflowResumeMenuItem {...props} extension={this} />,
-      },
-    },
-    {
-      kind: ArgoWorkflow.kind,
-      apiVersions: ArgoWorkflow.crd.apiVersions,
-      components: {
-        MenuItem: (props: ArgoWorkflowMenuItemProps) => <ArgoWorkflowTerminateMenuItem {...props} extension={this} />,
-      },
-    },
-    {
-      kind: ArgoWorkflow.kind,
-      apiVersions: ArgoWorkflow.crd.apiVersions,
-      components: {
-        MenuItem: (props: ArgoWorkflowMenuItemProps) => <ArgoWorkflowRetryMenuItem {...props} extension={this} />,
-      },
-    },
-    {
-      kind: ArgoWorkflow.kind,
-      apiVersions: ArgoWorkflow.crd.apiVersions,
-      components: {
-        MenuItem: (props: ArgoWorkflowMenuItemProps) => <ArgoWorkflowResubmitMenuItem {...props} extension={this} />,
-      },
-    },
-    {
-      kind: ArgoCronWorkflow.kind,
-      apiVersions: ArgoCronWorkflow.crd.apiVersions,
-      components: {
-        MenuItem: (props: ArgoCronWorkflowMenuItemProps) => (
-          <ArgoCronWorkflowSuspendMenuItem {...props} extension={this} />
-        ),
-      },
-    },
-    {
-      kind: ArgoCronWorkflow.kind,
-      apiVersions: ArgoCronWorkflow.crd.apiVersions,
-      components: {
-        MenuItem: (props: ArgoCronWorkflowMenuItemProps) => (
-          <ArgoCronWorkflowResumeMenuItem {...props} extension={this} />
-        ),
       },
     },
     {

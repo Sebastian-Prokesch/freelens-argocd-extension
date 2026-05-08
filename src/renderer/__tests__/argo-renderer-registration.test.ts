@@ -46,6 +46,7 @@ describe("ArgoRenderer registrations", () => {
     const components = renderer.clusterFrameComponents;
 
     expect(Array.isArray(components)).toBe(true);
+    expect(components).toHaveLength(1);
     expect(components[0]?.id).toBe("argocd-config-dialog");
     expect(components[0]?.Component).toBeDefined();
     expect(typeof components[0]?.shouldRender?.get).toBe("function");
@@ -109,12 +110,12 @@ describe("ArgoRenderer registrations", () => {
     expect(rolloutMenuItems.length).toBeGreaterThanOrEqual(6);
   });
 
-  it("registers workflow and cron workflow menu actions", () => {
+  it("does not register workflow and cron workflow mutation menu actions", () => {
     const renderer = createRenderer();
     const workflowMenuItems = renderer.kubeObjectMenuItems.filter((item: any) => item.kind === "Workflow");
     const cronWorkflowMenuItems = renderer.kubeObjectMenuItems.filter((item: any) => item.kind === "CronWorkflow");
 
-    expect(workflowMenuItems.length).toBeGreaterThanOrEqual(5);
-    expect(cronWorkflowMenuItems.length).toBeGreaterThanOrEqual(2);
+    expect(workflowMenuItems).toHaveLength(0);
+    expect(cronWorkflowMenuItems).toHaveLength(0);
   });
 });

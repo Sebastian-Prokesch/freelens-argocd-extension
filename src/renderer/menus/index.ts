@@ -2,8 +2,6 @@ export * from "./argo-application-rollback";
 export * from "./argo-application-sync";
 export * from "./argo-application-terminate";
 export * from "./argo-config-menu";
-export * from "./argo-cron-workflow-actions";
 export * from "./argo-rollout-abort";
 export * from "./argo-rollout-promote";
 export * from "./argo-rollout-retry";
-export * from "./argo-workflow-actions";

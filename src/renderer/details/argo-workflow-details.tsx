@@ -1,28 +1,19 @@
 import { Renderer } from "@freelensapp/extensions";
 import { observer } from "mobx-react";
+import { Link } from "react-router-dom";
 import { withErrorPage } from "../components/error-page";
-import { argoWorkflowResubmitOptionsDialogStore } from "../components/workflow-resubmit-options";
 import {
   type ArgoWorkflow,
-  canResubmitWorkflow,
-  canResumeWorkflow,
-  canRetryWorkflow,
-  canSuspendWorkflow,
-  canTerminateWorkflow,
   getArgoWorkflowDuration,
   getArgoWorkflowProgress,
   getArgoWorkflowStatusReason,
-  getArgoWorkflowStore,
-  getErrorMessage,
-  getResumeWorkflowPatch,
-  getSuspendWorkflowPatch,
-  getTerminateWorkflowPatch,
   getWorkflowPhase,
-  requestWorkflowAction,
+  getWorkflowPodReferences,
 } from "../k8s/workflows";
 
 const {
-  Component: { Button, DrawerItem, DrawerTitle, Notifications, WithTooltip },
+  Component: { DrawerItem, DrawerTitle, WithTooltip },
+  Navigation: { getDetailsUrl },
 } = Renderer;
 
 export interface ArgoWorkflowDetailsProps extends Renderer.Component.KubeObjectDetailsProps<ArgoWorkflow> {
@@ -32,57 +23,11 @@ export interface ArgoWorkflowDetailsProps extends Renderer.Component.KubeObjectD
 export const ArgoWorkflowDetails = observer((props: ArgoWorkflowDetailsProps) =>
   withErrorPage(props, () => {
     const { object } = props;
-    const workflowStore = getArgoWorkflowStore();
-    const workflowName = object.getName?.() ?? object.metadata?.name ?? "workflow";
+    const namespace = object.getNs?.() ?? object.metadata?.namespace ?? "default";
+    const podReferences = getWorkflowPodReferences(object);
 
-    const suspendWorkflow = async () => {
-      try {
-        await workflowStore.patch(object, getSuspendWorkflowPatch(), "merge");
-        Notifications.ok(`Suspend requested for ${workflowName}`);
-      } catch (error) {
-        Notifications.error(getErrorMessage(error, "Failed to suspend workflow."));
-      }
-    };
-
-    const resumeWorkflow = async () => {
-      try {
-        await workflowStore.patch(object, getResumeWorkflowPatch(), "merge");
-        Notifications.ok(`Resume requested for ${workflowName}`);
-      } catch (error) {
-        Notifications.error(getErrorMessage(error, "Failed to resume workflow."));
-      }
-    };
-
-    const terminateWorkflow = async () => {
-      try {
-        await workflowStore.patch(object, getTerminateWorkflowPatch(), "merge");
-        Notifications.ok(`Terminate requested for ${workflowName}`);
-      } catch (error) {
-        Notifications.error(getErrorMessage(error, "Failed to terminate workflow."));
-      }
-    };
-
-    const retryWorkflow = async () => {
-      try {
-        await requestWorkflowAction(workflowStore, object, "retry");
-        Notifications.ok(`Retry requested for ${workflowName}`);
-      } catch (error) {
-        Notifications.error(getErrorMessage(error, "Failed to retry workflow."));
-      }
-    };
-
-    const resubmitWorkflow = async () => {
-      try {
-        await requestWorkflowAction(workflowStore, object, "resubmit");
-        Notifications.ok(`Resubmit requested for ${workflowName}`);
-      } catch (error) {
-        Notifications.error(getErrorMessage(error, "Failed to resubmit workflow."));
-      }
-    };
-
-    const openResubmitWithOptionsDialog = () => {
-      argoWorkflowResubmitOptionsDialogStore.open(object);
-    };
+    const getPodDetailsUrl = (podName: string) =>
+      getDetailsUrl(`/api/v1/namespaces/${encodeURIComponent(namespace)}/pods/${encodeURIComponent(podName)}`);
 
     return (
       <>
@@ -96,22 +41,18 @@ export const ArgoWorkflowDetails = observer((props: ArgoWorkflowDetailsProps) =>
           <WithTooltip>{getArgoWorkflowStatusReason(object)}</WithTooltip>
         </DrawerItem>
         <DrawerItem name="Suspend">{object.spec?.suspend ? "true" : "false"}</DrawerItem>
-        {canSuspendWorkflow(object) ||
-        canResumeWorkflow(object) ||
-        canTerminateWorkflow(object) ||
-        canRetryWorkflow(object) ||
-        canResubmitWorkflow(object) ? (
-          <DrawerItem name="Actions">
-            {canSuspendWorkflow(object) ? <Button onClick={suspendWorkflow}>Suspend</Button> : null}
-            {canResumeWorkflow(object) ? <Button onClick={resumeWorkflow}>Resume</Button> : null}
-            {canTerminateWorkflow(object) ? <Button onClick={terminateWorkflow}>Terminate</Button> : null}
-            {canRetryWorkflow(object) ? <Button onClick={retryWorkflow}>Retry</Button> : null}
-            {canResubmitWorkflow(object) ? <Button onClick={resubmitWorkflow}>Resubmit</Button> : null}
-            {canResubmitWorkflow(object) ? (
-              <Button onClick={openResubmitWithOptionsDialog}>Resubmit with options</Button>
-            ) : null}
-          </DrawerItem>
-        ) : null}
+        <DrawerItem name="Logs">
+          {podReferences.length > 0
+            ? podReferences.map((podRef) => (
+                <div key={podRef.nodeId}>
+                  <Link to={getPodDetailsUrl(podRef.podName)}>
+                    <WithTooltip>{podRef.podName}</WithTooltip>
+                  </Link>
+                  <span>{` - ${podRef.nodeName} (${podRef.phase})`}</span>
+                </div>
+              ))
+            : "No pod logs available yet"}
+        </DrawerItem>
       </>
     );
   }),

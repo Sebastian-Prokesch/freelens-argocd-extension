@@ -25,3 +25,5 @@
 *.DS_Store
 /.idea
 /.vscode
+
+.pnpm-store

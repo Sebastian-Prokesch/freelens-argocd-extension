@@ -107,7 +107,6 @@ let _argoCronWorkflowStore: ArgoCronWorkflowStore | undefined;
 let _argoWorkflowTemplateStore: ArgoWorkflowTemplateStore | undefined;
 let _argoClusterWorkflowTemplateStore: ArgoClusterWorkflowTemplateStore | undefined;
 
-export * from "./actions";
 export * from "./state";
 
 export function getArgoWorkflowStore(): ArgoWorkflowStore {
