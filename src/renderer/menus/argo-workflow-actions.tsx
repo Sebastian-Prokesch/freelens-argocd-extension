@@ -8,10 +8,10 @@ import {
   canSuspendWorkflow,
   canTerminateWorkflow,
   getArgoWorkflowStore,
+  getErrorMessage,
   getResumeWorkflowPatch,
   getSuspendWorkflowPatch,
   getTerminateWorkflowPatch,
-  getErrorMessage,
   requestWorkflowAction,
 } from "../k8s/workflows";
 

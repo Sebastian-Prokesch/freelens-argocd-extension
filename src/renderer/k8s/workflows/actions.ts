@@ -46,10 +46,9 @@ function normalizeStringMap(
     return undefined;
   }
 
-  const normalized = Object.fromEntries(Object.entries(value).filter(([, entry]) => typeof entry === "string")) as Record<
-    string,
-    string
-  >;
+  const normalized = Object.fromEntries(
+    Object.entries(value).filter(([, entry]) => typeof entry === "string"),
+  ) as Record<string, string>;
 
   return Object.keys(normalized).length > 0 ? normalized : undefined;
 }
@@ -120,7 +119,10 @@ function sanitizeResubmittedWorkflowSpec(spec: WorkflowSpecRecord): WorkflowSpec
   return nextSpec;
 }
 
-function buildResubmittedWorkflow(workflow: ArgoWorkflow, options?: ResubmitWorkflowOptions): {
+function buildResubmittedWorkflow(
+  workflow: ArgoWorkflow,
+  options?: ResubmitWorkflowOptions,
+): {
   apiVersion: string;
   kind: string;
   metadata: {

@@ -1,6 +1,11 @@
 import { Renderer } from "@freelensapp/extensions";
 import React from "react";
-import { getErrorMessage, getArgoWorkflowStore, requestWorkflowAction, type ResubmitWorkflowParameterOverride } from "../../k8s/workflows";
+import {
+  getArgoWorkflowStore,
+  getErrorMessage,
+  type ResubmitWorkflowParameterOverride,
+  requestWorkflowAction,
+} from "../../k8s/workflows";
 import { argoWorkflowResubmitOptionsDialogStore } from "./argo-workflow-resubmit-options-dialog-store";
 
 const { observer } = global.MobxReact;

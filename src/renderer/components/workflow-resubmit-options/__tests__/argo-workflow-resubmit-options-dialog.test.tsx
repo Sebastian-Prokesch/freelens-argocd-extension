@@ -78,7 +78,9 @@ describe("ArgoWorkflowResubmitOptionsDialog", () => {
     expect(notifications.error).toHaveBeenCalledWith(
       'Invalid parameter override "missing-separator". Use key=value format.',
     );
-    expect(screen.getByText('Invalid parameter override "missing-separator". Use key=value format.')).toBeInTheDocument();
+    expect(
+      screen.getByText('Invalid parameter override "missing-separator". Use key=value format.'),
+    ).toBeInTheDocument();
   });
 
   it("does not render memoized control in clone mode", () => {

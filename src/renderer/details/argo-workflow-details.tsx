@@ -1,7 +1,7 @@
 import { Renderer } from "@freelensapp/extensions";
 import { observer } from "mobx-react";
-import { argoWorkflowResubmitOptionsDialogStore } from "../components/workflow-resubmit-options";
 import { withErrorPage } from "../components/error-page";
+import { argoWorkflowResubmitOptionsDialogStore } from "../components/workflow-resubmit-options";
 import {
   type ArgoWorkflow,
   canResubmitWorkflow,
@@ -12,8 +12,8 @@ import {
   getArgoWorkflowDuration,
   getArgoWorkflowProgress,
   getArgoWorkflowStatusReason,
-  getErrorMessage,
   getArgoWorkflowStore,
+  getErrorMessage,
   getResumeWorkflowPatch,
   getSuspendWorkflowPatch,
   getTerminateWorkflowPatch,
