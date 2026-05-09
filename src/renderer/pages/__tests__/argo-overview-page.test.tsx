@@ -30,8 +30,9 @@ describe("ArgoOverviewTabContent", () => {
     await waitFor(() => expect(screen.getByText("ArgoCD Overview")).toBeInTheDocument());
     await waitFor(() => expect(screen.getByTestId("NamespaceSelectFilter")).toBeInTheDocument());
     await waitFor(() => expect(screen.getByTestId("Events")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("Health Summary")).toBeInTheDocument());
 
     // Both charts should be present and show their empty state
-    await waitFor(() => expect(screen.getAllByText("No ArgoCD applications found").length).toBeGreaterThan(0));
+    await waitFor(() => expect(screen.getAllByText("No applications").length).toBeGreaterThan(0));
   });
 });

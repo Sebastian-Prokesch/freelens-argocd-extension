@@ -77,6 +77,29 @@
   background: var(--contentColor);
 }
 
+.healthSummary {
+  padding: calc(var(--unit) * 2) calc(var(--unit) * 2) 0;
+}
+
+.summaryTitle {
+  margin: 0;
+  color: var(--textColorPrimary);
+}
+
+.summaryText {
+  margin-top: var(--unit);
+  color: var(--textColorSecondary);
+  word-break: break-word;
+}
+
+.emptyState {
+  margin: calc(var(--unit) * 2) calc(var(--unit) * 2) 0;
+  padding: calc(var(--unit) * 2);
+  border: 1px dashed var(--borderColor);
+  border-radius: 4px;
+  color: var(--textColorSecondary);
+}
+
 .chartsRow {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));

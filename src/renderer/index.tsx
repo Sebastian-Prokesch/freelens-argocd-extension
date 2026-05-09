@@ -31,8 +31,6 @@ import {
 import { ArgoClusterWorkflowTemplate, ArgoCronWorkflow, ArgoWorkflow, ArgoWorkflowTemplate } from "./k8s/workflows";
 import {
   ArgoConfigMenuItem,
-  ArgoRollbackMenuItem,
-  type ArgoRollbackMenuItemProps,
   ArgoRolloutAbortMenuItem,
   type ArgoRolloutAbortMenuItemProps,
   ArgoRolloutPromoteFullMenuItem,
@@ -235,13 +233,6 @@ export default class ArgoRenderer extends Renderer.LensExtension {
       apiVersions: ArgoApplication.crd.apiVersions,
       components: {
         MenuItem: (props: ArgoTerminateMenuItemProps) => <ArgoTerminateMenuItem {...props} extension={this} />,
-      },
-    },
-    {
-      kind: ArgoApplication.kind,
-      apiVersions: ArgoApplication.crd.apiVersions,
-      components: {
-        MenuItem: (props: ArgoRollbackMenuItemProps) => <ArgoRollbackMenuItem {...props} extension={this} />,
       },
     },
     {

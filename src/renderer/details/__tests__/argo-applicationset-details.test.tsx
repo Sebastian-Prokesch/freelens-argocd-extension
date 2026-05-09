@@ -44,6 +44,8 @@ describe("ArgoApplicationSetDetails", () => {
       "href",
       "/apis/argoproj.io/v1alpha1/namespaces/argocd/applications/payments",
     );
+    expect(screen.getByText("Sync Status")).toBeInTheDocument();
+    expect(screen.getByText("Health Status")).toBeInTheDocument();
   });
 
   it("derives up-to-date from specific condition types and hides error row when false", () => {
@@ -103,6 +105,33 @@ describe("ArgoApplicationSetDetails", () => {
 
     expect(screen.getByText("Error Occurred")).toBeInTheDocument();
     expect(screen.getByText("Error Message")).toBeInTheDocument();
-    expect(screen.getByText("failed to execute go template for generator item #2")).toBeInTheDocument();
+    expect(screen.getAllByText("failed to execute go template for generator item #2").length).toBeGreaterThan(0);
+  });
+
+  it("renders detailed conditions table entries", () => {
+    render(
+      <MemoryRouter>
+        <ArgoApplicationSetDetails
+          extension={extension}
+          object={
+            {
+              getNs: () => "argocd",
+              spec: {
+                generators: [{ list: {} }],
+              },
+              status: {
+                conditions: [{ type: "ResourcesUpToDate", status: "True", reason: "AllHealthy", message: "ok" }],
+              },
+            } as any
+          }
+        />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText("Generator Types")).toBeInTheDocument();
+    expect(screen.getByText("list (1)")).toBeInTheDocument();
+    expect(screen.getByText("ResourcesUpToDate")).toBeInTheDocument();
+    expect(screen.getByText("AllHealthy")).toBeInTheDocument();
+    expect(screen.getByText("ok")).toBeInTheDocument();
   });
 });

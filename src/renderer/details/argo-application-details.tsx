@@ -14,6 +14,8 @@ const resourcesSortable = {
   name: (appResourceStatus: ArgoApplicationResourceSyncStatus) => appResourceStatus.name,
   status: (appResourceStatus: ArgoApplicationResourceSyncStatus) => appResourceStatus.status,
   kind: (appResourceStatus: ArgoApplicationResourceSyncStatus) => appResourceStatus.kind,
+  health: (appResourceStatus: ArgoApplicationResourceSyncStatus) =>
+    (appResourceStatus as { health?: { status?: string } }).health?.status ?? "",
 };
 
 const resourcesSortByNames = createEnumFromKeys(resourcesSortable);
@@ -81,6 +83,8 @@ const formatDateTime = (dateString?: string): string => {
   if (!dateString) return "N/A";
   return new Date(dateString).toLocaleString();
 };
+
+const formatConditionStatus = (status?: string): string => status ?? "Unknown";
 
 export interface ArgoApplicationDetailsProps extends Renderer.Component.KubeObjectDetailsProps<ArgoApplication> {
   extension: Renderer.LensExtension;
@@ -283,10 +287,40 @@ export const ArgoApplicationDetails = observer((props: ArgoApplicationDetailsPro
           <DrawerItem name="Current Sync Status">{object.status?.sync?.status ?? "N/A"}</DrawerItem>
           <DrawerItem name="Last Synced Revision">{object.status?.history?.[0]?.revision ?? "N/A"}</DrawerItem>
           <DrawerItem name="Observed At">{formatDateTime(object.status?.observedAt)}</DrawerItem>
+          <DrawerItem name="Reconciled At">{formatDateTime(object.status?.reconciledAt)}</DrawerItem>
 
           <Gutter size="md" />
 
-          {/* Section 7: Resources Sync Status (existing table) */}
+          {/* Section 7: Conditions */}
+          {object.status?.conditions && object.status.conditions.length > 0 && (
+            <>
+              <DrawerTitle>Conditions</DrawerTitle>
+              <Table
+                tableId="conditions"
+                key="argo-application-details-conditions-table"
+                scrollable={false}
+                sortSyncWithUrl={false}
+              >
+                <TableHead flat sticky={false}>
+                  <TableCell>Type</TableCell>
+                  <TableCell>Status</TableCell>
+                  <TableCell>Message</TableCell>
+                  <TableCell>Last Transition</TableCell>
+                </TableHead>
+                {object.status.conditions.map((condition, index) => (
+                  <TableRow key={`${condition.type ?? "condition"}-${index}`}>
+                    <TableCell>{condition.type ?? "Unknown"}</TableCell>
+                    <TableCell>{formatConditionStatus((condition as any).status)}</TableCell>
+                    <TableCell>{condition.message ?? (condition as any).reason ?? "N/A"}</TableCell>
+                    <TableCell>{formatDateTime(condition.lastTransitionTime)}</TableCell>
+                  </TableRow>
+                ))}
+              </Table>
+              <Gutter size="md" />
+            </>
+          )}
+
+          {/* Section 8: Resources Sync Status (existing table) */}
           <DrawerTitle>Resources Sync Status</DrawerTitle>
           <Table
             tableId="resources"
@@ -299,12 +333,14 @@ export const ArgoApplicationDetails = observer((props: ArgoApplicationDetailsPro
             <TableHead flat sticky={false}>
               <TableCell sortBy={resourcesSortByNames.name}>Name</TableCell>
               <TableCell sortBy={resourcesSortByNames.status}>Sync Status</TableCell>
+              <TableCell sortBy={resourcesSortByNames.health}>Health</TableCell>
               <TableCell sortBy={resourcesSortByNames.kind}>Kind</TableCell>
             </TableHead>
             {object.status?.resources?.map((resource, index) => (
               <TableRow key={`${resource.name}-${resource.kind}-${index}`} sortItem={resource}>
                 <TableCell>{resource.name}</TableCell>
                 <TableCell>{resource.status || "Unknown"}</TableCell>
+                <TableCell>{resource.health?.status ?? "Unknown"}</TableCell>
                 <TableCell>{resource.kind}</TableCell>
               </TableRow>
             ))}
@@ -312,7 +348,7 @@ export const ArgoApplicationDetails = observer((props: ArgoApplicationDetailsPro
 
           <Gutter size="md" />
 
-          {/* Section 8: Sync History */}
+          {/* Section 9: Sync History */}
           {object.status?.history && object.status.history.length > 0 && (
             <>
               <DrawerTitle>Sync History</DrawerTitle>

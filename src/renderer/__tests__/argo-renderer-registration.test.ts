@@ -115,11 +115,11 @@ describe("ArgoRenderer registrations", () => {
     expect(detailKinds).toContain("ClusterWorkflowTemplate");
   });
 
-  it("registers sync, terminate and rollback menu items for applications", () => {
+  it("registers sync and terminate menu items for applications", () => {
     const renderer = createRenderer();
     const applicationMenuItems = renderer.kubeObjectMenuItems.filter((item: any) => item.kind === "Application");
 
-    expect(applicationMenuItems.length).toBeGreaterThanOrEqual(3);
+    expect(applicationMenuItems.length).toBeGreaterThanOrEqual(2);
   });
 
   it("registers promote, abort and retry menu items for rollouts", () => {
