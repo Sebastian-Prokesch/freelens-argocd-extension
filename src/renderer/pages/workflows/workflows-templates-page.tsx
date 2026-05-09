@@ -22,12 +22,12 @@ const sortingCallbacks = {
   age: (object: ArgoWorkflowTemplate) => object.getCreationTimestamp(),
 };
 
-const renderTableHeader: { title: string; sortBy: keyof typeof sortingCallbacks }[] = [
-  { title: "Name", sortBy: "name" },
-  { title: "Namespace", sortBy: "namespace" },
-  { title: "Entrypoint", sortBy: "entrypoint" },
-  { title: "Service Account", sortBy: "serviceAccountName" },
-  { title: "Age", sortBy: "age" },
+const renderTableHeader: { id: string; title: string; sortBy: keyof typeof sortingCallbacks }[] = [
+  { id: "name", title: "Name", sortBy: "name" },
+  { id: "namespace", title: "Namespace", sortBy: "namespace" },
+  { id: "entrypoint", title: "Entrypoint", sortBy: "entrypoint" },
+  { id: "serviceAccountName", title: "Service Account", sortBy: "serviceAccountName" },
+  { id: "age", title: "Age", sortBy: "age" },
 ];
 
 export const ArgoWorkflowsTemplatesTabContent = observer(() => {
@@ -44,6 +44,7 @@ export const ArgoWorkflowsTemplatesTabContent = observer(() => {
   return (
     <KubeObjectListLayout<ArgoWorkflowTemplate, ArgoWorkflowTemplateApi>
       tableId={`${ArgoWorkflowTemplate.crd.plural}Table`}
+      isConfigurable
       className=""
       store={workflowTemplateStore}
       sortingCallbacks={sortingCallbacks}

@@ -22,10 +22,10 @@ const sortingCallbacks = {
   age: (object: ArgoApplicationSet) => object.getCreationTimestamp(),
 };
 
-const renderTableHeader: { title: string; sortBy: keyof typeof sortingCallbacks; className?: string }[] = [
-  { title: "Name", sortBy: "name" },
-  { title: "Namespace", sortBy: "namespace" },
-  { title: "Age", sortBy: "age", className: styles.age },
+const renderTableHeader: { id: string; title: string; sortBy: keyof typeof sortingCallbacks; className?: string }[] = [
+  { id: "name", title: "Name", sortBy: "name" },
+  { id: "namespace", title: "Namespace", sortBy: "namespace" },
+  { id: "age", title: "Age", sortBy: "age", className: styles.age },
 ];
 
 export interface ArgoApplicationSetsPageProps {
@@ -48,6 +48,7 @@ export const ArgoApplicationSetsTabContent = observer(() => {
       <style>{stylesInline}</style>
       <KubeObjectListLayout<ArgoApplicationSet, ArgoApplicationSetApi>
         tableId={`${ArgoApplicationSet.crd.plural}Table`}
+        isConfigurable
         className={styles.page}
         store={applicationSetStore}
         sortingCallbacks={sortingCallbacks}

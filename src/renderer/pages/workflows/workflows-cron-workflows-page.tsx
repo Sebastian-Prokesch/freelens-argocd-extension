@@ -33,15 +33,15 @@ const sortingCallbacks = {
   age: (object: ArgoCronWorkflow) => object.getCreationTimestamp(),
 };
 
-const renderTableHeader: { title: string; sortBy: keyof typeof sortingCallbacks }[] = [
-  { title: "Name", sortBy: "name" },
-  { title: "Namespace", sortBy: "namespace" },
-  { title: "Schedule", sortBy: "schedule" },
-  { title: "Timezone", sortBy: "timezone" },
-  { title: "Suspended", sortBy: "suspended" },
-  { title: "Active", sortBy: "active" },
-  { title: "Last Scheduled", sortBy: "lastScheduled" },
-  { title: "Age", sortBy: "age" },
+const renderTableHeader: { id: string; title: string; sortBy: keyof typeof sortingCallbacks }[] = [
+  { id: "name", title: "Name", sortBy: "name" },
+  { id: "namespace", title: "Namespace", sortBy: "namespace" },
+  { id: "schedule", title: "Schedule", sortBy: "schedule" },
+  { id: "timezone", title: "Timezone", sortBy: "timezone" },
+  { id: "suspended", title: "Suspended", sortBy: "suspended" },
+  { id: "active", title: "Active", sortBy: "active" },
+  { id: "lastScheduled", title: "Last Scheduled", sortBy: "lastScheduled" },
+  { id: "age", title: "Age", sortBy: "age" },
 ];
 
 export const ArgoWorkflowsCronWorkflowsTabContent = observer(() => {
@@ -58,6 +58,7 @@ export const ArgoWorkflowsCronWorkflowsTabContent = observer(() => {
   return (
     <KubeObjectListLayout<ArgoCronWorkflow, ArgoCronWorkflowApi>
       tableId={`${ArgoCronWorkflow.crd.plural}Table`}
+      isConfigurable
       className=""
       store={cronWorkflowStore}
       sortingCallbacks={sortingCallbacks}

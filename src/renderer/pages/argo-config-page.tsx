@@ -26,6 +26,7 @@ const renderAgeCell = (object: LabeledObject) => <KubeObjectAge object={object a
 const renderConfigMapList = (configMaps: any[]) => (
   <KubeObjectListLayout<any, any>
     tableId="argocdConfigMaps"
+    isConfigurable
     className={styles.page}
     store={configMapStore}
     items={configMaps}
@@ -38,10 +39,10 @@ const renderConfigMapList = (configMaps: any[]) => (
     searchFilters={[(object) => object.getSearchFields()]}
     renderHeaderTitle="ArgoCD ConfigMaps"
     renderTableHeader={[
-      { title: "Name", sortBy: "name" },
-      { title: "Namespace", sortBy: "namespace", className: styles.tableCellSmall },
-      { title: "Keys", sortBy: "keys", className: styles.tableCellSmall },
-      { title: "Age", sortBy: "age", className: styles.tableCellSmall },
+      { id: "name", title: "Name", sortBy: "name" },
+      { id: "namespace", title: "Namespace", sortBy: "namespace", className: styles.tableCellSmall },
+      { id: "keys", title: "Keys", sortBy: "keys", className: styles.tableCellSmall },
+      { id: "age", title: "Age", sortBy: "age", className: styles.tableCellSmall },
     ]}
     renderTableContents={(object) => [
       <WithTooltip>{object.getName()}</WithTooltip>,
@@ -58,6 +59,7 @@ const renderRepoList = (secrets: any[], title: string) => {
   return (
     <KubeObjectListLayout<any, any>
       tableId={`argocd${safeTitle}Secrets`}
+      isConfigurable
       className={styles.page}
       store={secretsStore}
       items={secrets}
@@ -72,12 +74,12 @@ const renderRepoList = (secrets: any[], title: string) => {
       searchFilters={[(object) => object.getSearchFields()]}
       renderHeaderTitle={`ArgoCD ${title}`}
       renderTableHeader={[
-        { title: "Name", sortBy: "name" },
-        { title: "Namespace", sortBy: "namespace", className: styles.tableCellSmall },
-        { title: "URL", sortBy: "url", className: styles.tableCellLarge },
-        { title: "Type", sortBy: "type", className: styles.tableCellSmall },
-        { title: "Project", sortBy: "project", className: styles.tableCellSmall },
-        { title: "Age", sortBy: "age", className: styles.tableCellSmall },
+        { id: "name", title: "Name", sortBy: "name" },
+        { id: "namespace", title: "Namespace", sortBy: "namespace", className: styles.tableCellSmall },
+        { id: "url", title: "URL", sortBy: "url", className: styles.tableCellLarge },
+        { id: "type", title: "Type", sortBy: "type", className: styles.tableCellSmall },
+        { id: "project", title: "Project", sortBy: "project", className: styles.tableCellSmall },
+        { id: "age", title: "Age", sortBy: "age", className: styles.tableCellSmall },
       ]}
       renderTableContents={(object) => [
         <WithTooltip>{object.getName()}</WithTooltip>,
@@ -97,6 +99,7 @@ const renderRepoList = (secrets: any[], title: string) => {
 const renderClusterList = (secrets: any[]) => (
   <KubeObjectListLayout<any, any>
     tableId="argocdClusterSecrets"
+    isConfigurable
     className={styles.page}
     store={secretsStore}
     items={secrets}
@@ -111,12 +114,12 @@ const renderClusterList = (secrets: any[]) => (
     searchFilters={[(object) => object.getSearchFields()]}
     renderHeaderTitle="ArgoCD Clusters"
     renderTableHeader={[
-      { title: "Name", sortBy: "name" },
-      { title: "Namespace", sortBy: "namespace", className: styles.tableCellSmall },
-      { title: "Cluster Name", sortBy: "clusterName", className: styles.tableCellSmall },
-      { title: "Server", sortBy: "server", className: styles.tableCellLarge },
-      { title: "Project", sortBy: "project", className: styles.tableCellSmall },
-      { title: "Age", sortBy: "age", className: styles.tableCellSmall },
+      { id: "name", title: "Name", sortBy: "name" },
+      { id: "namespace", title: "Namespace", sortBy: "namespace", className: styles.tableCellSmall },
+      { id: "clusterName", title: "Cluster Name", sortBy: "clusterName", className: styles.tableCellSmall },
+      { id: "server", title: "Server", sortBy: "server", className: styles.tableCellLarge },
+      { id: "project", title: "Project", sortBy: "project", className: styles.tableCellSmall },
+      { id: "age", title: "Age", sortBy: "age", className: styles.tableCellSmall },
     ]}
     renderTableContents={(object) => [
       <WithTooltip>{object.getName()}</WithTooltip>,
