@@ -40,7 +40,7 @@ export const ArgoWorkflowDetails = observer((props: ArgoWorkflowDetailsProps) =>
         <DrawerItem name="Reason">
           <WithTooltip>{getArgoWorkflowStatusReason(object)}</WithTooltip>
         </DrawerItem>
-        <DrawerItem name="Suspend">{object.spec?.suspend ? "true" : "false"}</DrawerItem>
+        <DrawerItem name="Suspend">{object.spec?.suspend ? "Suspended" : "Not Suspended"}</DrawerItem>
         <DrawerItem name="Logs">
           {podReferences.length > 0
             ? podReferences.map((podRef) => (

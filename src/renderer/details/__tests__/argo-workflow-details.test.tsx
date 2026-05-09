@@ -23,12 +23,12 @@ describe("ArgoWorkflowDetails", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText("Suspended")).toBeInTheDocument();
+    expect(screen.getAllByText("Suspended")).toHaveLength(2);
     expect(screen.getByText("1/1")).toBeInTheDocument();
     expect(screen.getByText("2025-01-01T00:00:00Z")).toBeInTheDocument();
     expect(screen.getByText("2025-01-01T00:01:00Z")).toBeInTheDocument();
     expect(screen.getByText("Workflow completed")).toBeInTheDocument();
-    expect(screen.getByText("true")).toBeInTheDocument();
+    expect(screen.queryByText("true")).not.toBeInTheDocument();
     expect(screen.getByText("No pod logs available yet")).toBeInTheDocument();
   });
 
@@ -61,6 +61,7 @@ describe("ArgoWorkflowDetails", () => {
     expect(screen.queryByRole("button", { name: "Terminate" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Retry" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Resubmit" })).not.toBeInTheDocument();
+    expect(screen.getByText("Not Suspended")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "workflow-pod-a" })).toHaveAttribute(
       "href",
       "/api/v1/namespaces/default/pods/workflow-pod-a",
