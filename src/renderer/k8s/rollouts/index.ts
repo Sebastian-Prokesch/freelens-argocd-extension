@@ -4,6 +4,12 @@ import type { IRollout } from "@kubernetes-models/argo-rollouts/argoproj.io/v1al
 
 import type { ArgoApplicationKubeObjectCRD } from "../types";
 
+export * from "./analysis-run";
+export * from "./analysis-template";
+export * from "./cluster-analysis-template";
+export * from "./experiment";
+export * from "./related";
+
 export type RolloutSpec = IRollout["spec"];
 export type RolloutStatus = IRollout["status"];
 

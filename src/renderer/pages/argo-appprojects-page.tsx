@@ -22,11 +22,11 @@ const sortingCallbacks = {
   age: (object: ArgoAppProject) => object.getCreationTimestamp(),
 };
 
-const renderTableHeader: { title: string; sortBy: keyof typeof sortingCallbacks; className?: string }[] = [
-  { title: "Name", sortBy: "name" },
-  { title: "Namespace", sortBy: "namespace" },
-  { title: "Description", sortBy: "description", className: styles.description },
-  { title: "Age", sortBy: "age", className: styles.age },
+const renderTableHeader: { id: string; title: string; sortBy: keyof typeof sortingCallbacks; className?: string }[] = [
+  { id: "name", title: "Name", sortBy: "name" },
+  { id: "namespace", title: "Namespace", sortBy: "namespace" },
+  { id: "description", title: "Description", sortBy: "description", className: styles.description },
+  { id: "age", title: "Age", sortBy: "age", className: styles.age },
 ];
 
 export interface ArgoAppProjectsPageProps {
@@ -48,6 +48,7 @@ export const ArgoAppProjectsTabContent = observer(() => {
       <style>{stylesInline}</style>
       <KubeObjectListLayout<ArgoAppProject, ArgoAppProjectApi>
         tableId={`${ArgoAppProject.crd.plural}Table`}
+        isConfigurable
         className={styles.page}
         store={appProjectStore}
         sortingCallbacks={sortingCallbacks}

@@ -18,6 +18,14 @@ const renderStringList = (values?: string[]) => {
   return values.join(", ");
 };
 
+const formatJwtToken = (token: { iat?: number; exp?: number; id?: string }) => {
+  const parts: string[] = [];
+  if (token.id) parts.push(`id=${token.id}`);
+  if (token.iat) parts.push(`iat=${token.iat}`);
+  if (token.exp) parts.push(`exp=${token.exp}`);
+  return parts.length > 0 ? parts.join(" ") : "token";
+};
+
 const renderTable = (rows: any[], columns: string[], rowRenderer: (row: any) => any[]) => {
   if (!rows?.length) return <span>None</span>;
 
@@ -50,6 +58,11 @@ export const ArgoAppProjectDetails = observer((props: ArgoAppProjectDetailsProps
       <>
         <style>{stylesInline}</style>
         <div className={styles.argoAppProjectDetails}>
+          <DrawerTitle>General</DrawerTitle>
+          <DrawerItem name="Description">{spec.description ?? "None"}</DrawerItem>
+
+          <Gutter size="md" />
+
           <DrawerTitle>Source Repositories</DrawerTitle>
           <DrawerItem name="Repositories">{renderStringList(spec.sourceRepos)}</DrawerItem>
 
@@ -85,14 +98,39 @@ export const ArgoAppProjectDetails = observer((props: ArgoAppProjectDetailsProps
 
           <Gutter size="md" />
 
+          <DrawerTitle>Cluster Resource Blacklist</DrawerTitle>
+          <DrawerItem name="Blocked Cluster Resources">
+            {renderTable(spec.clusterResourceBlacklist ?? [], ["Group", "Kind"], (resource) => [
+              resource.group ?? "*",
+              resource.kind ?? "*",
+            ])}
+          </DrawerItem>
+
+          <Gutter size="md" />
+
+          <DrawerTitle>Namespace Resource Blacklist</DrawerTitle>
+          <DrawerItem name="Blocked Namespace Resources">
+            {renderTable(spec.namespaceResourceBlacklist ?? [], ["Group", "Kind"], (resource) => [
+              resource.group ?? "*",
+              resource.kind ?? "*",
+            ])}
+          </DrawerItem>
+
+          <Gutter size="md" />
+
           <DrawerTitle>Roles</DrawerTitle>
           <DrawerItem name="Role Definitions">
-            {renderTable(spec.roles ?? [], ["Name", "Description", "Policies", "JWT Tokens"], (role) => [
-              role.name ?? "N/A",
-              role.description ?? "N/A",
-              renderStringList(role.policies),
-              role.jwtTokens?.length ? String(role.jwtTokens.length) : "0",
-            ])}
+            {renderTable(spec.roles ?? [], ["Name", "Description", "Groups", "Policies", "JWT Tokens"], (role) => {
+              const jwtTokens = Array.isArray(role.jwtTokens) ? role.jwtTokens : [];
+
+              return [
+                role.name ?? "N/A",
+                role.description ?? "N/A",
+                renderStringList(role.groups),
+                renderStringList(role.policies),
+                jwtTokens.length > 0 ? jwtTokens.map((token: any) => formatJwtToken(token)).join(", ") : "None",
+              ];
+            })}
           </DrawerItem>
 
           <Gutter size="md" />
@@ -124,8 +162,12 @@ export const ArgoAppProjectDetails = observer((props: ArgoAppProjectDetailsProps
           <DrawerItem name="Warning Enabled">
             {spec.orphanedResources?.warn === undefined ? "N/A" : spec.orphanedResources.warn ? "true" : "false"}
           </DrawerItem>
-          <DrawerItem name="Ignore Rules Count">
-            {spec.orphanedResources?.ignore?.length ? String(spec.orphanedResources.ignore.length) : "0"}
+          <DrawerItem name="Ignored Resources">
+            {renderTable(spec.orphanedResources?.ignore ?? [], ["Group", "Kind", "Name"], (resource) => [
+              resource.group ?? "*",
+              resource.kind ?? "*",
+              resource.name ?? "*",
+            ])}
           </DrawerItem>
         </div>
       </>

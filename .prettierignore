@@ -14,3 +14,4 @@
 *.tsx
 *.xml
 *.yaml
+.pnpm-store

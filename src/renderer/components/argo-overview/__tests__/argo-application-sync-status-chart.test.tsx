@@ -12,7 +12,7 @@ describe("ArgoApplicationSyncStatusChart", () => {
   it("renders empty state when no applications exist", () => {
     render(<ArgoApplicationSyncStatusChart applications={[]} />);
 
-    expect(screen.getByText("No ArgoCD applications found")).toBeInTheDocument();
+    expect(screen.getByText("No applications")).toBeInTheDocument();
   });
 
   it("groups applications by sync status and passes labels/dataset to PieChart", () => {

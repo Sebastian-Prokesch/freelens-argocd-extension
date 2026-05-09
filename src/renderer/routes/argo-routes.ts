@@ -15,9 +15,16 @@ export const ArgoRoutes = {
   workflows: {
     workflows: "/argo/workflows",
     cronWorkflows: "/argo/workflows/cron-workflows",
+    workflowTemplates: "/argo/workflows/workflow-templates",
+    clusterWorkflowTemplates: "/argo/workflows/cluster-workflow-templates",
   },
   rollouts: {
+    overview: "/argo/rollouts/overview",
     rollouts: "/argo/rollouts",
+    analysisRuns: "/argo/rollouts/analysis-runs",
+    experiments: "/argo/rollouts/experiments",
+    analysisTemplates: "/argo/rollouts/analysis-templates",
+    clusterAnalysisTemplates: "/argo/rollouts/cluster-analysis-templates",
   },
 } as const;
 

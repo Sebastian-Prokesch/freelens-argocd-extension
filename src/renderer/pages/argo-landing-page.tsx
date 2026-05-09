@@ -17,7 +17,7 @@ export const ArgoLandingPage = observer(() => {
         </li>
         <li>
           <Link to="workflows">Argo Workflows</Link>
-          <span className={styles.hint}> — placeholder list pages (Phase 3)</span>
+          <span className={styles.hint}> — Workflows, CronWorkflows, and templates</span>
         </li>
         <li>
           <Link to="rollouts">Argo Rollouts</Link>

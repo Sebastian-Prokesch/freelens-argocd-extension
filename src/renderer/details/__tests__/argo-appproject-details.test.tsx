@@ -70,6 +70,6 @@ describe("ArgoAppProjectDetails", () => {
 
     expect(screen.getAllByText("None").length).toBeGreaterThan(0);
     expect(screen.getByText("N/A")).toBeInTheDocument();
-    expect(screen.getByText("0")).toBeInTheDocument();
+    expect(screen.getByText("Ignored Resources")).toBeInTheDocument();
   });
 });

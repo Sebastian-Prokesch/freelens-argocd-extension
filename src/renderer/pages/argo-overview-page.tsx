@@ -14,6 +14,16 @@ export interface ArgoOverviewPageProps {
   extension: Renderer.LensExtension;
 }
 
+const getHealthStatusCounts = (applications: ArgoApplication[]): Record<string, number> =>
+  applications.reduce(
+    (counts, app) => {
+      const status = app.status?.health?.status ?? "Unknown";
+      counts[status] = (counts[status] ?? 0) + 1;
+      return counts;
+    },
+    {} as Record<string, number>,
+  );
+
 function filterItems(items: Renderer.K8sApi.KubeEvent[]): Renderer.K8sApi.KubeEvent[] {
   const events = items.filter((event) => {
     return event?.involvedObject?.apiVersion?.includes("argoproj.io/v1alpha1");
@@ -65,6 +75,9 @@ export const ArgoOverviewTabContent = observer(() => {
   }, []);
 
   const applications = (applicationStore.contextItems as ArgoApplication[]) ?? [];
+  const healthCounts = getHealthStatusCounts(applications);
+  const isNoApplications = isLoaded && !loadError && applications.length === 0;
+  const scopedStyles = styles as Record<string, string>;
 
   return (
     <>
@@ -81,6 +94,19 @@ export const ArgoOverviewTabContent = observer(() => {
           {!isLoaded ? <div className={styles.loadingMessage}>Loading ArgoCD overview resources...</div> : null}
           {loadError ? <div className={styles.errorMessage}>{loadError}</div> : null}
           <div className={styles.statuses}>
+            <div className={scopedStyles.healthSummary}>
+              <h6 className={scopedStyles.summaryTitle}>Health Summary</h6>
+              {Object.keys(healthCounts).length > 0 ? (
+                <div className={scopedStyles.summaryText}>
+                  {Object.entries(healthCounts)
+                    .map(([status, count]) => `${status}: ${count}`)
+                    .join(" | ")}
+                </div>
+              ) : (
+                <div className={scopedStyles.summaryText}>No applications</div>
+              )}
+            </div>
+            {isNoApplications ? <div className={scopedStyles.emptyState}>No applications</div> : null}
             <div className={styles.chartsRow}>
               <div className={styles.chart}>
                 <ArgoApplicationStatusChart applications={applications} isLoading={!isLoaded && !loadError} />

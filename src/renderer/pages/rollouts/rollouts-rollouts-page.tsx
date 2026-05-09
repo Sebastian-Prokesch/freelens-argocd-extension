@@ -39,18 +39,18 @@ const sortingCallbacks = {
   age: (object: ArgoRollout) => object.getCreationTimestamp(),
 };
 
-const renderTableHeader: { title: string; sortBy: keyof typeof sortingCallbacks; className?: string }[] = [
-  { title: "Name", sortBy: "name" },
-  { title: "Namespace", sortBy: "namespace" },
-  { title: "Strategy", sortBy: "strategy", className: styles.strategy },
-  { title: "Desired", sortBy: "desired" },
-  { title: "Updated", sortBy: "updated" },
-  { title: "Ready", sortBy: "ready" },
-  { title: "Available", sortBy: "available" },
-  { title: "Traffic", sortBy: "traffic", className: styles.traffic },
-  { title: "State", sortBy: "state", className: styles.state },
-  { title: "Reason", sortBy: "reason", className: styles.reason },
-  { title: "Age", sortBy: "age", className: styles.age },
+const renderTableHeader: { id: string; title: string; sortBy: keyof typeof sortingCallbacks; className?: string }[] = [
+  { id: "name", title: "Name", sortBy: "name" },
+  { id: "namespace", title: "Namespace", sortBy: "namespace" },
+  { id: "strategy", title: "Strategy", sortBy: "strategy", className: styles.strategy },
+  { id: "desired", title: "Desired", sortBy: "desired" },
+  { id: "updated", title: "Updated", sortBy: "updated" },
+  { id: "ready", title: "Ready", sortBy: "ready" },
+  { id: "available", title: "Available", sortBy: "available" },
+  { id: "traffic", title: "Traffic", sortBy: "traffic", className: styles.traffic },
+  { id: "state", title: "State", sortBy: "state", className: styles.state },
+  { id: "reason", title: "Reason", sortBy: "reason", className: styles.reason },
+  { id: "age", title: "Age", sortBy: "age", className: styles.age },
 ];
 
 export interface ArgoRolloutsPageProps {
@@ -76,6 +76,7 @@ export const ArgoRolloutsTabContent = observer(() => {
       <style>{stylesInline}</style>
       <KubeObjectListLayout<ArgoRollout, ArgoRolloutApi>
         tableId={`${ArgoRollout.crd.plural}Table`}
+        isConfigurable
         className={styles.page}
         store={rolloutStore}
         sortingCallbacks={sortingCallbacks}

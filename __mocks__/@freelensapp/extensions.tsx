@@ -78,7 +78,7 @@ export const Renderer = {
 
     // dialog & inputs
     Dialog: ({ children }: AnyRecord) => <div data-testid="Dialog">{children}</div>,
-    Input: ({ value, onChange, ...props }: AnyRecord) => (
+    Input: ({ value, onChange, multiLine: _multiLine, ...props }: AnyRecord) => (
       <input
         data-testid="Input"
         value={value ?? ""}

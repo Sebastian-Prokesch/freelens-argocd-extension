@@ -168,7 +168,7 @@ describe("ArgoApplicationDetails", () => {
 
     // fallback for missing status
     expect(screen.getByText("db")).toBeInTheDocument();
-    expect(screen.getByText("Unknown")).toBeInTheDocument();
+    expect(screen.getAllByText("Unknown").length).toBeGreaterThan(0);
   });
 
   it("renders operation state and last sync information", () => {

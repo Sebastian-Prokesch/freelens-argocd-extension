@@ -93,7 +93,7 @@ export const ArgoApplicationSyncStatusChart = observer(
           <div className={`${styles.chartContainer} ${className || ""}`}>
             <h6 className={styles.title}>Application Sync Status</h6>
             <div className={styles.noData}>
-              <div>{isLoading ? "Loading ArgoCD applications..." : "No ArgoCD applications found"}</div>
+              <div>{isLoading ? "Loading ArgoCD applications..." : "No applications"}</div>
             </div>
           </div>
         </>
