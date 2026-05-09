@@ -1,0 +1,37 @@
+.chartContainer {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+:global(.ArgoRolloutsPhaseChart) {
+  --rollout-phase-healthy: var(--colorSuccess);
+  --rollout-phase-progressing: var(--colorInfo);
+  --rollout-phase-degraded: var(--colorWarning);
+  --rollout-phase-paused: var(--colorViolet);
+  --rollout-phase-error: var(--colorError);
+  --rollout-phase-unknown: var(--colorTextSecondary);
+}
+
+.title {
+  margin: 0 0 calc(var(--unit) * 1.5) 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--textColorPrimary);
+  text-align: left;
+}
+
+.chart {
+  flex: 1;
+  position: relative;
+  min-height: 300px;
+}
+
+.noData {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 180px;
+  color: var(--textColorSecondary);
+  font-style: italic;
+}

@@ -1,0 +1,95 @@
+import { Renderer } from "@freelensapp/extensions";
+import { observer } from "mobx-react";
+import { withErrorPage } from "../components/error-page";
+import {
+  type ArgoAnalysisRun,
+  getAnalysisRunConditionSummary,
+  getAnalysisRunMeasurementCount,
+  getAnalysisRunMetricCount,
+  getAnalysisRunPhase,
+} from "../k8s/rollouts";
+
+const {
+  Component: { DrawerItem, DrawerTitle, Gutter, Table, TableCell, TableHead, TableRow, WithTooltip },
+} = Renderer;
+
+export interface ArgoAnalysisRunDetailsProps extends Renderer.Component.KubeObjectDetailsProps<ArgoAnalysisRun> {
+  extension: Renderer.LensExtension;
+}
+
+const formatOptional = (value: unknown): string => {
+  if (value === undefined || value === null || value === "") {
+    return "N/A";
+  }
+
+  return String(value);
+};
+
+export const ArgoAnalysisRunDetails = observer((props: ArgoAnalysisRunDetailsProps) =>
+  withErrorPage(props, () => {
+    const { object } = props;
+    const metricResults = object.status?.metricResults ?? [];
+    const conditions = object.status?.conditions ?? [];
+
+    return (
+      <>
+        <DrawerTitle>AnalysisRun</DrawerTitle>
+        <DrawerItem name="Phase">{getAnalysisRunPhase(object)}</DrawerItem>
+        <DrawerItem name="Started">{formatOptional(object.status?.startedAt)}</DrawerItem>
+        <DrawerItem name="Finished">{formatOptional(object.status?.finishedAt)}</DrawerItem>
+        <DrawerItem name="Message">
+          <WithTooltip>{formatOptional(object.status?.message)}</WithTooltip>
+        </DrawerItem>
+        <DrawerItem name="Metrics count">{String(getAnalysisRunMetricCount(object))}</DrawerItem>
+        <DrawerItem name="Measurements count">{String(getAnalysisRunMeasurementCount(object))}</DrawerItem>
+        <DrawerItem name="Conditions summary">
+          <WithTooltip>{getAnalysisRunConditionSummary(object)}</WithTooltip>
+        </DrawerItem>
+
+        <Gutter size="md" />
+        <DrawerTitle>Metrics</DrawerTitle>
+        {metricResults.length === 0 ? (
+          <DrawerItem name="Summary">No metric results</DrawerItem>
+        ) : (
+          <Table tableId="analysis-run-metrics" scrollable={false} sortSyncWithUrl={false}>
+            <TableHead flat sticky={false}>
+              <TableCell>Name</TableCell>
+              <TableCell>Phase</TableCell>
+              <TableCell>Success</TableCell>
+              <TableCell>Failed</TableCell>
+              <TableCell>Inconclusive</TableCell>
+              <TableCell>Measurements</TableCell>
+            </TableHead>
+            {metricResults.map((metricResult, index) => (
+              <TableRow key={`${metricResult.name ?? "metric"}-${index}`}>
+                <TableCell>{formatOptional(metricResult.name)}</TableCell>
+                <TableCell>{formatOptional(metricResult.phase)}</TableCell>
+                <TableCell>{String(metricResult.successful ?? 0)}</TableCell>
+                <TableCell>{String(metricResult.failed ?? 0)}</TableCell>
+                <TableCell>{String(metricResult.inconclusive ?? 0)}</TableCell>
+                <TableCell>{String(metricResult.measurements?.length ?? 0)}</TableCell>
+              </TableRow>
+            ))}
+          </Table>
+        )}
+
+        <Gutter size="md" />
+        <DrawerTitle>Conditions</DrawerTitle>
+        {conditions.length === 0 ? (
+          <DrawerItem name="Summary">None</DrawerItem>
+        ) : (
+          conditions.map((condition, index) => (
+            <DrawerItem
+              key={`${condition.type ?? "condition"}-${index}`}
+              name={condition.type ?? `Condition ${index + 1}`}
+            >
+              <WithTooltip>
+                {formatOptional(condition.status)} - {formatOptional(condition.reason ?? condition.message)}
+              </WithTooltip>
+            </DrawerItem>
+          ))
+        )}
+      </>
+    );
+  }),
+);

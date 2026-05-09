@@ -1,6 +1,6 @@
 {
   "name": "@sebastian-prokesch/freelens-argocd-extension",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "Freelens Extension for ArgoCD resources",
   "repository": {
     "type": "git",
@@ -63,7 +63,7 @@
   "devDependencies": {
     "@babel/plugin-proposal-decorators": "^7.28.0",
     "@electron-toolkit/tsconfig": "^1.0.1",
-    "@freelensapp/extensions": "^1.5.2",
+    "@freelensapp/extensions": "^1.9.0",
     "@jest/test-sequencer": "^29.7.0",
     "@kubernetes-models/argo-cd": "^2.7.2",
     "@kubernetes-models/argo-rollouts": "^1.0.0",

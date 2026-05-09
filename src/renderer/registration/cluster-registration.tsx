@@ -8,7 +8,13 @@
 import { Renderer } from "@freelensapp/extensions";
 import { ArgoPlainLogoIcon } from "../icons";
 import { ArgoApplication, ArgoApplicationSet, ArgoAppProject } from "../k8s/argocd";
-import { ArgoRollout } from "../k8s/rollouts";
+import {
+  ArgoAnalysisRun,
+  ArgoAnalysisTemplate,
+  ArgoClusterAnalysisTemplate,
+  ArgoExperiment,
+  ArgoRollout,
+} from "../k8s/rollouts";
 import {
   ArgoApplicationSetsPage,
   ArgoApplicationsPage,
@@ -16,6 +22,11 @@ import {
   ArgoConfigPage,
   ArgoLandingPage,
   ArgoOverviewPage,
+  ArgoRolloutsAnalysisRunsPage,
+  ArgoRolloutsAnalysisTemplatesPage,
+  ArgoRolloutsClusterAnalysisTemplatesPage,
+  ArgoRolloutsExperimentsPage,
+  ArgoRolloutsOverviewPage,
   ArgoRolloutsRolloutsPage,
   ArgoWorkflowsClusterTemplatesPage,
   ArgoWorkflowsCronWorkflowsPage,
@@ -26,6 +37,8 @@ import { ArgoPageIds } from "../routes/argo-page-ids";
 import { ArgoRoutes, LegacyArgoCdRoutes } from "../routes/argo-routes";
 
 export { ArgoPageIds };
+
+const argoRolloutsOverviewPageId = "argo-rollouts-overview";
 
 export function buildClusterPages(extension: Renderer.LensExtension) {
   return [
@@ -107,10 +120,45 @@ export function buildClusterPages(extension: Renderer.LensExtension) {
       },
     },
     {
+      id: argoRolloutsOverviewPageId,
+      routePath: ArgoRoutes.rollouts.overview,
+      components: {
+        Page: () => <ArgoRolloutsOverviewPage extension={extension} />,
+      },
+    },
+    {
       id: ArgoRollout.crd.plural,
       routePath: ArgoRoutes.rollouts.rollouts,
       components: {
         Page: () => <ArgoRolloutsRolloutsPage extension={extension} />,
+      },
+    },
+    {
+      id: ArgoAnalysisRun.crd.plural,
+      routePath: ArgoRoutes.rollouts.analysisRuns,
+      components: {
+        Page: () => <ArgoRolloutsAnalysisRunsPage extension={extension} />,
+      },
+    },
+    {
+      id: ArgoExperiment.crd.plural,
+      routePath: ArgoRoutes.rollouts.experiments,
+      components: {
+        Page: () => <ArgoRolloutsExperimentsPage extension={extension} />,
+      },
+    },
+    {
+      id: ArgoAnalysisTemplate.crd.plural,
+      routePath: ArgoRoutes.rollouts.analysisTemplates,
+      components: {
+        Page: () => <ArgoRolloutsAnalysisTemplatesPage extension={extension} />,
+      },
+    },
+    {
+      id: ArgoClusterAnalysisTemplate.crd.plural,
+      routePath: ArgoRoutes.rollouts.clusterAnalysisTemplates,
+      components: {
+        Page: () => <ArgoRolloutsClusterAnalysisTemplatesPage extension={extension} />,
       },
     },
     // Legacy `/argocd/*` — same UI as above; keeps old bookmarks working.
@@ -250,7 +298,14 @@ export function buildClusterPageMenus() {
       id: "argo-rollouts",
       parentId: "argo",
       title: "Argo Rollouts",
-      target: { pageId: ArgoRollout.crd.plural },
+      target: { pageId: argoRolloutsOverviewPageId },
+      components: {},
+    },
+    {
+      id: "argo-rollouts-overview-menu",
+      parentId: "argo-rollouts",
+      title: "Overview",
+      target: { pageId: argoRolloutsOverviewPageId },
       components: {},
     },
     {
@@ -258,6 +313,34 @@ export function buildClusterPageMenus() {
       parentId: "argo-rollouts",
       title: "Rollouts",
       target: { pageId: ArgoRollout.crd.plural },
+      components: {},
+    },
+    {
+      id: "argo-rollouts-analysis-runs-menu",
+      parentId: "argo-rollouts",
+      title: "AnalysisRuns",
+      target: { pageId: ArgoAnalysisRun.crd.plural },
+      components: {},
+    },
+    {
+      id: "argo-rollouts-experiments-menu",
+      parentId: "argo-rollouts",
+      title: "Experiments",
+      target: { pageId: ArgoExperiment.crd.plural },
+      components: {},
+    },
+    {
+      id: "argo-rollouts-analysis-templates-menu",
+      parentId: "argo-rollouts",
+      title: "AnalysisTemplates",
+      target: { pageId: ArgoAnalysisTemplate.crd.plural },
+      components: {},
+    },
+    {
+      id: "argo-rollouts-cluster-analysis-templates-menu",
+      parentId: "argo-rollouts",
+      title: "ClusterAnalysisTemplates",
+      target: { pageId: ArgoClusterAnalysisTemplate.crd.plural },
       components: {},
     },
   ];

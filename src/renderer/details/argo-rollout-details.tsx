@@ -1,7 +1,10 @@
 import { Renderer } from "@freelensapp/extensions";
 import { observer } from "mobx-react";
+import { useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
 import { withErrorPage } from "../components/error-page";
 import {
+  type ArgoAnalysisRun,
   type ArgoRollout,
   canAbortRollout,
   canRetryRollout,
@@ -10,6 +13,9 @@ import {
   canShowPromoteSkipCurrentStepAction,
   deriveRolloutState,
   getAbortMergePatch,
+  getAnalysisRunPhase,
+  getAnalysisRunsForRollout,
+  getArgoAnalysisRunStore,
   getArgoRolloutStore,
   getBlueGreenPromotionLabel,
   getBlueGreenPromotionState,
@@ -22,6 +28,7 @@ import {
 
 const {
   Component: { Button, DrawerItem, DrawerTitle, Gutter, Notifications, WithTooltip },
+  Navigation: { getDetailsUrl },
 } = Renderer;
 
 export interface ArgoRolloutDetailsProps extends Renderer.Component.KubeObjectDetailsProps<ArgoRollout> {
@@ -35,9 +42,38 @@ const formatOptional = (value: unknown): string => {
   return String(value);
 };
 
-export const ArgoRolloutDetails = observer((props: ArgoRolloutDetailsProps) =>
-  withErrorPage(props, () => {
-    const { object } = props;
+export const ArgoRolloutDetails = observer((props: ArgoRolloutDetailsProps) => {
+  const { object } = props;
+  const analysisRunStore = getArgoAnalysisRunStore();
+  const analysisRunWatches = useRef<(() => void)[]>([]);
+  const rolloutNamespace = object.getNs?.() ?? object.metadata?.namespace;
+
+  useEffect(() => {
+    let isMounted = true;
+
+    (async () => {
+      try {
+        await analysisRunStore.loadAll({ namespaces: rolloutNamespace ? [rolloutNamespace] : [] });
+        if (!isMounted) {
+          return;
+        }
+
+        analysisRunWatches.current.push(analysisRunStore.subscribe());
+      } catch {
+        // Errors are surfaced by the list section state ("No AnalysisRuns") and extension notifications elsewhere.
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+      for (const unsubscribe of analysisRunWatches.current) {
+        unsubscribe();
+      }
+      analysisRunWatches.current = [];
+    };
+  }, [analysisRunStore, rolloutNamespace]);
+
+  return withErrorPage(props, () => {
     const spec = object.spec;
     const status = object.status;
     const rolloutStore = getArgoRolloutStore();
@@ -55,6 +91,7 @@ export const ArgoRolloutDetails = observer((props: ArgoRolloutDetailsProps) =>
     const showRetryAction = canRetryRollout(object);
     const blueGreenState = getBlueGreenPromotionState(object);
     const isBlueGreen = blueGreenState !== "not_bluegreen";
+    const analysisRuns = getAnalysisRunsForRollout(object, (analysisRunStore.items as ArgoAnalysisRun[]) ?? []);
 
     const rolloutDisplayName = object.getName?.() ?? object.metadata?.name ?? "rollout";
 
@@ -184,7 +221,31 @@ export const ArgoRolloutDetails = observer((props: ArgoRolloutDetailsProps) =>
             </DrawerItem>
           ))
         )}
+
+        <Gutter size="md" />
+        <DrawerTitle>Related AnalysisRuns</DrawerTitle>
+        {analysisRuns.length === 0 ? (
+          <DrawerItem name="Summary">None</DrawerItem>
+        ) : (
+          analysisRuns.map((analysisRun) => {
+            const analysisRunName = analysisRun.getName();
+            const detailsUrl = getDetailsUrl(
+              analysisRunStore.api.formatUrlForNotListing({
+                namespace: analysisRun.getNs(),
+                name: analysisRunName,
+              }),
+            );
+
+            return (
+              <DrawerItem key={analysisRunName} name={analysisRunName}>
+                <Link to={detailsUrl}>
+                  <WithTooltip>{getAnalysisRunPhase(analysisRun)}</WithTooltip>
+                </Link>
+              </DrawerItem>
+            );
+          })
+        )}
       </>
     );
-  }),
-);
+  });
+});

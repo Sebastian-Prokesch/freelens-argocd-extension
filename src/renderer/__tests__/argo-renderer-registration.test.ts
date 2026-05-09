@@ -62,6 +62,11 @@ describe("ArgoRenderer registrations", () => {
     expect(pageIds).toContain("appprojects");
     expect(pageIds).toContain("applicationsets");
     expect(pageIds).toContain("rollouts");
+    expect(pageIds).toContain("argo-rollouts-overview");
+    expect(pageIds).toContain("analysisruns");
+    expect(pageIds).toContain("experiments");
+    expect(pageIds).toContain("analysistemplates");
+    expect(pageIds).toContain("clusteranalysistemplates");
     expect(pageIds).toContain("argo-workflows-root");
     expect(pageIds).toContain("argo-workflows-cron-workflows");
     expect(pageIds).toContain("argo-workflows-templates");
@@ -72,6 +77,11 @@ describe("ArgoRenderer registrations", () => {
     expect(pageRoutes).toContain("/argo/workflows/cron-workflows");
     expect(pageRoutes).toContain("/argo/workflows/workflow-templates");
     expect(pageRoutes).toContain("/argo/workflows/cluster-workflow-templates");
+    expect(pageRoutes).toContain("/argo/rollouts/overview");
+    expect(pageRoutes).toContain("/argo/rollouts/analysis-runs");
+    expect(pageRoutes).toContain("/argo/rollouts/experiments");
+    expect(pageRoutes).toContain("/argo/rollouts/analysis-templates");
+    expect(pageRoutes).toContain("/argo/rollouts/cluster-analysis-templates");
     expect(pageRoutes).toContain("/argocd/appprojects");
     expect(pageRoutes).toContain("/argocd/applicationsets");
     expect(menuIds).toContain("appprojects");
@@ -80,6 +90,11 @@ describe("ArgoRenderer registrations", () => {
     expect(menuIds).toContain("argo-workflows-cron-menu");
     expect(menuIds).toContain("argo-workflows-templates-menu");
     expect(menuIds).toContain("argo-workflows-cluster-templates-menu");
+    expect(menuIds).toContain("argo-rollouts-overview-menu");
+    expect(menuIds).toContain("argo-rollouts-analysis-runs-menu");
+    expect(menuIds).toContain("argo-rollouts-experiments-menu");
+    expect(menuIds).toContain("argo-rollouts-analysis-templates-menu");
+    expect(menuIds).toContain("argo-rollouts-cluster-analysis-templates-menu");
   });
 
   it("registers Application and AppProject detail items", () => {
@@ -90,6 +105,10 @@ describe("ArgoRenderer registrations", () => {
     expect(detailKinds).toContain("ApplicationSet");
     expect(detailKinds).toContain("AppProject");
     expect(detailKinds).toContain("Rollout");
+    expect(detailKinds).toContain("AnalysisTemplate");
+    expect(detailKinds).toContain("ClusterAnalysisTemplate");
+    expect(detailKinds).toContain("AnalysisRun");
+    expect(detailKinds).toContain("Experiment");
     expect(detailKinds).toContain("Workflow");
     expect(detailKinds).toContain("CronWorkflow");
     expect(detailKinds).toContain("WorkflowTemplate");
