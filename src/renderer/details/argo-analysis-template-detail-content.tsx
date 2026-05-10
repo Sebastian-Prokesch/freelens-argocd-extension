@@ -1,6 +1,7 @@
 import { Renderer } from "@freelensapp/extensions";
-import type { AnalysisTemplateSpec } from "../k8s/rollouts";
 import { formatOptionalValue } from "../utils";
+
+import type { AnalysisTemplateSpec } from "../k8s/rollouts";
 
 const {
   Component: { DrawerItem, DrawerTitle, Gutter, WithTooltip },

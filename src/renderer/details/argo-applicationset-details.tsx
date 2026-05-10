@@ -165,13 +165,15 @@ export const ArgoApplicationSetDetails = observer((props: ArgoApplicationSetDeta
       errorCondition?.message ?? errorCondition?.reason ?? "ApplicationSet reports an unspecified error.";
     const generators = Array.isArray(spec.generators) ? spec.generators : [];
     const applicationStatusByName = new Map<string, any>(
-      (status?.applicationStatus ?? []).filter((item: any) => isDefinedString(item?.application)).map((item: any) => {
-        const reference = parseApplicationReference(item.application);
-        const entryName = reference.name ?? item.application;
-        const entryNamespace = item?.namespace ?? reference.namespace ?? namespace;
+      (status?.applicationStatus ?? [])
+        .filter((item: any) => isDefinedString(item?.application))
+        .map((item: any) => {
+          const reference = parseApplicationReference(item.application);
+          const entryName = reference.name ?? item.application;
+          const entryNamespace = item?.namespace ?? reference.namespace ?? namespace;
 
-        return [toApplicationKey(entryNamespace, entryName), item];
-      }),
+          return [toApplicationKey(entryNamespace, entryName), item];
+        }),
     );
 
     return (

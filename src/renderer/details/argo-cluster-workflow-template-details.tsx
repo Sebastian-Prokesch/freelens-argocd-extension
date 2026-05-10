@@ -1,8 +1,7 @@
 import { Renderer } from "@freelensapp/extensions";
 import { observer } from "mobx-react";
 import { withErrorPage } from "../components/error-page";
-
-import { getWorkflowArgumentsOverview, type ArgoClusterWorkflowTemplate } from "../k8s/workflows";
+import { type ArgoClusterWorkflowTemplate, getWorkflowArgumentsOverview } from "../k8s/workflows";
 
 const {
   Component: { DrawerItem, DrawerTitle },
