@@ -15,11 +15,65 @@ export interface ArgoApplicationSetDetailsProps extends Renderer.Component.KubeO
 
 const isDefinedString = (value: unknown): value is string => typeof value === "string" && value.length > 0;
 
-const getGeneratedApplications = (status: any): string[] => {
-  const fromResources = (status?.resources ?? []).map((item: any) => item?.name).filter(isDefinedString);
-  const fromStatus = (status?.applicationStatus ?? []).map((item: any) => item?.application).filter(isDefinedString);
+interface GeneratedApplicationEntry {
+  name: string;
+  namespace: string;
+}
 
-  return [...new Set([...fromResources, ...fromStatus])];
+const parseApplicationReference = (
+  rawValue: unknown,
+): {
+  namespace?: string;
+  name?: string;
+} => {
+  if (!isDefinedString(rawValue)) {
+    return {};
+  }
+
+  const [first, second] = rawValue.split("/", 2);
+  if (first && second) {
+    return {
+      namespace: first,
+      name: second,
+    };
+  }
+
+  return {
+    name: rawValue,
+  };
+};
+
+const toApplicationKey = (namespace: string, name: string): string => `${namespace}/${name}`;
+
+const getGeneratedApplications = (status: any, defaultNamespace: string): GeneratedApplicationEntry[] => {
+  const fromResources = (status?.resources ?? []).map((item: any) => ({
+    name: item?.name,
+    namespace: item?.namespace,
+  }));
+  const fromStatus = (status?.applicationStatus ?? []).map((item: any) => {
+    const reference = parseApplicationReference(item?.application);
+
+    return {
+      name: reference.name,
+      namespace: item?.namespace ?? reference.namespace,
+    };
+  });
+
+  const deduped = new Map<string, GeneratedApplicationEntry>();
+
+  for (const candidate of [...fromResources, ...fromStatus]) {
+    if (!isDefinedString(candidate?.name)) {
+      continue;
+    }
+
+    const namespace = isDefinedString(candidate?.namespace) ? candidate.namespace : defaultNamespace;
+    deduped.set(toApplicationKey(namespace, candidate.name), {
+      name: candidate.name,
+      namespace,
+    });
+  }
+
+  return [...deduped.values()];
 };
 
 const getGeneratorSummary = (generators: any[]): string => {
@@ -100,7 +154,7 @@ export const ArgoApplicationSetDetails = observer((props: ArgoApplicationSetDeta
     const spec = object.spec as any;
     const status = object.status as any;
     const namespace = object.getNs() ?? object.metadata?.namespace ?? "default";
-    const generatedApplications = getGeneratedApplications(status);
+    const generatedApplications = getGeneratedApplications(status, namespace);
     const resourcesUpToDate =
       getConditionBooleanStatus(status?.conditions, "ResourcesUpToDate") ??
       getConditionBooleanStatus(status?.conditions, "ApplicationSetUpToDate") ??
@@ -111,9 +165,13 @@ export const ArgoApplicationSetDetails = observer((props: ArgoApplicationSetDeta
       errorCondition?.message ?? errorCondition?.reason ?? "ApplicationSet reports an unspecified error.";
     const generators = Array.isArray(spec.generators) ? spec.generators : [];
     const applicationStatusByName = new Map<string, any>(
-      (status?.applicationStatus ?? [])
-        .filter((item: any) => isDefinedString(item?.application))
-        .map((item: any) => [item.application, item]),
+      (status?.applicationStatus ?? []).filter((item: any) => isDefinedString(item?.application)).map((item: any) => {
+        const reference = parseApplicationReference(item.application);
+        const entryName = reference.name ?? item.application;
+        const entryNamespace = item?.namespace ?? reference.namespace ?? namespace;
+
+        return [toApplicationKey(entryNamespace, entryName), item];
+      }),
     );
 
     return (
@@ -138,14 +196,16 @@ export const ArgoApplicationSetDetails = observer((props: ArgoApplicationSetDeta
                 <TableCell>Sync Status</TableCell>
                 <TableCell>Health Status</TableCell>
               </TableHead>
-              {generatedApplications.map((applicationName) => {
-                const appStatus = applicationStatusByName.get(applicationName);
+              {generatedApplications.map((application) => {
+                const appStatus =
+                  applicationStatusByName.get(toApplicationKey(application.namespace, application.name)) ??
+                  applicationStatusByName.get(toApplicationKey(namespace, application.name));
 
                 return (
-                  <TableRow key={applicationName}>
+                  <TableRow key={toApplicationKey(application.namespace, application.name)}>
                     <TableCell>
-                      <Link to={getApplicationDetailsUrl(namespace, applicationName)}>
-                        <WithTooltip>{applicationName}</WithTooltip>
+                      <Link to={getApplicationDetailsUrl(application.namespace, application.name)}>
+                        <WithTooltip>{application.name}</WithTooltip>
                       </Link>
                     </TableCell>
                     <TableCell>{appStatus?.sync?.status ?? "Unknown"}</TableCell>

@@ -25,6 +25,7 @@ import {
   getRolloutStrategyLabel,
   requestRolloutPromotion,
 } from "../k8s/rollouts";
+import { formatOptionalValue } from "../utils";
 
 const {
   Component: { Button, DrawerItem, DrawerTitle, Gutter, Notifications, WithTooltip },
@@ -34,13 +35,6 @@ const {
 export interface ArgoRolloutDetailsProps extends Renderer.Component.KubeObjectDetailsProps<ArgoRollout> {
   extension: Renderer.LensExtension;
 }
-
-const formatOptional = (value: unknown): string => {
-  if (value === undefined || value === null || value === "") {
-    return "N/A";
-  }
-  return String(value);
-};
 
 export const ArgoRolloutDetails = observer((props: ArgoRolloutDetailsProps) => {
   const { object } = props;
@@ -161,12 +155,12 @@ export const ArgoRolloutDetails = observer((props: ArgoRolloutDetailsProps) => {
         <DrawerItem name="Strategy">
           <WithTooltip>{getRolloutStrategyLabel(spec?.strategy)}</WithTooltip>
         </DrawerItem>
-        <DrawerItem name="Replicas (spec)">{formatOptional(spec?.replicas)}</DrawerItem>
-        <DrawerItem name="Replicas (status)">{formatOptional(status?.replicas)}</DrawerItem>
-        <DrawerItem name="Updated">{formatOptional(status?.updatedReplicas)}</DrawerItem>
-        <DrawerItem name="Ready">{formatOptional(status?.readyReplicas)}</DrawerItem>
-        <DrawerItem name="Available">{formatOptional(status?.availableReplicas)}</DrawerItem>
-        <DrawerItem name="Phase">{formatOptional(status?.phase)}</DrawerItem>
+        <DrawerItem name="Replicas (spec)">{formatOptionalValue(spec?.replicas)}</DrawerItem>
+        <DrawerItem name="Replicas (status)">{formatOptionalValue(status?.replicas)}</DrawerItem>
+        <DrawerItem name="Updated">{formatOptionalValue(status?.updatedReplicas)}</DrawerItem>
+        <DrawerItem name="Ready">{formatOptionalValue(status?.readyReplicas)}</DrawerItem>
+        <DrawerItem name="Available">{formatOptionalValue(status?.availableReplicas)}</DrawerItem>
+        <DrawerItem name="Phase">{formatOptionalValue(status?.phase)}</DrawerItem>
         <DrawerItem name="State">{rolloutStateLabel}</DrawerItem>
         <DrawerItem name="State reason">
           <WithTooltip>{rolloutStateReason}</WithTooltip>
@@ -187,12 +181,12 @@ export const ArgoRolloutDetails = observer((props: ArgoRolloutDetailsProps) => {
             {showRetryAction ? <Button onClick={retryRollout}>Retry</Button> : null}
           </DrawerItem>
         ) : null}
-        <DrawerItem name="Current pod hash">{formatOptional(status?.currentPodHash)}</DrawerItem>
-        <DrawerItem name="Stable RS">{formatOptional(status?.stableRS)}</DrawerItem>
-        <DrawerItem name="Current step index">{formatOptional(status?.currentStepIndex)}</DrawerItem>
-        <DrawerItem name="Observed generation">{formatOptional(status?.observedGeneration)}</DrawerItem>
+        <DrawerItem name="Current pod hash">{formatOptionalValue(status?.currentPodHash)}</DrawerItem>
+        <DrawerItem name="Stable RS">{formatOptionalValue(status?.stableRS)}</DrawerItem>
+        <DrawerItem name="Current step index">{formatOptionalValue(status?.currentStepIndex)}</DrawerItem>
+        <DrawerItem name="Observed generation">{formatOptionalValue(status?.observedGeneration)}</DrawerItem>
         <DrawerItem name="Message">
-          <WithTooltip>{formatOptional(status?.message)}</WithTooltip>
+          <WithTooltip>{formatOptionalValue(status?.message)}</WithTooltip>
         </DrawerItem>
 
         {isBlueGreen ? (
@@ -200,10 +194,10 @@ export const ArgoRolloutDetails = observer((props: ArgoRolloutDetailsProps) => {
             <Gutter size="md" />
             <DrawerTitle>BlueGreen Status</DrawerTitle>
             <DrawerItem name="Promotion state">{getBlueGreenPromotionLabel(object)}</DrawerItem>
-            <DrawerItem name="Active selector">{formatOptional(status?.blueGreen?.activeSelector)}</DrawerItem>
-            <DrawerItem name="Preview selector">{formatOptional(status?.blueGreen?.previewSelector)}</DrawerItem>
-            <DrawerItem name="Stable RS">{formatOptional(status?.stableRS)}</DrawerItem>
-            <DrawerItem name="Current pod hash">{formatOptional(status?.currentPodHash)}</DrawerItem>
+            <DrawerItem name="Active selector">{formatOptionalValue(status?.blueGreen?.activeSelector)}</DrawerItem>
+            <DrawerItem name="Preview selector">{formatOptionalValue(status?.blueGreen?.previewSelector)}</DrawerItem>
+            <DrawerItem name="Stable RS">{formatOptionalValue(status?.stableRS)}</DrawerItem>
+            <DrawerItem name="Current pod hash">{formatOptionalValue(status?.currentPodHash)}</DrawerItem>
           </>
         ) : null}
 

@@ -142,6 +142,7 @@ export interface ArgoConfigPageProps {
 export const ArgoConfigTabContent = observer(() => {
   const [activeTab, setActiveTab] = React.useState<ArgoConfigTab>("repositories");
   const [isLoaded, setIsLoaded] = React.useState(false);
+  const [loadError, setLoadError] = React.useState<string | null>(null);
   const watches = React.useRef<(() => void)[]>([]);
 
   React.useEffect(() => {
@@ -149,17 +150,25 @@ export const ArgoConfigTabContent = observer(() => {
 
     (async () => {
       const { namespaceStore } = Renderer.K8sApi;
-      await namespaceStore.loadAll({ namespaces: [] });
-      watches.current.push(namespaceStore.subscribe());
+      try {
+        setLoadError(null);
+        await namespaceStore.loadAll({ namespaces: [] });
+        watches.current.push(namespaceStore.subscribe());
 
-      const namespaces = namespaceStore.items.map((ns) => ns.getName());
-      await Promise.all([secretsStore.loadAll({ namespaces }), configMapStore.loadAll({ namespaces })]);
+        const namespaces = namespaceStore.items.map((ns) => ns.getName());
+        await Promise.all([secretsStore.loadAll({ namespaces }), configMapStore.loadAll({ namespaces })]);
 
-      watches.current.push(secretsStore.subscribe());
-      watches.current.push(configMapStore.subscribe());
+        watches.current.push(secretsStore.subscribe());
+        watches.current.push(configMapStore.subscribe());
 
-      if (isMounted) {
-        setIsLoaded(true);
+        if (isMounted) {
+          setIsLoaded(true);
+        }
+      } catch (error) {
+        if (isMounted) {
+          const message = error instanceof Error ? error.message : "Failed to load ArgoCD config resources.";
+          setLoadError(message);
+        }
       }
     })();
 
@@ -203,14 +212,19 @@ export const ArgoConfigTabContent = observer(() => {
             <div className={styles.loading}>
               <WithTooltip>Loading ArgoCD config resources...</WithTooltip>
             </div>
-          ) : (
+          ) : null}
+          {loadError ? (
+            <div className={styles.loading}>
+              <WithTooltip>{loadError}</WithTooltip>
+            </div>
+          ) : isLoaded ? (
             <>
               {activeTab === "repositories" && renderRepoList(repositorySecrets, "Repositories")}
               {activeTab === "repo-creds" && renderRepoList(repoCredsSecrets, "Repo Credentials")}
               {activeTab === "clusters" && renderClusterList(clusterSecrets)}
               {activeTab === "configmaps" && renderConfigMapList(configMaps)}
             </>
-          )}
+          ) : null}
         </div>
       </div>
     </>

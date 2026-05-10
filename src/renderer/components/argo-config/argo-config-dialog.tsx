@@ -1,4 +1,5 @@
 import { Renderer } from "@freelensapp/extensions";
+import { observer } from "mobx-react";
 import React from "react";
 import {
   ARGOCD_PART_OF_LABEL,
@@ -11,8 +12,6 @@ import {
 import styles from "./argo-config-dialog.module.scss";
 import stylesInline from "./argo-config-dialog.module.scss?inline";
 import { type ArgoConfigKind, argoConfigDialogStore } from "./argo-config-dialog-store";
-
-const { observer } = global.MobxReact;
 
 const {
   Component: { Button, Dialog, Input, Notifications },

@@ -8,6 +8,7 @@ import {
   getAnalysisRunMetricCount,
   getAnalysisRunPhase,
 } from "../k8s/rollouts";
+import { formatOptionalValue } from "../utils";
 
 const {
   Component: { DrawerItem, DrawerTitle, Gutter, Table, TableCell, TableHead, TableRow, WithTooltip },
@@ -16,14 +17,6 @@ const {
 export interface ArgoAnalysisRunDetailsProps extends Renderer.Component.KubeObjectDetailsProps<ArgoAnalysisRun> {
   extension: Renderer.LensExtension;
 }
-
-const formatOptional = (value: unknown): string => {
-  if (value === undefined || value === null || value === "") {
-    return "N/A";
-  }
-
-  return String(value);
-};
 
 export const ArgoAnalysisRunDetails = observer((props: ArgoAnalysisRunDetailsProps) =>
   withErrorPage(props, () => {
@@ -35,10 +28,10 @@ export const ArgoAnalysisRunDetails = observer((props: ArgoAnalysisRunDetailsPro
       <>
         <DrawerTitle>AnalysisRun</DrawerTitle>
         <DrawerItem name="Phase">{getAnalysisRunPhase(object)}</DrawerItem>
-        <DrawerItem name="Started">{formatOptional(object.status?.startedAt)}</DrawerItem>
-        <DrawerItem name="Finished">{formatOptional(object.status?.finishedAt)}</DrawerItem>
+        <DrawerItem name="Started">{formatOptionalValue(object.status?.startedAt)}</DrawerItem>
+        <DrawerItem name="Finished">{formatOptionalValue(object.status?.finishedAt)}</DrawerItem>
         <DrawerItem name="Message">
-          <WithTooltip>{formatOptional(object.status?.message)}</WithTooltip>
+          <WithTooltip>{formatOptionalValue(object.status?.message)}</WithTooltip>
         </DrawerItem>
         <DrawerItem name="Metrics count">{String(getAnalysisRunMetricCount(object))}</DrawerItem>
         <DrawerItem name="Measurements count">{String(getAnalysisRunMeasurementCount(object))}</DrawerItem>
@@ -62,8 +55,8 @@ export const ArgoAnalysisRunDetails = observer((props: ArgoAnalysisRunDetailsPro
             </TableHead>
             {metricResults.map((metricResult, index) => (
               <TableRow key={`${metricResult.name ?? "metric"}-${index}`}>
-                <TableCell>{formatOptional(metricResult.name)}</TableCell>
-                <TableCell>{formatOptional(metricResult.phase)}</TableCell>
+                <TableCell>{formatOptionalValue(metricResult.name)}</TableCell>
+                <TableCell>{formatOptionalValue(metricResult.phase)}</TableCell>
                 <TableCell>{String(metricResult.successful ?? 0)}</TableCell>
                 <TableCell>{String(metricResult.failed ?? 0)}</TableCell>
                 <TableCell>{String(metricResult.inconclusive ?? 0)}</TableCell>
@@ -84,7 +77,7 @@ export const ArgoAnalysisRunDetails = observer((props: ArgoAnalysisRunDetailsPro
               name={condition.type ?? `Condition ${index + 1}`}
             >
               <WithTooltip>
-                {formatOptional(condition.status)} - {formatOptional(condition.reason ?? condition.message)}
+                {formatOptionalValue(condition.status)} - {formatOptionalValue(condition.reason ?? condition.message)}
               </WithTooltip>
             </DrawerItem>
           ))

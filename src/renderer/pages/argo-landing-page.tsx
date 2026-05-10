@@ -21,7 +21,10 @@ export const ArgoLandingPage = observer(() => {
         </li>
         <li>
           <Link to="rollouts">Argo Rollouts</Link>
-          <span className={styles.hint}> — Rollouts list and details</span>
+          <span className={styles.hint}>
+            {" "}
+            — Rollouts overview, Rollouts, AnalysisRuns, AnalysisTemplates, ClusterAnalysisTemplates, and Experiments
+          </span>
         </li>
       </ul>
     </div>

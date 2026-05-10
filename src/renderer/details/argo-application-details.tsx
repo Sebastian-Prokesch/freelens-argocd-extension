@@ -324,7 +324,7 @@ export const ArgoApplicationDetails = observer((props: ArgoApplicationDetailsPro
           <DrawerTitle>Resources Sync Status</DrawerTitle>
           <Table
             tableId="resources"
-            key="argo-application-details-ressources-table"
+            key="argo-application-details-resources-table"
             sortable={resourcesSortable}
             sortByDefault={resourcesSortByDefault}
             scrollable={false}

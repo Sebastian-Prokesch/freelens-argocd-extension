@@ -42,6 +42,13 @@ interface WorkflowNodeStatus {
   phase?: string;
 }
 
+interface WorkflowTemplateLikeSpec {
+  arguments?: {
+    parameters?: unknown[];
+    artifacts?: unknown[];
+  };
+}
+
 export interface WorkflowPodReference {
   nodeId: string;
   nodeName: string;
@@ -427,4 +434,19 @@ export function getCronWorkflowLastScheduled(cronWorkflow: ArgoCronWorkflow): st
 
 export function getCronWorkflowActiveCount(cronWorkflow: ArgoCronWorkflow): number {
   return cronWorkflow.status?.active?.length ?? 0;
+}
+
+export function getWorkflowArgumentsOverview(spec: WorkflowTemplateLikeSpec | undefined): string {
+  const parameters = spec?.arguments?.parameters ?? [];
+  const artifacts = spec?.arguments?.artifacts ?? [];
+
+  const parts: string[] = [];
+  if (parameters.length > 0) {
+    parts.push(`Parameters: ${parameters.length}`);
+  }
+  if (artifacts.length > 0) {
+    parts.push(`Artifacts: ${artifacts.length}`);
+  }
+
+  return parts.length > 0 ? parts.join(" | ") : "N/A";
 }

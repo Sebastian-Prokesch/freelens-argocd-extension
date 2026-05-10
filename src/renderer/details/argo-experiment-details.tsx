@@ -7,6 +7,7 @@ import {
   getExperimentPhase,
   getExperimentTemplateCount,
 } from "../k8s/rollouts";
+import { formatOptionalValue } from "../utils";
 
 const {
   Component: { DrawerItem, DrawerTitle, Gutter, Table, TableCell, TableHead, TableRow, WithTooltip },
@@ -15,14 +16,6 @@ const {
 export interface ArgoExperimentDetailsProps extends Renderer.Component.KubeObjectDetailsProps<ArgoExperiment> {
   extension: Renderer.LensExtension;
 }
-
-const formatOptional = (value: unknown): string => {
-  if (value === undefined || value === null || value === "") {
-    return "N/A";
-  }
-
-  return String(value);
-};
 
 export const ArgoExperimentDetails = observer((props: ArgoExperimentDetailsProps) =>
   withErrorPage(props, () => {
@@ -36,10 +29,10 @@ export const ArgoExperimentDetails = observer((props: ArgoExperimentDetailsProps
         <DrawerTitle>Experiment</DrawerTitle>
         <DrawerItem name="Phase">{getExperimentPhase(object)}</DrawerItem>
         <DrawerItem name="Message">
-          <WithTooltip>{formatOptional(object.status?.message)}</WithTooltip>
+          <WithTooltip>{formatOptionalValue(object.status?.message)}</WithTooltip>
         </DrawerItem>
-        <DrawerItem name="Duration">{formatOptional(object.spec?.duration)}</DrawerItem>
-        <DrawerItem name="Progress deadline">{formatOptional(object.spec?.progressDeadlineSeconds)}</DrawerItem>
+        <DrawerItem name="Duration">{formatOptionalValue(object.spec?.duration)}</DrawerItem>
+        <DrawerItem name="Progress deadline">{formatOptionalValue(object.spec?.progressDeadlineSeconds)}</DrawerItem>
         <DrawerItem name="Template count">{String(getExperimentTemplateCount(object))}</DrawerItem>
         <DrawerItem name="Analysis count">{String(getExperimentAnalysisCount(object))}</DrawerItem>
 
@@ -56,9 +49,9 @@ export const ArgoExperimentDetails = observer((props: ArgoExperimentDetailsProps
             </TableHead>
             {templates.map((template, index) => (
               <TableRow key={`${template.name ?? "template"}-${index}`}>
-                <TableCell>{formatOptional(template.name)}</TableCell>
-                <TableCell>{formatOptional(template.specRef)}</TableCell>
-                <TableCell>{formatOptional(template.replicas)}</TableCell>
+                <TableCell>{formatOptionalValue(template.name)}</TableCell>
+                <TableCell>{formatOptionalValue(template.specRef)}</TableCell>
+                <TableCell>{formatOptionalValue(template.replicas)}</TableCell>
               </TableRow>
             ))}
           </Table>
@@ -72,7 +65,7 @@ export const ArgoExperimentDetails = observer((props: ArgoExperimentDetailsProps
           analyses.map((analysis, index) => (
             <DrawerItem key={`${analysis.name ?? "analysis"}-${index}`} name={analysis.name ?? `Analysis ${index + 1}`}>
               <WithTooltip>
-                template: {formatOptional(analysis.templateName)}, args: {String(analysis.args?.length ?? 0)}
+                template: {formatOptionalValue(analysis.templateName)}, args: {String(analysis.args?.length ?? 0)}
               </WithTooltip>
             </DrawerItem>
           ))
@@ -89,7 +82,7 @@ export const ArgoExperimentDetails = observer((props: ArgoExperimentDetailsProps
               name={condition.type ?? `Condition ${index + 1}`}
             >
               <WithTooltip>
-                {formatOptional(condition.status)} - {formatOptional(condition.reason ?? condition.message)}
+                {formatOptionalValue(condition.status)} - {formatOptionalValue(condition.reason ?? condition.message)}
               </WithTooltip>
             </DrawerItem>
           ))

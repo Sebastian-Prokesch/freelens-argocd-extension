@@ -26,12 +26,12 @@ const formatJwtToken = (token: { iat?: number; exp?: number; id?: string }) => {
   return parts.length > 0 ? parts.join(" ") : "token";
 };
 
-const renderTable = (rows: any[], columns: string[], rowRenderer: (row: any) => any[]) => {
+const renderTable = (tableId: string, rows: any[], columns: string[], rowRenderer: (row: any) => any[]) => {
   if (!rows?.length) return <span>None</span>;
 
   return (
     <div className={styles.tableWrapper}>
-      <Table scrollable={false} sortSyncWithUrl={false}>
+      <Table tableId={tableId} scrollable={false} sortSyncWithUrl={false}>
         <TableHead flat sticky={false}>
           {columns.map((column) => (
             <TableCell key={column}>{column}</TableCell>
@@ -70,7 +70,7 @@ export const ArgoAppProjectDetails = observer((props: ArgoAppProjectDetailsProps
 
           <DrawerTitle>Destinations</DrawerTitle>
           <DrawerItem name="Allowed Destinations">
-            {renderTable(spec.destinations ?? [], ["Server", "Namespace"], (destination) => [
+            {renderTable("appproject-destinations", spec.destinations ?? [], ["Server", "Namespace"], (destination) => [
               destination.server ?? destination.name ?? "Any",
               destination.namespace ?? "Any",
             ])}
@@ -80,7 +80,7 @@ export const ArgoAppProjectDetails = observer((props: ArgoAppProjectDetailsProps
 
           <DrawerTitle>Cluster Resource Whitelist</DrawerTitle>
           <DrawerItem name="Allowed Cluster Resources">
-            {renderTable(spec.clusterResourceWhitelist ?? [], ["Group", "Kind"], (resource) => [
+            {renderTable("appproject-cluster-resource-whitelist", spec.clusterResourceWhitelist ?? [], ["Group", "Kind"], (resource) => [
               resource.group ?? "*",
               resource.kind ?? "*",
             ])}
@@ -90,17 +90,19 @@ export const ArgoAppProjectDetails = observer((props: ArgoAppProjectDetailsProps
 
           <DrawerTitle>Namespace Resource Whitelist</DrawerTitle>
           <DrawerItem name="Allowed Namespace Resources">
-            {renderTable(spec.namespaceResourceWhitelist ?? [], ["Group", "Kind"], (resource) => [
-              resource.group ?? "*",
-              resource.kind ?? "*",
-            ])}
+            {renderTable(
+              "appproject-namespace-resource-whitelist",
+              spec.namespaceResourceWhitelist ?? [],
+              ["Group", "Kind"],
+              (resource) => [resource.group ?? "*", resource.kind ?? "*"],
+            )}
           </DrawerItem>
 
           <Gutter size="md" />
 
           <DrawerTitle>Cluster Resource Blacklist</DrawerTitle>
           <DrawerItem name="Blocked Cluster Resources">
-            {renderTable(spec.clusterResourceBlacklist ?? [], ["Group", "Kind"], (resource) => [
+            {renderTable("appproject-cluster-resource-blacklist", spec.clusterResourceBlacklist ?? [], ["Group", "Kind"], (resource) => [
               resource.group ?? "*",
               resource.kind ?? "*",
             ])}
@@ -110,17 +112,19 @@ export const ArgoAppProjectDetails = observer((props: ArgoAppProjectDetailsProps
 
           <DrawerTitle>Namespace Resource Blacklist</DrawerTitle>
           <DrawerItem name="Blocked Namespace Resources">
-            {renderTable(spec.namespaceResourceBlacklist ?? [], ["Group", "Kind"], (resource) => [
-              resource.group ?? "*",
-              resource.kind ?? "*",
-            ])}
+            {renderTable(
+              "appproject-namespace-resource-blacklist",
+              spec.namespaceResourceBlacklist ?? [],
+              ["Group", "Kind"],
+              (resource) => [resource.group ?? "*", resource.kind ?? "*"],
+            )}
           </DrawerItem>
 
           <Gutter size="md" />
 
           <DrawerTitle>Roles</DrawerTitle>
           <DrawerItem name="Role Definitions">
-            {renderTable(spec.roles ?? [], ["Name", "Description", "Groups", "Policies", "JWT Tokens"], (role) => {
+            {renderTable("appproject-roles", spec.roles ?? [], ["Name", "Description", "Groups", "Policies", "JWT Tokens"], (role) => {
               const jwtTokens = Array.isArray(role.jwtTokens) ? role.jwtTokens : [];
 
               return [
@@ -138,6 +142,7 @@ export const ArgoAppProjectDetails = observer((props: ArgoAppProjectDetailsProps
           <DrawerTitle>Sync Windows</DrawerTitle>
           <DrawerItem name="Window Rules">
             {renderTable(
+              "appproject-sync-windows",
               spec.syncWindows ?? [],
               ["Kind", "Schedule", "Duration", "Applications", "Manual Sync", "Timezone"],
               (window) => [
@@ -163,7 +168,7 @@ export const ArgoAppProjectDetails = observer((props: ArgoAppProjectDetailsProps
             {spec.orphanedResources?.warn === undefined ? "N/A" : spec.orphanedResources.warn ? "true" : "false"}
           </DrawerItem>
           <DrawerItem name="Ignored Resources">
-            {renderTable(spec.orphanedResources?.ignore ?? [], ["Group", "Kind", "Name"], (resource) => [
+            {renderTable("appproject-orphaned-ignore", spec.orphanedResources?.ignore ?? [], ["Group", "Kind", "Name"], (resource) => [
               resource.group ?? "*",
               resource.kind ?? "*",
               resource.name ?? "*",
