@@ -32,24 +32,20 @@ import { ArgoClusterWorkflowTemplate, ArgoCronWorkflow, ArgoWorkflow, ArgoWorkfl
 import {
   ArgoConfigMenuItem,
   ArgoRolloutAbortMenuItem,
-  type ArgoRolloutAbortMenuItemProps,
   ArgoRolloutPromoteFullMenuItem,
-  type ArgoRolloutPromoteFullMenuItemProps,
   ArgoRolloutPromoteMenuItem,
-  type ArgoRolloutPromoteMenuItemProps,
   ArgoRolloutPromoteSkipAllMenuItem,
-  type ArgoRolloutPromoteSkipAllMenuItemProps,
   ArgoRolloutPromoteSkipCurrentMenuItem,
-  type ArgoRolloutPromoteSkipCurrentMenuItemProps,
   ArgoRolloutRetryMenuItem,
-  type ArgoRolloutRetryMenuItemProps,
   ArgoSyncMenuItem,
-  type ArgoSyncMenuItemProps,
   ArgoTerminateMenuItem,
-  type ArgoTerminateMenuItemProps,
 } from "./menus";
 import { ArgoPreferenceHint, ArgoPreferenceInput } from "./preferences";
 import { buildClusterPageMenus, buildClusterPages } from "./registration/cluster-registration";
+import {
+  createKubeObjectDetailRegistration,
+  createKubeObjectMenuRegistration,
+} from "./registration/kube-object-registration";
 
 export default class ArgoRenderer extends Renderer.LensExtension {
   clusterFrameComponents = [
@@ -74,146 +70,92 @@ export default class ArgoRenderer extends Renderer.LensExtension {
   ];
 
   kubeObjectDetailItems = [
-    {
+    createKubeObjectDetailRegistration({
       kind: ArgoApplication.kind,
       apiVersions: ArgoApplication.crd.apiVersions,
-      priority: 10,
-      components: {
-        Details: (props: Renderer.Component.KubeObjectDetailsProps<any>) => (
-          <ArgoApplicationDetails {...props} extension={this} />
-        ),
-      },
-    },
-    {
+      extension: this,
+      Details: ArgoApplicationDetails,
+    }),
+    createKubeObjectDetailRegistration({
       kind: ArgoApplicationSet.kind,
       apiVersions: ArgoApplicationSet.crd.apiVersions,
-      priority: 10,
-      components: {
-        Details: (props: Renderer.Component.KubeObjectDetailsProps<any>) => (
-          <ArgoApplicationSetDetails {...props} extension={this} />
-        ),
-      },
-    },
-    {
+      extension: this,
+      Details: ArgoApplicationSetDetails,
+    }),
+    createKubeObjectDetailRegistration({
       kind: ArgoAppProject.kind,
       apiVersions: ArgoAppProject.crd.apiVersions,
-      priority: 10,
-      components: {
-        Details: (props: Renderer.Component.KubeObjectDetailsProps<any>) => (
-          <ArgoAppProjectDetails {...props} extension={this} />
-        ),
-      },
-    },
-    {
+      extension: this,
+      Details: ArgoAppProjectDetails,
+    }),
+    createKubeObjectDetailRegistration({
       kind: ArgoRollout.kind,
       apiVersions: ArgoRollout.crd.apiVersions,
-      priority: 10,
-      components: {
-        Details: (props: Renderer.Component.KubeObjectDetailsProps<any>) => (
-          <ArgoRolloutDetails {...props} extension={this} />
-        ),
-      },
-    },
-    {
+      extension: this,
+      Details: ArgoRolloutDetails,
+    }),
+    createKubeObjectDetailRegistration({
       kind: ArgoAnalysisTemplate.kind,
       apiVersions: ArgoAnalysisTemplate.crd.apiVersions,
-      priority: 10,
-      components: {
-        Details: (props: Renderer.Component.KubeObjectDetailsProps<any>) => (
-          <ArgoAnalysisTemplateDetails {...props} extension={this} />
-        ),
-      },
-    },
-    {
+      extension: this,
+      Details: ArgoAnalysisTemplateDetails,
+    }),
+    createKubeObjectDetailRegistration({
       kind: ArgoClusterAnalysisTemplate.kind,
       apiVersions: ArgoClusterAnalysisTemplate.crd.apiVersions,
-      priority: 10,
-      components: {
-        Details: (props: Renderer.Component.KubeObjectDetailsProps<any>) => (
-          <ArgoClusterAnalysisTemplateDetails {...props} extension={this} />
-        ),
-      },
-    },
-    {
+      extension: this,
+      Details: ArgoClusterAnalysisTemplateDetails,
+    }),
+    createKubeObjectDetailRegistration({
       kind: ArgoAnalysisRun.kind,
       apiVersions: ArgoAnalysisRun.crd.apiVersions,
-      priority: 10,
-      components: {
-        Details: (props: Renderer.Component.KubeObjectDetailsProps<any>) => (
-          <ArgoAnalysisRunDetails {...props} extension={this} />
-        ),
-      },
-    },
-    {
+      extension: this,
+      Details: ArgoAnalysisRunDetails,
+    }),
+    createKubeObjectDetailRegistration({
       kind: ArgoExperiment.kind,
       apiVersions: ArgoExperiment.crd.apiVersions,
-      priority: 10,
-      components: {
-        Details: (props: Renderer.Component.KubeObjectDetailsProps<any>) => (
-          <ArgoExperimentDetails {...props} extension={this} />
-        ),
-      },
-    },
-    {
+      extension: this,
+      Details: ArgoExperimentDetails,
+    }),
+    createKubeObjectDetailRegistration({
       kind: ArgoWorkflow.kind,
       apiVersions: ArgoWorkflow.crd.apiVersions,
-      priority: 10,
-      components: {
-        Details: (props: Renderer.Component.KubeObjectDetailsProps<any>) => (
-          <ArgoWorkflowDetails {...props} extension={this} />
-        ),
-      },
-    },
-    {
+      extension: this,
+      Details: ArgoWorkflowDetails,
+    }),
+    createKubeObjectDetailRegistration({
       kind: ArgoCronWorkflow.kind,
       apiVersions: ArgoCronWorkflow.crd.apiVersions,
-      priority: 10,
-      components: {
-        Details: (props: Renderer.Component.KubeObjectDetailsProps<any>) => (
-          <ArgoCronWorkflowDetails {...props} extension={this} />
-        ),
-      },
-    },
-    {
+      extension: this,
+      Details: ArgoCronWorkflowDetails,
+    }),
+    createKubeObjectDetailRegistration({
       kind: ArgoWorkflowTemplate.kind,
       apiVersions: ArgoWorkflowTemplate.crd.apiVersions,
-      priority: 10,
-      components: {
-        Details: (props: Renderer.Component.KubeObjectDetailsProps<any>) => (
-          <ArgoWorkflowTemplateDetails {...props} extension={this} />
-        ),
-      },
-    },
-    {
+      extension: this,
+      Details: ArgoWorkflowTemplateDetails,
+    }),
+    createKubeObjectDetailRegistration({
       kind: ArgoClusterWorkflowTemplate.kind,
       apiVersions: ArgoClusterWorkflowTemplate.crd.apiVersions,
-      priority: 10,
-      components: {
-        Details: (props: Renderer.Component.KubeObjectDetailsProps<any>) => (
-          <ArgoClusterWorkflowTemplateDetails {...props} extension={this} />
-        ),
-      },
-    },
-    {
+      extension: this,
+      Details: ArgoClusterWorkflowTemplateDetails,
+    }),
+    createKubeObjectDetailRegistration({
       kind: "Secret",
       apiVersions: ["v1"],
       priority: 50,
-      components: {
-        Details: (props: Renderer.Component.KubeObjectDetailsProps<any>) => (
-          <ArgoConfigDetails {...props} extension={this} />
-        ),
-      },
-    },
-    {
+      extension: this,
+      Details: ArgoConfigDetails,
+    }),
+    createKubeObjectDetailRegistration({
       kind: "ConfigMap",
       apiVersions: ["v1"],
       priority: 50,
-      components: {
-        Details: (props: Renderer.Component.KubeObjectDetailsProps<any>) => (
-          <ArgoConfigDetails {...props} extension={this} />
-        ),
-      },
-    },
+      extension: this,
+      Details: ArgoConfigDetails,
+    }),
   ];
 
   clusterPages = buildClusterPages(this);
@@ -221,87 +163,65 @@ export default class ArgoRenderer extends Renderer.LensExtension {
   clusterPageMenus = buildClusterPageMenus();
 
   kubeObjectMenuItems = [
-    {
+    createKubeObjectMenuRegistration({
       kind: ArgoApplication.kind,
       apiVersions: ArgoApplication.crd.apiVersions,
-      components: {
-        MenuItem: (props: ArgoSyncMenuItemProps) => <ArgoSyncMenuItem {...props} extension={this} />,
-      },
-    },
-    {
+      extension: this,
+      MenuItem: ArgoSyncMenuItem,
+    }),
+    createKubeObjectMenuRegistration({
       kind: ArgoApplication.kind,
       apiVersions: ArgoApplication.crd.apiVersions,
-      components: {
-        MenuItem: (props: ArgoTerminateMenuItemProps) => <ArgoTerminateMenuItem {...props} extension={this} />,
-      },
-    },
-    {
+      extension: this,
+      MenuItem: ArgoTerminateMenuItem,
+    }),
+    createKubeObjectMenuRegistration({
       kind: ArgoRollout.kind,
       apiVersions: ArgoRollout.crd.apiVersions,
-      components: {
-        MenuItem: (props: ArgoRolloutPromoteMenuItemProps) => (
-          <ArgoRolloutPromoteMenuItem {...props} extension={this} />
-        ),
-      },
-    },
-    {
+      extension: this,
+      MenuItem: ArgoRolloutPromoteMenuItem,
+    }),
+    createKubeObjectMenuRegistration({
       kind: ArgoRollout.kind,
       apiVersions: ArgoRollout.crd.apiVersions,
-      components: {
-        MenuItem: (props: ArgoRolloutPromoteFullMenuItemProps) => (
-          <ArgoRolloutPromoteFullMenuItem {...props} extension={this} />
-        ),
-      },
-    },
-    {
+      extension: this,
+      MenuItem: ArgoRolloutPromoteFullMenuItem,
+    }),
+    createKubeObjectMenuRegistration({
       kind: ArgoRollout.kind,
       apiVersions: ArgoRollout.crd.apiVersions,
-      components: {
-        MenuItem: (props: ArgoRolloutPromoteSkipCurrentMenuItemProps) => (
-          <ArgoRolloutPromoteSkipCurrentMenuItem {...props} extension={this} />
-        ),
-      },
-    },
-    {
+      extension: this,
+      MenuItem: ArgoRolloutPromoteSkipCurrentMenuItem,
+    }),
+    createKubeObjectMenuRegistration({
       kind: ArgoRollout.kind,
       apiVersions: ArgoRollout.crd.apiVersions,
-      components: {
-        MenuItem: (props: ArgoRolloutPromoteSkipAllMenuItemProps) => (
-          <ArgoRolloutPromoteSkipAllMenuItem {...props} extension={this} />
-        ),
-      },
-    },
-    {
+      extension: this,
+      MenuItem: ArgoRolloutPromoteSkipAllMenuItem,
+    }),
+    createKubeObjectMenuRegistration({
       kind: ArgoRollout.kind,
       apiVersions: ArgoRollout.crd.apiVersions,
-      components: {
-        MenuItem: (props: ArgoRolloutAbortMenuItemProps) => <ArgoRolloutAbortMenuItem {...props} extension={this} />,
-      },
-    },
-    {
+      extension: this,
+      MenuItem: ArgoRolloutAbortMenuItem,
+    }),
+    createKubeObjectMenuRegistration({
       kind: ArgoRollout.kind,
       apiVersions: ArgoRollout.crd.apiVersions,
-      components: {
-        MenuItem: (props: ArgoRolloutRetryMenuItemProps) => <ArgoRolloutRetryMenuItem {...props} extension={this} />,
-      },
-    },
-    {
+      extension: this,
+      MenuItem: ArgoRolloutRetryMenuItem,
+    }),
+    createKubeObjectMenuRegistration({
       kind: "Secret",
       apiVersions: ["v1"],
-      components: {
-        MenuItem: (props: Renderer.Component.KubeObjectMenuProps<any>) => (
-          <ArgoConfigMenuItem {...props} extension={this} />
-        ),
-      },
-    },
-    {
+      extension: this,
+      MenuItem: ArgoConfigMenuItem,
+    }),
+    createKubeObjectMenuRegistration({
       kind: "ConfigMap",
       apiVersions: ["v1"],
-      components: {
-        MenuItem: (props: Renderer.Component.KubeObjectMenuProps<any>) => (
-          <ArgoConfigMenuItem {...props} extension={this} />
-        ),
-      },
-    },
+      extension: this,
+      MenuItem: ArgoConfigMenuItem,
+    }),
   ];
 }
