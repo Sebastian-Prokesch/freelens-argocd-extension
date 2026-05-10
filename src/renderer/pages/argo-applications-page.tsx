@@ -2,6 +2,7 @@ import { Common, Renderer } from "@freelensapp/extensions";
 import { observer } from "mobx-react";
 import { Link } from "react-router-dom";
 import { withErrorPage } from "../components/error-page";
+import { StatusBadge } from "../components/shared";
 import { ArgoApplication, type ArgoApplicationApi, getArgoApplicationStore } from "../k8s/argocd";
 import styles from "./argo-applications-page.module.scss";
 import stylesInline from "./argo-applications-page.module.scss?inline";
@@ -73,8 +74,8 @@ export const ArgoApplicationsTabContent = observer(() => {
             <WithTooltip>{object.getNs()}</WithTooltip>
           </Link>,
           <WithTooltip>{object.spec?.project ?? "N/A"}</WithTooltip>,
-          <WithTooltip>{object.status?.sync?.status ?? "N/A"}</WithTooltip>,
-          <WithTooltip>{object.status?.health?.status ?? "N/A"}</WithTooltip>,
+          <StatusBadge status={object.status?.sync?.status} fallbackLabel="N/A" />,
+          <StatusBadge status={object.status?.health?.status} fallbackLabel="N/A" />,
           <KubeObjectAge object={object} key="age" />,
         ]}
       />

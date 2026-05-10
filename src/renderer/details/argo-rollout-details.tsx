@@ -3,6 +3,7 @@ import { observer } from "mobx-react";
 import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { withErrorPage } from "../components/error-page";
+import { ConditionsList, ResourceEventsSection, StatusBadge } from "../components/shared";
 import {
   type ArgoAnalysisRun,
   type ArgoRollout,
@@ -160,7 +161,9 @@ export const ArgoRolloutDetails = observer((props: ArgoRolloutDetailsProps) => {
         <DrawerItem name="Updated">{formatOptionalValue(status?.updatedReplicas)}</DrawerItem>
         <DrawerItem name="Ready">{formatOptionalValue(status?.readyReplicas)}</DrawerItem>
         <DrawerItem name="Available">{formatOptionalValue(status?.availableReplicas)}</DrawerItem>
-        <DrawerItem name="Phase">{formatOptionalValue(status?.phase)}</DrawerItem>
+        <DrawerItem name="Phase">
+          <StatusBadge status={status?.phase} />
+        </DrawerItem>
         <DrawerItem name="State">{rolloutStateLabel}</DrawerItem>
         <DrawerItem name="State reason">
           <WithTooltip>{rolloutStateReason}</WithTooltip>
@@ -204,17 +207,7 @@ export const ArgoRolloutDetails = observer((props: ArgoRolloutDetailsProps) => {
         <Gutter size="md" />
 
         <DrawerTitle>Conditions</DrawerTitle>
-        {(status?.conditions?.length ?? 0) === 0 ? (
-          <DrawerItem name="Summary">None</DrawerItem>
-        ) : (
-          status?.conditions?.map((condition, index) => (
-            <DrawerItem key={`${condition.type}-${index}`} name={condition.type ?? `Condition ${index + 1}`}>
-              <WithTooltip>
-                {condition.status} — {condition.reason ?? condition.message ?? "no details"}
-              </WithTooltip>
-            </DrawerItem>
-          ))
-        )}
+        <ConditionsList conditions={status?.conditions} mode="compact" />
 
         <Gutter size="md" />
         <DrawerTitle>Related AnalysisRuns</DrawerTitle>
@@ -239,6 +232,17 @@ export const ArgoRolloutDetails = observer((props: ArgoRolloutDetailsProps) => {
             );
           })
         )}
+
+        <Gutter size="md" />
+        <ResourceEventsSection
+          resource={{
+            uid: object.metadata?.uid,
+            name: object.getName?.() ?? object.metadata?.name,
+            namespace: object.getNs?.() ?? object.metadata?.namespace,
+            kind: object.kind,
+            apiVersion: object.apiVersion,
+          }}
+        />
       </>
     );
   });

@@ -2,6 +2,7 @@ import { Renderer } from "@freelensapp/extensions";
 import { observer } from "mobx-react";
 import { Link } from "react-router-dom";
 import { withErrorPage } from "../components/error-page";
+import { ConditionsList, ResourceEventsSection, StatusBadge } from "../components/shared";
 import { ArgoApplicationSet, getArgoApplicationStore } from "../k8s/argocd";
 
 const {
@@ -210,8 +211,12 @@ export const ArgoApplicationSetDetails = observer((props: ArgoApplicationSetDeta
                         <WithTooltip>{application.name}</WithTooltip>
                       </Link>
                     </TableCell>
-                    <TableCell>{appStatus?.sync?.status ?? "Unknown"}</TableCell>
-                    <TableCell>{appStatus?.health?.status ?? "Unknown"}</TableCell>
+                    <TableCell>
+                      <StatusBadge status={appStatus?.sync?.status} />
+                    </TableCell>
+                    <TableCell>
+                      <StatusBadge status={appStatus?.health?.status} />
+                    </TableCell>
                   </TableRow>
                 );
               })}
@@ -224,26 +229,7 @@ export const ArgoApplicationSetDetails = observer((props: ArgoApplicationSetDeta
           {status?.observedGeneration ? String(status.observedGeneration) : "N/A"}
         </DrawerItem>
         <DrawerItem name="Conditions">
-          {status?.conditions?.length ? (
-            <Table tableId="applicationset-conditions" scrollable={false} sortSyncWithUrl={false}>
-              <TableHead flat sticky={false}>
-                <TableCell>Type</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Reason</TableCell>
-                <TableCell>Message</TableCell>
-              </TableHead>
-              {status.conditions.map((condition: any, index: number) => (
-                <TableRow key={`${condition?.type ?? "condition"}-${index}`}>
-                  <TableCell>{condition?.type ?? "Unknown"}</TableCell>
-                  <TableCell>{condition?.status ?? "Unknown"}</TableCell>
-                  <TableCell>{condition?.reason ?? "N/A"}</TableCell>
-                  <TableCell>{condition?.message ?? "N/A"}</TableCell>
-                </TableRow>
-              ))}
-            </Table>
-          ) : (
-            "None"
-          )}
+          <ConditionsList conditions={status?.conditions} mode="table" tableId="applicationset-conditions" />
         </DrawerItem>
         {hasError ? (
           <>
@@ -256,6 +242,16 @@ export const ArgoApplicationSetDetails = observer((props: ArgoApplicationSetDeta
         <DrawerItem name="Resources Up-to-date">
           <BadgeBoolean value={resourcesUpToDate} />
         </DrawerItem>
+        <Gutter size="md" />
+        <ResourceEventsSection
+          resource={{
+            uid: object.metadata?.uid,
+            name: object.getName?.() ?? object.metadata?.name,
+            namespace: object.getNs?.() ?? object.metadata?.namespace,
+            kind: object.kind,
+            apiVersion: object.apiVersion,
+          }}
+        />
       </>
     );
   }),

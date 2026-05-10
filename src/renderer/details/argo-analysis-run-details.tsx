@@ -1,6 +1,7 @@
 import { Renderer } from "@freelensapp/extensions";
 import { observer } from "mobx-react";
 import { withErrorPage } from "../components/error-page";
+import { ConditionsList, ResourceEventsSection, StatusBadge } from "../components/shared";
 import {
   type ArgoAnalysisRun,
   getAnalysisRunConditionSummary,
@@ -27,7 +28,9 @@ export const ArgoAnalysisRunDetails = observer((props: ArgoAnalysisRunDetailsPro
     return (
       <>
         <DrawerTitle>AnalysisRun</DrawerTitle>
-        <DrawerItem name="Phase">{getAnalysisRunPhase(object)}</DrawerItem>
+        <DrawerItem name="Phase">
+          <StatusBadge status={getAnalysisRunPhase(object)} />
+        </DrawerItem>
         <DrawerItem name="Started">{formatOptionalValue(object.status?.startedAt)}</DrawerItem>
         <DrawerItem name="Finished">{formatOptionalValue(object.status?.finishedAt)}</DrawerItem>
         <DrawerItem name="Message">
@@ -56,7 +59,9 @@ export const ArgoAnalysisRunDetails = observer((props: ArgoAnalysisRunDetailsPro
             {metricResults.map((metricResult, index) => (
               <TableRow key={`${metricResult.name ?? "metric"}-${index}`}>
                 <TableCell>{formatOptionalValue(metricResult.name)}</TableCell>
-                <TableCell>{formatOptionalValue(metricResult.phase)}</TableCell>
+                <TableCell>
+                  <StatusBadge status={metricResult.phase} fallbackLabel="N/A" />
+                </TableCell>
                 <TableCell>{String(metricResult.successful ?? 0)}</TableCell>
                 <TableCell>{String(metricResult.failed ?? 0)}</TableCell>
                 <TableCell>{String(metricResult.inconclusive ?? 0)}</TableCell>
@@ -68,20 +73,18 @@ export const ArgoAnalysisRunDetails = observer((props: ArgoAnalysisRunDetailsPro
 
         <Gutter size="md" />
         <DrawerTitle>Conditions</DrawerTitle>
-        {conditions.length === 0 ? (
-          <DrawerItem name="Summary">None</DrawerItem>
-        ) : (
-          conditions.map((condition, index) => (
-            <DrawerItem
-              key={`${condition.type ?? "condition"}-${index}`}
-              name={condition.type ?? `Condition ${index + 1}`}
-            >
-              <WithTooltip>
-                {formatOptionalValue(condition.status)} - {formatOptionalValue(condition.reason ?? condition.message)}
-              </WithTooltip>
-            </DrawerItem>
-          ))
-        )}
+        <ConditionsList conditions={conditions} mode="compact" />
+
+        <Gutter size="md" />
+        <ResourceEventsSection
+          resource={{
+            uid: object.metadata?.uid,
+            name: object.getName?.() ?? object.metadata?.name,
+            namespace: object.getNs?.() ?? object.metadata?.namespace,
+            kind: object.kind,
+            apiVersion: object.apiVersion,
+          }}
+        />
       </>
     );
   }),
