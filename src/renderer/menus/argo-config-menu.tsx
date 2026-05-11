@@ -4,7 +4,7 @@ import { argoConfigDialogStore } from "../components/argo-config";
 import { isArgoConfigMap, isArgoSecret } from "../k8s/argocd";
 
 const {
-  Component: { ConfirmDialog, MenuItem },
+  Component: { ConfirmDialog, MenuItem, Notifications },
   K8sApi: { configMapStore, secretsStore },
 } = Renderer;
 
@@ -39,10 +39,16 @@ export const ArgoConfigMenuItem = observer((props: ArgoConfigMenuItemProps) => {
       return;
     }
 
-    if (isSecret) {
-      await secretsStore.remove(object as any);
-    } else {
-      await configMapStore.remove(object as any);
+    try {
+      if (isSecret) {
+        await secretsStore.remove(object as any);
+      } else {
+        await configMapStore.remove(object as any);
+      }
+      Notifications.ok(`Deleted ArgoCD config ${object.getName()}.`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to delete ArgoCD config.";
+      Notifications.error(message);
     }
   };
 

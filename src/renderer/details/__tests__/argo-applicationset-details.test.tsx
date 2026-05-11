@@ -48,6 +48,36 @@ describe("ArgoApplicationSetDetails", () => {
     expect(screen.getByText("Health Status")).toBeInTheDocument();
   });
 
+  it("uses generated application namespace in links", () => {
+    render(
+      <MemoryRouter>
+        <ArgoApplicationSetDetails
+          extension={extension}
+          object={
+            {
+              getNs: () => "argocd",
+              spec: {},
+              status: {
+                resources: [{ name: "guestbook", namespace: "team-a" }],
+                applicationStatus: [{ application: "team-b/payments" }],
+                conditions: [],
+              },
+            } as any
+          }
+        />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole("link", { name: "guestbook" })).toHaveAttribute(
+      "href",
+      "/apis/argoproj.io/v1alpha1/namespaces/team-a/applications/guestbook",
+    );
+    expect(screen.getByRole("link", { name: "payments" })).toHaveAttribute(
+      "href",
+      "/apis/argoproj.io/v1alpha1/namespaces/team-b/applications/payments",
+    );
+  });
+
   it("derives up-to-date from specific condition types and hides error row when false", () => {
     render(
       <MemoryRouter>

@@ -1,6 +1,7 @@
 import { Renderer } from "@freelensapp/extensions";
 import { observer } from "mobx-react";
 import { withErrorPage } from "../components/error-page";
+import { ConditionsList, ResourceEventsSection, StatusBadge } from "../components/shared";
 import { ArgoApplication, ArgoApplicationResourceSyncStatus } from "../k8s/argocd";
 import { createEnumFromKeys } from "../utils";
 import styles from "./argo-application-details.module.scss";
@@ -83,8 +84,6 @@ const formatDateTime = (dateString?: string): string => {
   if (!dateString) return "N/A";
   return new Date(dateString).toLocaleString();
 };
-
-const formatConditionStatus = (status?: string): string => status ?? "Unknown";
 
 export interface ArgoApplicationDetailsProps extends Renderer.Component.KubeObjectDetailsProps<ArgoApplication> {
   extension: Renderer.LensExtension;
@@ -284,7 +283,9 @@ export const ArgoApplicationDetails = observer((props: ArgoApplicationDetailsPro
           {/* Section 6: Last Sync Information */}
           <DrawerTitle>Last Sync Information</DrawerTitle>
           <DrawerItem name="Current Revision">{object.status?.sync?.revision ?? "N/A"}</DrawerItem>
-          <DrawerItem name="Current Sync Status">{object.status?.sync?.status ?? "N/A"}</DrawerItem>
+          <DrawerItem name="Current Sync Status">
+            <StatusBadge status={object.status?.sync?.status} fallbackLabel="N/A" />
+          </DrawerItem>
           <DrawerItem name="Last Synced Revision">{object.status?.history?.[0]?.revision ?? "N/A"}</DrawerItem>
           <DrawerItem name="Observed At">{formatDateTime(object.status?.observedAt)}</DrawerItem>
           <DrawerItem name="Reconciled At">{formatDateTime(object.status?.reconciledAt)}</DrawerItem>
@@ -295,27 +296,16 @@ export const ArgoApplicationDetails = observer((props: ArgoApplicationDetailsPro
           {object.status?.conditions && object.status.conditions.length > 0 && (
             <>
               <DrawerTitle>Conditions</DrawerTitle>
-              <Table
+              <ConditionsList
+                conditions={object.status.conditions}
+                mode="table"
                 tableId="conditions"
-                key="argo-application-details-conditions-table"
-                scrollable={false}
-                sortSyncWithUrl={false}
-              >
-                <TableHead flat sticky={false}>
-                  <TableCell>Type</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Message</TableCell>
-                  <TableCell>Last Transition</TableCell>
-                </TableHead>
-                {object.status.conditions.map((condition, index) => (
-                  <TableRow key={`${condition.type ?? "condition"}-${index}`}>
-                    <TableCell>{condition.type ?? "Unknown"}</TableCell>
-                    <TableCell>{formatConditionStatus((condition as any).status)}</TableCell>
-                    <TableCell>{condition.message ?? (condition as any).reason ?? "N/A"}</TableCell>
-                    <TableCell>{formatDateTime(condition.lastTransitionTime)}</TableCell>
-                  </TableRow>
-                ))}
-              </Table>
+                showReason={false}
+                showMessage={true}
+                showLastTransitionTime={true}
+                getMessage={(condition) => condition.message ?? (condition as { reason?: string }).reason ?? "N/A"}
+                getLastTransitionTime={(condition) => formatDateTime(condition.lastTransitionTime)}
+              />
               <Gutter size="md" />
             </>
           )}
@@ -324,7 +314,7 @@ export const ArgoApplicationDetails = observer((props: ArgoApplicationDetailsPro
           <DrawerTitle>Resources Sync Status</DrawerTitle>
           <Table
             tableId="resources"
-            key="argo-application-details-ressources-table"
+            key="argo-application-details-resources-table"
             sortable={resourcesSortable}
             sortByDefault={resourcesSortByDefault}
             scrollable={false}
@@ -339,8 +329,12 @@ export const ArgoApplicationDetails = observer((props: ArgoApplicationDetailsPro
             {object.status?.resources?.map((resource, index) => (
               <TableRow key={`${resource.name}-${resource.kind}-${index}`} sortItem={resource}>
                 <TableCell>{resource.name}</TableCell>
-                <TableCell>{resource.status || "Unknown"}</TableCell>
-                <TableCell>{resource.health?.status ?? "Unknown"}</TableCell>
+                <TableCell>
+                  <StatusBadge status={resource.status} />
+                </TableCell>
+                <TableCell>
+                  <StatusBadge status={resource.health?.status} />
+                </TableCell>
                 <TableCell>{resource.kind}</TableCell>
               </TableRow>
             ))}
@@ -381,6 +375,17 @@ export const ArgoApplicationDetails = observer((props: ArgoApplicationDetailsPro
               </Table>
             </>
           )}
+
+          <Gutter size="md" />
+          <ResourceEventsSection
+            resource={{
+              uid: object.metadata?.uid,
+              name: object.getName?.() ?? object.metadata?.name,
+              namespace: object.getNs?.() ?? object.metadata?.namespace,
+              kind: object.kind,
+              apiVersion: object.apiVersion,
+            }}
+          />
         </div>
       </>
     );

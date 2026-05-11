@@ -1,6 +1,7 @@
 import { Renderer } from "@freelensapp/extensions";
 import { observer } from "mobx-react";
 import { withErrorPage } from "../components/error-page";
+import { ConditionsList, ResourceEventsSection, StatusBadge } from "../components/shared";
 import {
   type ArgoAnalysisRun,
   getAnalysisRunConditionSummary,
@@ -8,6 +9,7 @@ import {
   getAnalysisRunMetricCount,
   getAnalysisRunPhase,
 } from "../k8s/rollouts";
+import { formatOptionalValue } from "../utils";
 
 const {
   Component: { DrawerItem, DrawerTitle, Gutter, Table, TableCell, TableHead, TableRow, WithTooltip },
@@ -16,14 +18,6 @@ const {
 export interface ArgoAnalysisRunDetailsProps extends Renderer.Component.KubeObjectDetailsProps<ArgoAnalysisRun> {
   extension: Renderer.LensExtension;
 }
-
-const formatOptional = (value: unknown): string => {
-  if (value === undefined || value === null || value === "") {
-    return "N/A";
-  }
-
-  return String(value);
-};
 
 export const ArgoAnalysisRunDetails = observer((props: ArgoAnalysisRunDetailsProps) =>
   withErrorPage(props, () => {
@@ -34,11 +28,13 @@ export const ArgoAnalysisRunDetails = observer((props: ArgoAnalysisRunDetailsPro
     return (
       <>
         <DrawerTitle>AnalysisRun</DrawerTitle>
-        <DrawerItem name="Phase">{getAnalysisRunPhase(object)}</DrawerItem>
-        <DrawerItem name="Started">{formatOptional(object.status?.startedAt)}</DrawerItem>
-        <DrawerItem name="Finished">{formatOptional(object.status?.finishedAt)}</DrawerItem>
+        <DrawerItem name="Phase">
+          <StatusBadge status={getAnalysisRunPhase(object)} />
+        </DrawerItem>
+        <DrawerItem name="Started">{formatOptionalValue(object.status?.startedAt)}</DrawerItem>
+        <DrawerItem name="Finished">{formatOptionalValue(object.status?.finishedAt)}</DrawerItem>
         <DrawerItem name="Message">
-          <WithTooltip>{formatOptional(object.status?.message)}</WithTooltip>
+          <WithTooltip>{formatOptionalValue(object.status?.message)}</WithTooltip>
         </DrawerItem>
         <DrawerItem name="Metrics count">{String(getAnalysisRunMetricCount(object))}</DrawerItem>
         <DrawerItem name="Measurements count">{String(getAnalysisRunMeasurementCount(object))}</DrawerItem>
@@ -62,8 +58,10 @@ export const ArgoAnalysisRunDetails = observer((props: ArgoAnalysisRunDetailsPro
             </TableHead>
             {metricResults.map((metricResult, index) => (
               <TableRow key={`${metricResult.name ?? "metric"}-${index}`}>
-                <TableCell>{formatOptional(metricResult.name)}</TableCell>
-                <TableCell>{formatOptional(metricResult.phase)}</TableCell>
+                <TableCell>{formatOptionalValue(metricResult.name)}</TableCell>
+                <TableCell>
+                  <StatusBadge status={metricResult.phase} fallbackLabel="N/A" />
+                </TableCell>
                 <TableCell>{String(metricResult.successful ?? 0)}</TableCell>
                 <TableCell>{String(metricResult.failed ?? 0)}</TableCell>
                 <TableCell>{String(metricResult.inconclusive ?? 0)}</TableCell>
@@ -75,20 +73,18 @@ export const ArgoAnalysisRunDetails = observer((props: ArgoAnalysisRunDetailsPro
 
         <Gutter size="md" />
         <DrawerTitle>Conditions</DrawerTitle>
-        {conditions.length === 0 ? (
-          <DrawerItem name="Summary">None</DrawerItem>
-        ) : (
-          conditions.map((condition, index) => (
-            <DrawerItem
-              key={`${condition.type ?? "condition"}-${index}`}
-              name={condition.type ?? `Condition ${index + 1}`}
-            >
-              <WithTooltip>
-                {formatOptional(condition.status)} - {formatOptional(condition.reason ?? condition.message)}
-              </WithTooltip>
-            </DrawerItem>
-          ))
-        )}
+        <ConditionsList conditions={conditions} mode="compact" />
+
+        <Gutter size="md" />
+        <ResourceEventsSection
+          resource={{
+            uid: object.metadata?.uid,
+            name: object.getName?.() ?? object.metadata?.name,
+            namespace: object.getNs?.() ?? object.metadata?.namespace,
+            kind: object.kind,
+            apiVersion: object.apiVersion,
+          }}
+        />
       </>
     );
   }),

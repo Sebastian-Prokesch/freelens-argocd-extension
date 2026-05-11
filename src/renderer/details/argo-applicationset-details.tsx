@@ -2,6 +2,7 @@ import { Renderer } from "@freelensapp/extensions";
 import { observer } from "mobx-react";
 import { Link } from "react-router-dom";
 import { withErrorPage } from "../components/error-page";
+import { ConditionsList, ResourceEventsSection, StatusBadge } from "../components/shared";
 import { ArgoApplicationSet, getArgoApplicationStore } from "../k8s/argocd";
 
 const {
@@ -15,11 +16,65 @@ export interface ArgoApplicationSetDetailsProps extends Renderer.Component.KubeO
 
 const isDefinedString = (value: unknown): value is string => typeof value === "string" && value.length > 0;
 
-const getGeneratedApplications = (status: any): string[] => {
-  const fromResources = (status?.resources ?? []).map((item: any) => item?.name).filter(isDefinedString);
-  const fromStatus = (status?.applicationStatus ?? []).map((item: any) => item?.application).filter(isDefinedString);
+interface GeneratedApplicationEntry {
+  name: string;
+  namespace: string;
+}
 
-  return [...new Set([...fromResources, ...fromStatus])];
+const parseApplicationReference = (
+  rawValue: unknown,
+): {
+  namespace?: string;
+  name?: string;
+} => {
+  if (!isDefinedString(rawValue)) {
+    return {};
+  }
+
+  const [first, second] = rawValue.split("/", 2);
+  if (first && second) {
+    return {
+      namespace: first,
+      name: second,
+    };
+  }
+
+  return {
+    name: rawValue,
+  };
+};
+
+const toApplicationKey = (namespace: string, name: string): string => `${namespace}/${name}`;
+
+const getGeneratedApplications = (status: any, defaultNamespace: string): GeneratedApplicationEntry[] => {
+  const fromResources = (status?.resources ?? []).map((item: any) => ({
+    name: item?.name,
+    namespace: item?.namespace,
+  }));
+  const fromStatus = (status?.applicationStatus ?? []).map((item: any) => {
+    const reference = parseApplicationReference(item?.application);
+
+    return {
+      name: reference.name,
+      namespace: item?.namespace ?? reference.namespace,
+    };
+  });
+
+  const deduped = new Map<string, GeneratedApplicationEntry>();
+
+  for (const candidate of [...fromResources, ...fromStatus]) {
+    if (!isDefinedString(candidate?.name)) {
+      continue;
+    }
+
+    const namespace = isDefinedString(candidate?.namespace) ? candidate.namespace : defaultNamespace;
+    deduped.set(toApplicationKey(namespace, candidate.name), {
+      name: candidate.name,
+      namespace,
+    });
+  }
+
+  return [...deduped.values()];
 };
 
 const getGeneratorSummary = (generators: any[]): string => {
@@ -100,7 +155,7 @@ export const ArgoApplicationSetDetails = observer((props: ArgoApplicationSetDeta
     const spec = object.spec as any;
     const status = object.status as any;
     const namespace = object.getNs() ?? object.metadata?.namespace ?? "default";
-    const generatedApplications = getGeneratedApplications(status);
+    const generatedApplications = getGeneratedApplications(status, namespace);
     const resourcesUpToDate =
       getConditionBooleanStatus(status?.conditions, "ResourcesUpToDate") ??
       getConditionBooleanStatus(status?.conditions, "ApplicationSetUpToDate") ??
@@ -113,7 +168,13 @@ export const ArgoApplicationSetDetails = observer((props: ArgoApplicationSetDeta
     const applicationStatusByName = new Map<string, any>(
       (status?.applicationStatus ?? [])
         .filter((item: any) => isDefinedString(item?.application))
-        .map((item: any) => [item.application, item]),
+        .map((item: any) => {
+          const reference = parseApplicationReference(item.application);
+          const entryName = reference.name ?? item.application;
+          const entryNamespace = item?.namespace ?? reference.namespace ?? namespace;
+
+          return [toApplicationKey(entryNamespace, entryName), item];
+        }),
     );
 
     return (
@@ -138,18 +199,24 @@ export const ArgoApplicationSetDetails = observer((props: ArgoApplicationSetDeta
                 <TableCell>Sync Status</TableCell>
                 <TableCell>Health Status</TableCell>
               </TableHead>
-              {generatedApplications.map((applicationName) => {
-                const appStatus = applicationStatusByName.get(applicationName);
+              {generatedApplications.map((application) => {
+                const appStatus =
+                  applicationStatusByName.get(toApplicationKey(application.namespace, application.name)) ??
+                  applicationStatusByName.get(toApplicationKey(namespace, application.name));
 
                 return (
-                  <TableRow key={applicationName}>
+                  <TableRow key={toApplicationKey(application.namespace, application.name)}>
                     <TableCell>
-                      <Link to={getApplicationDetailsUrl(namespace, applicationName)}>
-                        <WithTooltip>{applicationName}</WithTooltip>
+                      <Link to={getApplicationDetailsUrl(application.namespace, application.name)}>
+                        <WithTooltip>{application.name}</WithTooltip>
                       </Link>
                     </TableCell>
-                    <TableCell>{appStatus?.sync?.status ?? "Unknown"}</TableCell>
-                    <TableCell>{appStatus?.health?.status ?? "Unknown"}</TableCell>
+                    <TableCell>
+                      <StatusBadge status={appStatus?.sync?.status} />
+                    </TableCell>
+                    <TableCell>
+                      <StatusBadge status={appStatus?.health?.status} />
+                    </TableCell>
                   </TableRow>
                 );
               })}
@@ -162,26 +229,7 @@ export const ArgoApplicationSetDetails = observer((props: ArgoApplicationSetDeta
           {status?.observedGeneration ? String(status.observedGeneration) : "N/A"}
         </DrawerItem>
         <DrawerItem name="Conditions">
-          {status?.conditions?.length ? (
-            <Table tableId="applicationset-conditions" scrollable={false} sortSyncWithUrl={false}>
-              <TableHead flat sticky={false}>
-                <TableCell>Type</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Reason</TableCell>
-                <TableCell>Message</TableCell>
-              </TableHead>
-              {status.conditions.map((condition: any, index: number) => (
-                <TableRow key={`${condition?.type ?? "condition"}-${index}`}>
-                  <TableCell>{condition?.type ?? "Unknown"}</TableCell>
-                  <TableCell>{condition?.status ?? "Unknown"}</TableCell>
-                  <TableCell>{condition?.reason ?? "N/A"}</TableCell>
-                  <TableCell>{condition?.message ?? "N/A"}</TableCell>
-                </TableRow>
-              ))}
-            </Table>
-          ) : (
-            "None"
-          )}
+          <ConditionsList conditions={status?.conditions} mode="table" tableId="applicationset-conditions" />
         </DrawerItem>
         {hasError ? (
           <>
@@ -194,6 +242,16 @@ export const ArgoApplicationSetDetails = observer((props: ArgoApplicationSetDeta
         <DrawerItem name="Resources Up-to-date">
           <BadgeBoolean value={resourcesUpToDate} />
         </DrawerItem>
+        <Gutter size="md" />
+        <ResourceEventsSection
+          resource={{
+            uid: object.metadata?.uid,
+            name: object.getName?.() ?? object.metadata?.name,
+            namespace: object.getNs?.() ?? object.metadata?.namespace,
+            kind: object.kind,
+            apiVersion: object.apiVersion,
+          }}
+        />
       </>
     );
   }),

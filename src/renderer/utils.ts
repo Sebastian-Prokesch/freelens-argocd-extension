@@ -7,3 +7,11 @@ export function createEnumFromKeys<T extends Record<string, any>>(obj: T): Recor
     {} as Record<keyof T, keyof T>,
   );
 }
+
+export function formatOptionalValue(value: unknown): string {
+  if (value === undefined || value === null || value === "") {
+    return "N/A";
+  }
+
+  return String(value);
+}
