@@ -45,12 +45,19 @@ export const ArgoOverviewTabContent = observer(() => {
       const namespaceStore = Renderer.K8sApi.namespaceStore;
       try {
         setLoadError(null);
+        setIsLoaded(false);
         await namespaceStore.loadAll({ namespaces: [] });
+        if (!isMounted) {
+          return;
+        }
         watches.current.push(namespaceStore.subscribe());
 
         const namespaces = namespaceStore.items.map((ns) => ns.getName());
 
         await Promise.all([applicationStore.loadAll({ namespaces }), appProjectStore.loadAll({ namespaces })]);
+        if (!isMounted) {
+          return;
+        }
         watches.current.push(applicationStore.subscribe());
         watches.current.push(appProjectStore.subscribe());
 
@@ -61,6 +68,7 @@ export const ArgoOverviewTabContent = observer(() => {
         if (isMounted) {
           const message = error instanceof Error ? error.message : "Failed to load ArgoCD overview data.";
           setLoadError(message);
+          setIsLoaded(true);
         }
       }
     })();

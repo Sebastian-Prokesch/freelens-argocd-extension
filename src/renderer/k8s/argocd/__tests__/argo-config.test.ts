@@ -14,6 +14,7 @@ import {
   isArgoNotificationsSecret,
   isArgoRbacConfigMap,
   isArgoSecret,
+  isEditableArgoConfigMap,
   parseClusterConnection,
   parseRbacPolicyCsv,
   parseRepoConnection,
@@ -56,6 +57,7 @@ describe("argo-config helpers", () => {
     expect(getArgoSecretType(secret)).toBe("repository");
     expect(isArgoSecret(secret)).toBe(true);
     expect(isArgoConfigMap(configMap)).toBe(true);
+    expect(isEditableArgoConfigMap(configMap)).toBe(true);
   });
 
   it("reads stringData before data", () => {
@@ -110,6 +112,22 @@ describe("argo-config helpers", () => {
     expect(isArgoConfigResource(notificationsConfigMap)).toBe(true);
     expect(isArgoConfigResource(notificationsSecret)).toBe(true);
     expect(isArgoConfigResource(rbacConfigMap)).toBe(true);
+  });
+
+  it("marks non-whitelisted Argo configmaps as non-editable", () => {
+    const customConfigMap = makeObject({
+      metadata: {
+        name: "custom-argocd-cm",
+        namespace: "argocd",
+        labels: {
+          [ARGOCD_PART_OF_LABEL]: ARGOCD_PART_OF_VALUE,
+        },
+      },
+    });
+
+    expect(isArgoConfigMap(customConfigMap)).toBe(true);
+    expect(isEditableArgoConfigMap(customConfigMap)).toBe(false);
+    expect(isArgoConfigResource(customConfigMap)).toBe(false);
   });
 
   it("parses repository and cluster connection metadata", () => {

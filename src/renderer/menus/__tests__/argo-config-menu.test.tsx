@@ -3,14 +3,14 @@ import { ArgoConfigMenuItem } from "../argo-config-menu";
 
 const extension = { name: "argocd-test-extension" } as any;
 
-const makeObject = (labels: Record<string, string>, kind?: string) => ({
+const makeObject = (labels: Record<string, string>, kind?: string, name = "test") => ({
   kind,
   metadata: {
-    name: "test",
+    name,
     namespace: "argocd",
     labels,
   },
-  getName: () => "test",
+  getName: () => name,
   getNs: () => "argocd",
 });
 
@@ -23,6 +23,26 @@ describe("ArgoConfigMenuItem", () => {
     rerender(
       <ArgoConfigMenuItem
         object={makeObject({ "argocd.argoproj.io/secret-type": "repository" }, "Secret") as any}
+        extension={extension}
+      />,
+    );
+
+    expect(screen.getByText("Edit ArgoCD Config")).toBeInTheDocument();
+  });
+
+  it("renders for whitelisted argocd configmap names only", () => {
+    const { rerender } = render(
+      <ArgoConfigMenuItem
+        object={makeObject({ "app.kubernetes.io/part-of": "argocd" }, "ConfigMap", "custom-argocd-cm") as any}
+        extension={extension}
+      />,
+    );
+
+    expect(screen.queryByTestId("MenuItem")).not.toBeInTheDocument();
+
+    rerender(
+      <ArgoConfigMenuItem
+        object={makeObject({ "app.kubernetes.io/part-of": "argocd" }, "ConfigMap", "argocd-cm") as any}
         extension={extension}
       />,
     );

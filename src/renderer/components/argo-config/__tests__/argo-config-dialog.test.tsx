@@ -51,11 +51,29 @@ describe("ArgoConfigDialog", () => {
 
     render(<ArgoConfigDialog />);
 
+    await user.type(screen.getByPlaceholderText("Name"), "argocd-cm");
     const dataInput = screen.getByPlaceholderText("Data JSON");
     fireEvent.change(dataInput, { target: { value: "{invalid" } });
     await user.click(screen.getByRole("button", { name: "Create" }));
 
     expect(Renderer.K8sApi.configMapStore.create).not.toHaveBeenCalled();
     expect(Renderer.Component.Notifications.error).toHaveBeenCalledWith("ConfigMap data must be valid JSON.");
+  });
+
+  it("shows validation error when configmap data values are not strings", async () => {
+    const user = userEvent.setup();
+    argoConfigDialogStore.openCreate("configmap");
+
+    render(<ArgoConfigDialog />);
+
+    await user.type(screen.getByPlaceholderText("Name"), "argocd-cm");
+    const dataInput = screen.getByPlaceholderText("Data JSON");
+    fireEvent.change(dataInput, { target: { value: '{\n  "enabled": true\n}' } });
+    await user.click(screen.getByRole("button", { name: "Create" }));
+
+    expect(Renderer.K8sApi.configMapStore.create).not.toHaveBeenCalled();
+    expect(Renderer.Component.Notifications.error).toHaveBeenCalledWith(
+      'ConfigMap data key "enabled" must have a string value.',
+    );
   });
 });

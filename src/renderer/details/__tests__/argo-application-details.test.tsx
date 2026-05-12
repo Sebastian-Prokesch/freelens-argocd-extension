@@ -235,4 +235,29 @@ describe("ArgoApplicationDetails", () => {
     expect(screen.getAllByText("abc123").length).toBeGreaterThan(0);
     expect(screen.getByText("admin")).toBeInTheDocument();
   });
+
+  it("renders safely with malformed optional arrays", () => {
+    renderDetails({
+      spec: {
+        source: {
+          repoURL: "https://github.com/org/repo.git",
+          plugin: {
+            env: [null, { value: "missing-name" }],
+            parameters: [null, { string: "missing-name" }],
+          },
+        },
+        destination: { namespace: "apps" },
+        ignoreDifferences: [null, { name: "config-only" }],
+      },
+      status: {
+        resources: [null, { kind: "Deployment" }],
+        history: [null, { source: { chart: "app-chart" } }],
+      },
+    });
+
+    expect(screen.getByText("UNKNOWN=missing-name")).toBeInTheDocument();
+    expect(screen.getByText(/Unnamed parameter/)).toBeInTheDocument();
+    expect(screen.getAllByText("Unknown").length).toBeGreaterThan(0);
+    expect(screen.getByText("app-chart")).toBeInTheDocument();
+  });
 });

@@ -1,7 +1,7 @@
 import { Renderer } from "@freelensapp/extensions";
 import { observer } from "mobx-react";
 import { argoConfigDialogStore } from "../components/argo-config";
-import { isArgoConfigMap, isArgoSecret } from "../k8s/argocd";
+import { isArgoSecret, isEditableArgoConfigMap } from "../k8s/argocd";
 
 const {
   Component: { Icon, MenuItem },
@@ -22,7 +22,7 @@ export const ArgoConfigMenuItem = observer((props: ArgoConfigMenuItemProps) => {
   const matchesSecretKind = !objectKind || objectKind === "Secret";
   const matchesConfigMapKind = !objectKind || objectKind === "ConfigMap";
   const isSecret = matchesSecretKind && isArgoSecret(object);
-  const isConfigMap = matchesConfigMapKind && isArgoConfigMap(object);
+  const isConfigMap = matchesConfigMapKind && isEditableArgoConfigMap(object);
 
   if (!isSecret && !isConfigMap) {
     return null;

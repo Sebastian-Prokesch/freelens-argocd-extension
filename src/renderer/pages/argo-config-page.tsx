@@ -245,11 +245,18 @@ export const ArgoConfigTabContent = observer(() => {
       const { namespaceStore } = Renderer.K8sApi;
       try {
         setLoadError(null);
+        setIsLoaded(false);
         await namespaceStore.loadAll({ namespaces: [] });
+        if (!isMounted) {
+          return;
+        }
         watches.current.push(namespaceStore.subscribe());
 
         const namespaces = namespaceStore.items.map((ns) => ns.getName());
         await Promise.all([secretsStore.loadAll({ namespaces }), configMapStore.loadAll({ namespaces })]);
+        if (!isMounted) {
+          return;
+        }
 
         watches.current.push(secretsStore.subscribe());
         watches.current.push(configMapStore.subscribe());
@@ -261,6 +268,7 @@ export const ArgoConfigTabContent = observer(() => {
         if (isMounted) {
           const message = error instanceof Error ? error.message : "Failed to load ArgoCD config resources.";
           setLoadError(message);
+          setIsLoaded(true);
         }
       }
     })();
