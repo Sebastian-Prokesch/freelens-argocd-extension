@@ -221,6 +221,46 @@ const buildSecretStringData = (form: RepoFormState | ClusterFormState, secretTyp
 
 const getSecretName = (secret: LabeledObject) => secret.metadata?.name ?? secret.getName();
 const getSecretNamespace = (secret: LabeledObject) => secret.metadata?.namespace ?? secret.getNs();
+const ensureRequiredField = (value: string, label: string): string => {
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    throw new Error(`${label} is required.`);
+  }
+
+  return trimmed;
+};
+
+const parseJsonObject = (value: string, label: string): Record<string, unknown> => {
+  let parsed: unknown;
+
+  try {
+    parsed = JSON.parse(value);
+  } catch {
+    throw new Error(`${label} must be valid JSON.`);
+  }
+
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw new Error(`${label} must be a JSON object.`);
+  }
+
+  return parsed as Record<string, unknown>;
+};
+
+const parseConfigMapData = (value: string): Record<string, string> => {
+  const parsed = parseJsonObject(value, "ConfigMap data");
+  const data: Record<string, string> = {};
+
+  for (const [key, entryValue] of Object.entries(parsed)) {
+    if (typeof entryValue !== "string") {
+      throw new Error(`ConfigMap data key "${key}" must have a string value.`);
+    }
+
+    data[key] = entryValue;
+  }
+
+  return data;
+};
 
 export const ArgoConfigDialog = observer(() => {
   const { isOpen, mode, target } = argoConfigDialogStore;
@@ -256,28 +296,37 @@ export const ArgoConfigDialog = observer(() => {
 
   const closeDialog = () => argoConfigDialogStore.close();
 
-  const validateJson = (value: string, label: string) => {
-    try {
-      JSON.parse(value);
-    } catch (err) {
-      throw new Error(`${label} must be valid JSON.`);
-    }
-  };
-
   const handleSave = async () => {
     try {
       setError(undefined);
 
       if (target.kind === "configmap") {
-        validateJson(configMapForm.dataJson, "ConfigMap data");
+        ensureRequiredField(configMapForm.name, "Name");
+        ensureRequiredField(configMapForm.namespace, "Namespace");
       }
 
       if (target.kind === "cluster") {
-        validateJson(clusterForm.configJson, "Cluster config");
+        ensureRequiredField(clusterForm.name, "Secret name");
+        ensureRequiredField(clusterForm.namespace, "Namespace");
+      }
+
+      if (target.kind === "repository" || target.kind === "repo-creds") {
+        ensureRequiredField(repoForm.name, "Name");
+        ensureRequiredField(repoForm.namespace, "Namespace");
       }
 
       if (target.kind === "configmap") {
-        const data = JSON.parse(configMapForm.dataJson) as Record<string, string>;
+        parseConfigMapData(configMapForm.dataJson);
+      }
+
+      if (target.kind === "cluster") {
+        parseJsonObject(clusterForm.configJson, "Cluster config");
+      }
+
+      if (target.kind === "configmap") {
+        const data = parseConfigMapData(configMapForm.dataJson);
+        const name = configMapForm.name.trim();
+        const namespace = configMapForm.namespace.trim();
         const labels = {
           ...(target.object?.metadata?.labels ?? {}),
           [ARGOCD_PART_OF_LABEL]: ARGOCD_PART_OF_VALUE,
@@ -286,43 +335,30 @@ export const ArgoConfigDialog = observer(() => {
           apiVersion: "v1",
           kind: "ConfigMap",
           metadata: {
-            name: configMapForm.name,
-            namespace: configMapForm.namespace,
+            name,
+            namespace,
             labels,
           },
           data,
         };
 
         if (mode === "create") {
-          await configMapStore.create({ name: configMapForm.name, namespace: configMapForm.namespace }, base);
+          await configMapStore.create({ name, namespace }, base);
         } else if (target.object) {
-          await configMapStore.patch(
-            target.object as any,
-            [
-              {
-                op: "add",
-                path: "/metadata/labels",
-                value: labels,
-              },
-              {
-                op: "add",
-                path: "/data",
-                value: data,
-              },
-            ],
-            "json",
-          );
+          await configMapStore.patch(target.object as any, { metadata: { labels }, data }, "merge");
         }
       }
 
       if (target.kind === "repository" || target.kind === "repo-creds" || target.kind === "cluster") {
         const stringData = buildSecretStringData(target.kind === "cluster" ? clusterForm : repoForm, target.kind);
+        const name = target.kind === "cluster" ? clusterForm.name.trim() : repoForm.name.trim();
+        const namespace = target.kind === "cluster" ? clusterForm.namespace.trim() : repoForm.namespace.trim();
         const base = {
           apiVersion: "v1",
           kind: "Secret",
           metadata: {
-            name: target.kind === "cluster" ? clusterForm.name : repoForm.name,
-            namespace: target.kind === "cluster" ? clusterForm.namespace : repoForm.namespace,
+            name,
+            namespace,
             labels: {
               [ARGOCD_SECRET_TYPE_LABEL]: target.kind,
             },
@@ -364,12 +400,7 @@ export const ArgoConfigDialog = observer(() => {
                 },
               },
               {
-                op: "add",
-                path: "/type",
-                value: "Opaque",
-              },
-              {
-                // clear previous key material to avoid stale credentials after auth-method changes
+                // Clear previous key material to avoid stale credentials after auth-method changes.
                 op: "add",
                 path: "/data",
                 value: {},

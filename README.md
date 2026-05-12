@@ -4,8 +4,57 @@ Freelens extension that adds **Argo** cluster pages: **ArgoCD** views for GitOps
 
 ## Requirements
 
-- Kubernetes >= 1.24
-- Freelens >= 1.5.2
+- Kubernetes >= 1.32
+- Freelens >= 1.9.0
+
+## Beta Release
+
+### Beta scope
+
+- ArgoCD pages: Overview, Applications, ApplicationSets, AppProjects, and Config.
+- Argo Rollouts: list page and Rollout details.
+- Argo Workflows routes are placeholder pages only in this beta.
+
+### Known limitations
+
+- Workflows UI is intentionally incomplete and will be expanded after beta feedback.
+- Config editing is focused on known ArgoCD ConfigMaps and Argo-labeled secrets.
+- Behavior still depends on cluster RBAC and resource schema quality.
+
+### Compatibility
+
+- Tested with Freelens `>=1.9.0`.
+- Tested against Kubernetes `>=1.32`.
+- Node.js `>=22.16.0` is required for local build/test workflows.
+
+### Security and permissions notes
+
+- Mutating actions (sync, terminate, rollout actions, config/secret updates) execute with your current cluster identity and are limited by your RBAC permissions.
+- Secret values are submitted via Kubernetes `stringData` and should only be edited by trusted operators.
+- Avoid granting broad write access where read-only access is sufficient for your users.
+
+### Beta install and upgrade
+
+Install from the Extensions catalog (`@sebastian-prokesch/freelens-argocd-extension`) or from a local tarball:
+
+```sh
+pnpm build
+pnpm pack
+```
+
+Then load the generated `.tgz` in Freelens Extensions.
+
+### Beta release checklist
+
+```sh
+pnpm type:check
+pnpm lint:check
+pnpm test:unit
+pnpm test:integration
+pnpm security:check
+```
+
+If config editor behavior changes, verify invalid ConfigMap JSON/value types are rejected in the UI before release.
 
 ## Supported ArgoCD resources
 

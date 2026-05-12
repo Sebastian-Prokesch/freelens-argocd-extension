@@ -1,5 +1,5 @@
 import { Renderer } from "@freelensapp/extensions";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { ArgoConfigTabContent } from "../argo-config-page";
 
 const makeObject = (
@@ -23,6 +23,14 @@ const makeObject = (
 });
 
 describe("ArgoConfigTabContent", () => {
+  const createDeferred = () => {
+    let resolve: () => void;
+    const promise = new Promise<void>((res) => {
+      resolve = res;
+    });
+    return { promise, resolve: resolve! };
+  };
+
   beforeEach(() => {
     const namespaceStore = Renderer.K8sApi.namespaceStore as any;
     const secretsStore = Renderer.K8sApi.secretsStore as any;
@@ -87,5 +95,29 @@ describe("ArgoConfigTabContent", () => {
     expect(screen.getAllByText("argocd-notifications-secret").length).toBeGreaterThan(0);
     expect(screen.getByText("ConfigMap")).toBeInTheDocument();
     expect(screen.getByText("Secret")).toBeInTheDocument();
+  });
+
+  it("does not subscribe stores after unmount while loadAll is pending", async () => {
+    const namespaceStore = Renderer.K8sApi.namespaceStore as any;
+    const secretsStore = Renderer.K8sApi.secretsStore as any;
+    const configMapStore = Renderer.K8sApi.configMapStore as any;
+    const deferredNamespaces = createDeferred();
+
+    namespaceStore.loadAll = jest.fn(() => deferredNamespaces.promise);
+    namespaceStore.subscribe = jest.fn(() => () => {});
+    secretsStore.subscribe = jest.fn(() => () => {});
+    configMapStore.subscribe = jest.fn(() => () => {});
+
+    const { unmount } = render(<ArgoConfigTabContent />);
+    unmount();
+
+    await act(async () => {
+      deferredNamespaces.resolve();
+      await deferredNamespaces.promise;
+    });
+
+    expect(namespaceStore.subscribe).not.toHaveBeenCalled();
+    expect(secretsStore.subscribe).not.toHaveBeenCalled();
+    expect(configMapStore.subscribe).not.toHaveBeenCalled();
   });
 });

@@ -1,5 +1,5 @@
 import { action, makeObservable, observable } from "mobx";
-import { type ArgoSecretType, getArgoSecretType, isArgoConfigMap, type LabeledObject } from "../../k8s/argocd";
+import { type ArgoSecretType, getArgoSecretType, isEditableArgoConfigMap, type LabeledObject } from "../../k8s/argocd";
 
 export type ArgoConfigKind = ArgoSecretType | "configmap";
 export type ArgoConfigDialogMode = "create" | "edit";
@@ -33,7 +33,7 @@ class ArgoConfigDialogStore {
 
   openEdit(object: LabeledObject) {
     const secretType = getArgoSecretType(object);
-    const isConfigMap = isArgoConfigMap(object);
+    const isConfigMap = isEditableArgoConfigMap(object);
 
     if (!secretType && !isConfigMap) {
       return;

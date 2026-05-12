@@ -85,6 +85,16 @@ const formatDateTime = (dateString?: string): string => {
   return new Date(dateString).toLocaleString();
 };
 
+const normalizeArray = <T,>(value: T[] | undefined | null): T[] => (Array.isArray(value) ? value : []);
+
+const formatPluginEnv = (entries: Array<{ name?: string; value?: string } | null | undefined>): string => {
+  const pairs = entries
+    .filter((entry): entry is { name?: string; value?: string } => Boolean(entry))
+    .map((entry) => `${entry.name ?? "UNKNOWN"}=${entry.value ?? ""}`);
+
+  return pairs.length > 0 ? pairs.join(", ") : "None";
+};
+
 export interface ArgoApplicationDetailsProps extends Renderer.Component.KubeObjectDetailsProps<ArgoApplication> {
   extension: Renderer.LensExtension;
 }
@@ -92,6 +102,11 @@ export interface ArgoApplicationDetailsProps extends Renderer.Component.KubeObje
 export const ArgoApplicationDetails = observer((props: ArgoApplicationDetailsProps) =>
   withErrorPage(props, () => {
     const { object } = props;
+    const pluginEnv = normalizeArray(object.spec.source?.plugin?.env);
+    const pluginParameters = normalizeArray(object.spec.source?.plugin?.parameters);
+    const ignoreDifferences = normalizeArray(object.spec.ignoreDifferences);
+    const resources = normalizeArray(object.status?.resources);
+    const history = normalizeArray(object.status?.history);
 
     return (
       <>
@@ -138,14 +153,12 @@ export const ArgoApplicationDetails = observer((props: ArgoApplicationDetailsPro
               {object.spec.source.plugin && (
                 <>
                   <DrawerItem name="Plugin Name">{object.spec.source.plugin.name || "Not specified"}</DrawerItem>
-                  {object.spec.source.plugin.env && object.spec.source.plugin.env.length > 0 && (
-                    <DrawerItem name="Environment Variables">
-                      {object.spec.source.plugin.env.map((env) => `${env.name}=${env.value}`).join(", ")}
-                    </DrawerItem>
+                  {pluginEnv.length > 0 && (
+                    <DrawerItem name="Environment Variables">{formatPluginEnv(pluginEnv)}</DrawerItem>
                   )}
-                  {object.spec.source.plugin.parameters && object.spec.source.plugin.parameters.length > 0 && (
+                  {pluginParameters.length > 0 && (
                     <DrawerItem name="Parameters">
-                      {object.spec.source.plugin.parameters.map((param) => formatPluginParameter(param)).join(", ")}
+                      {pluginParameters.map((param) => formatPluginParameter(param)).join(", ")}
                     </DrawerItem>
                   )}
                 </>
@@ -250,7 +263,7 @@ export const ArgoApplicationDetails = observer((props: ArgoApplicationDetailsPro
           )}
 
           {/* Section 5: Advanced Settings */}
-          {object.spec.ignoreDifferences && object.spec.ignoreDifferences.length > 0 && (
+          {ignoreDifferences.length > 0 && (
             <>
               <DrawerTitle>Advanced Settings</DrawerTitle>
               <DrawerItem name="Ignore Differences">
@@ -266,14 +279,21 @@ export const ArgoApplicationDetails = observer((props: ArgoApplicationDetailsPro
                     <TableCell>Namespace</TableCell>
                     <TableCell>Group</TableCell>
                   </TableHead>
-                  {object.spec.ignoreDifferences.map((diff, index) => (
-                    <TableRow key={`${diff.kind}-${diff.name}-${index}`}>
-                      <TableCell>{diff.kind}</TableCell>
-                      <TableCell>{diff.name || "All"}</TableCell>
-                      <TableCell>{diff.namespace || "All"}</TableCell>
-                      <TableCell>{diff.group || "All"}</TableCell>
-                    </TableRow>
-                  ))}
+                  {ignoreDifferences.map((diff, index) => {
+                    const safeDiff = diff ?? {};
+                    const kind = safeDiff.kind ?? "Unknown";
+                    const name = typeof safeDiff.name === "string" ? safeDiff.name : "";
+                    const namespace = typeof safeDiff.namespace === "string" ? safeDiff.namespace : "";
+                    const group = typeof safeDiff.group === "string" ? safeDiff.group : "";
+                    return (
+                      <TableRow key={`${kind}-${name || "all"}-${index}`}>
+                        <TableCell>{kind}</TableCell>
+                        <TableCell>{name || "All"}</TableCell>
+                        <TableCell>{namespace || "All"}</TableCell>
+                        <TableCell>{group || "All"}</TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </Table>
               </DrawerItem>
               <Gutter size="md" />
@@ -286,7 +306,7 @@ export const ArgoApplicationDetails = observer((props: ArgoApplicationDetailsPro
           <DrawerItem name="Current Sync Status">
             <StatusBadge status={object.status?.sync?.status} fallbackLabel="N/A" />
           </DrawerItem>
-          <DrawerItem name="Last Synced Revision">{object.status?.history?.[0]?.revision ?? "N/A"}</DrawerItem>
+          <DrawerItem name="Last Synced Revision">{history[0]?.revision ?? "N/A"}</DrawerItem>
           <DrawerItem name="Observed At">{formatDateTime(object.status?.observedAt)}</DrawerItem>
           <DrawerItem name="Reconciled At">{formatDateTime(object.status?.reconciledAt)}</DrawerItem>
 
@@ -326,24 +346,30 @@ export const ArgoApplicationDetails = observer((props: ArgoApplicationDetailsPro
               <TableCell sortBy={resourcesSortByNames.health}>Health</TableCell>
               <TableCell sortBy={resourcesSortByNames.kind}>Kind</TableCell>
             </TableHead>
-            {object.status?.resources?.map((resource, index) => (
-              <TableRow key={`${resource.name}-${resource.kind}-${index}`} sortItem={resource}>
-                <TableCell>{resource.name}</TableCell>
-                <TableCell>
-                  <StatusBadge status={resource.status} />
-                </TableCell>
-                <TableCell>
-                  <StatusBadge status={resource.health?.status} />
-                </TableCell>
-                <TableCell>{resource.kind}</TableCell>
-              </TableRow>
-            ))}
+            {resources.map((resource, index) => {
+              const safeResource = (resource ?? {}) as ArgoApplicationResourceSyncStatus;
+              const resourceName = safeResource.name ?? "Unknown";
+              const resourceKind = safeResource.kind ?? "Unknown";
+              const resourceHealthStatus = (safeResource as { health?: { status?: string } }).health?.status;
+              return (
+                <TableRow key={`${resourceName}-${resourceKind}-${index}`} sortItem={safeResource}>
+                  <TableCell>{resourceName}</TableCell>
+                  <TableCell>
+                    <StatusBadge status={safeResource.status} />
+                  </TableCell>
+                  <TableCell>
+                    <StatusBadge status={resourceHealthStatus} />
+                  </TableCell>
+                  <TableCell>{resourceKind}</TableCell>
+                </TableRow>
+              );
+            })}
           </Table>
 
           <Gutter size="md" />
 
           {/* Section 9: Sync History */}
-          {object.status?.history && object.status.history.length > 0 && (
+          {history.length > 0 && (
             <>
               <DrawerTitle>Sync History</DrawerTitle>
               <Table
@@ -361,17 +387,21 @@ export const ArgoApplicationDetails = observer((props: ArgoApplicationDetailsPro
                   <TableCell>Initiated By</TableCell>
                   <TableCell>Source</TableCell>
                 </TableHead>
-                {object.status.history.map((entry, index) => (
-                  <TableRow key={`history-${entry.id ?? index}`} sortItem={entry}>
-                    <TableCell>{entry.id ?? "N/A"}</TableCell>
-                    <TableCell>{entry.revision ?? "N/A"}</TableCell>
-                    <TableCell>{formatDateTime(entry.deployedAt)}</TableCell>
-                    <TableCell>
-                      {entry.initiatedBy?.username ?? (entry.initiatedBy?.automated ? "Automated" : "Unknown")}
-                    </TableCell>
-                    <TableCell>{entry.source?.repoURL ?? entry.source?.chart ?? "N/A"}</TableCell>
-                  </TableRow>
-                ))}
+                {history.map((entry, index) => {
+                  const safeEntry = (entry ?? {}) as Record<string, any>;
+                  return (
+                    <TableRow key={`history-${safeEntry.id ?? index}`} sortItem={safeEntry}>
+                      <TableCell>{safeEntry.id ?? "N/A"}</TableCell>
+                      <TableCell>{safeEntry.revision ?? "N/A"}</TableCell>
+                      <TableCell>{formatDateTime(safeEntry.deployedAt)}</TableCell>
+                      <TableCell>
+                        {safeEntry.initiatedBy?.username ??
+                          (safeEntry.initiatedBy?.automated ? "Automated" : "Unknown")}
+                      </TableCell>
+                      <TableCell>{safeEntry.source?.repoURL ?? safeEntry.source?.chart ?? "N/A"}</TableCell>
+                    </TableRow>
+                  );
+                })}
               </Table>
             </>
           )}

@@ -4,6 +4,13 @@ export const ARGOCD_PART_OF_VALUE = "argocd";
 export const ARGOCD_NOTIFICATIONS_CONFIGMAP_NAME = "argocd-notifications-cm";
 export const ARGOCD_NOTIFICATIONS_SECRET_NAME = "argocd-notifications-secret";
 export const ARGOCD_RBAC_CONFIGMAP_NAME = "argocd-rbac-cm";
+export const ARGOCD_EDITABLE_CONFIGMAP_NAMES = [
+  "argocd-cm",
+  "argocd-cmd-params-cm",
+  "argocd-ssh-known-hosts-cm",
+  "argocd-tls-certs-cm",
+  "argocd-gpg-keys-cm",
+] as const;
 
 export const ARGOCD_SECRET_TYPES = ["repository", "repo-creds", "cluster"] as const;
 export type ArgoSecretType = (typeof ARGOCD_SECRET_TYPES)[number];
@@ -71,6 +78,10 @@ export const getArgoSecretType = (object: LabeledObject): ArgoSecretType | undef
 export const isArgoConfigMap = (object: LabeledObject): boolean =>
   object.metadata?.labels?.[ARGOCD_PART_OF_LABEL] === ARGOCD_PART_OF_VALUE;
 
+export const isEditableArgoConfigMap = (object: LabeledObject): boolean =>
+  isArgoConfigMap(object) &&
+  ARGOCD_EDITABLE_CONFIGMAP_NAMES.includes(getObjectName(object) as (typeof ARGOCD_EDITABLE_CONFIGMAP_NAMES)[number]);
+
 export const getObjectName = (object: LabeledObject): string => object.metadata?.name ?? object.getName();
 
 export const isArgoNotificationsConfigMap = (object: LabeledObject): boolean =>
@@ -84,7 +95,7 @@ export const isArgoRbacConfigMap = (object: LabeledObject): boolean =>
 
 export const isArgoConfigResource = (object: LabeledObject): boolean =>
   isArgoSecret(object) ||
-  isArgoConfigMap(object) ||
+  isEditableArgoConfigMap(object) ||
   isArgoNotificationsConfigMap(object) ||
   isArgoNotificationsSecret(object) ||
   isArgoRbacConfigMap(object);

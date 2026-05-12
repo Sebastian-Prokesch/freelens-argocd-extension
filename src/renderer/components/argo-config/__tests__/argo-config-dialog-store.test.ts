@@ -34,12 +34,35 @@ describe("argoConfigDialogStore", () => {
   });
 
   it("opens edit for labeled configmap", () => {
-    const configMap = makeObject({ "app.kubernetes.io/part-of": "argocd" });
+    const configMap = {
+      ...makeObject({ "app.kubernetes.io/part-of": "argocd" }),
+      metadata: {
+        name: "argocd-cm",
+        namespace: "argocd",
+        labels: { "app.kubernetes.io/part-of": "argocd" },
+      },
+    };
 
     argoConfigDialogStore.openEdit(configMap as any);
 
     expect(argoConfigDialogStore.isOpen).toBe(true);
     expect(argoConfigDialogStore.target?.kind).toBe("configmap");
+  });
+
+  it("ignores edit for non-whitelisted argocd configmaps", () => {
+    const customConfigMap = {
+      ...makeObject({ "app.kubernetes.io/part-of": "argocd" }),
+      metadata: {
+        name: "custom-argocd-cm",
+        namespace: "argocd",
+        labels: { "app.kubernetes.io/part-of": "argocd" },
+      },
+    };
+
+    argoConfigDialogStore.openEdit(customConfigMap as any);
+
+    expect(argoConfigDialogStore.isOpen).toBe(false);
+    expect(argoConfigDialogStore.target).toBeNull();
   });
 
   it("ignores edit for unrelated objects", () => {
