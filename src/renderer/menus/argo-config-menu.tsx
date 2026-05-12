@@ -4,8 +4,7 @@ import { argoConfigDialogStore } from "../components/argo-config";
 import { isArgoConfigMap, isArgoSecret } from "../k8s/argocd";
 
 const {
-  Component: { ConfirmDialog, MenuItem, Notifications },
-  K8sApi: { configMapStore, secretsStore },
+  Component: { Icon, MenuItem },
 } = Renderer;
 
 export interface ArgoConfigMenuItemProps extends Renderer.Component.KubeObjectMenuProps<any> {
@@ -13,16 +12,25 @@ export interface ArgoConfigMenuItemProps extends Renderer.Component.KubeObjectMe
 }
 
 export const ArgoConfigMenuItem = observer((props: ArgoConfigMenuItemProps) => {
-  const { object } = props;
+  const { object, toolbar } = props;
 
   if (!object) {
     return null;
   }
 
-  const isSecret = isArgoSecret(object);
-  const isConfigMap = isArgoConfigMap(object);
+  const objectKind = object.kind as string | undefined;
+  const matchesSecretKind = !objectKind || objectKind === "Secret";
+  const matchesConfigMapKind = !objectKind || objectKind === "ConfigMap";
+  const isSecret = matchesSecretKind && isArgoSecret(object);
+  const isConfigMap = matchesConfigMapKind && isArgoConfigMap(object);
 
   if (!isSecret && !isConfigMap) {
+    return null;
+  }
+
+  // Built-in Freelens toolbar actions already provide edit/delete for Secret/ConfigMap.
+  // Keep Argo-specific action in the context menu only to avoid duplicated toolbar icons.
+  if (toolbar) {
     return null;
   }
 
@@ -30,32 +38,10 @@ export const ArgoConfigMenuItem = observer((props: ArgoConfigMenuItemProps) => {
     argoConfigDialogStore.openEdit(object);
   };
 
-  const handleDelete = async () => {
-    const confirmed = await ConfirmDialog.confirm({
-      message: `Delete ArgoCD config ${object.getName()}?`,
-    });
-
-    if (!confirmed) {
-      return;
-    }
-
-    try {
-      if (isSecret) {
-        await secretsStore.remove(object as any);
-      } else {
-        await configMapStore.remove(object as any);
-      }
-      Notifications.ok(`Deleted ArgoCD config ${object.getName()}.`);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to delete ArgoCD config.";
-      Notifications.error(message);
-    }
-  };
-
   return (
-    <>
-      <MenuItem onClick={handleEdit}>Edit ArgoCD Config</MenuItem>
-      <MenuItem onClick={handleDelete}>Delete ArgoCD Config</MenuItem>
-    </>
+    <MenuItem onClick={handleEdit}>
+      <Icon material="settings" interactive={toolbar} title="Edit ArgoCD Config" />
+      <span className="title">Edit ArgoCD Config</span>
+    </MenuItem>
   );
 });

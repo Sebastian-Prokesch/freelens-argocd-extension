@@ -38,6 +38,8 @@ describe("ArgoConfigDetails", () => {
     expect(screen.getByText("repository")).toBeInTheDocument();
     expect(screen.getByText("https://example.com")).toBeInTheDocument();
     expect(screen.getByText("git")).toBeInTheDocument();
+    expect(screen.getByText("example.com")).toBeInTheDocument();
+    expect(screen.getByText("https")).toBeInTheDocument();
     expect(screen.getByText("default")).toBeInTheDocument();
     expect(screen.getByText("HTTPS")).toBeInTheDocument();
   });
@@ -64,9 +66,11 @@ describe("ArgoConfigDetails", () => {
 
     expect(screen.getByText("cluster-1")).toBeInTheDocument();
     expect(screen.getByText("https://kubernetes.default.svc")).toBeInTheDocument();
+    expect(screen.getByText("kubernetes.default.svc")).toBeInTheDocument();
+    expect(screen.getByText("namespaced")).toBeInTheDocument();
     expect(screen.getByText("apps")).toBeInTheDocument();
     expect(screen.getByText("default")).toBeInTheDocument();
-    expect(screen.getByTestId("BadgeBoolean")).toHaveTextContent("true");
+    expect(screen.getAllByTestId("BadgeBoolean")).toHaveLength(3);
   });
 
   it("renders configmap details", () => {
@@ -88,5 +92,52 @@ describe("ArgoConfigDetails", () => {
 
     expect(screen.getByText("ArgoCD Config")).toBeInTheDocument();
     expect(screen.getByText("url, dex.config")).toBeInTheDocument();
+  });
+
+  it("renders notifications configmap details", () => {
+    const configMap = makeObject({
+      metadata: {
+        name: "argocd-notifications-cm",
+        namespace: "argocd",
+        labels: {
+          "app.kubernetes.io/part-of": "argocd",
+        },
+      },
+      data: {
+        "trigger.on-sync-succeeded": "value",
+        "template.app-sync": "value",
+        subscriptions: "- recipients: [slack]",
+      },
+    });
+
+    render(<ArgoConfigDetails object={configMap as any} extension={extension} />);
+
+    expect(screen.getByText("ArgoCD Notifications")).toBeInTheDocument();
+    expect(screen.getByText("trigger.on-sync-succeeded")).toBeInTheDocument();
+    expect(screen.getByText("template.app-sync")).toBeInTheDocument();
+    expect(screen.getByText("subscriptions")).toBeInTheDocument();
+  });
+
+  it("renders rbac configmap details with parsed rules", () => {
+    const configMap = makeObject({
+      metadata: {
+        name: "argocd-rbac-cm",
+        namespace: "argocd",
+        labels: {
+          "app.kubernetes.io/part-of": "argocd",
+        },
+      },
+      data: {
+        "policy.default": "role:readonly",
+        scopes: "[groups]",
+        "policy.csv": "p, role:readonly, applications, get, */*, allow",
+      },
+    });
+
+    render(<ArgoConfigDetails object={configMap as any} extension={extension} />);
+
+    expect(screen.getByText("ArgoCD RBAC")).toBeInTheDocument();
+    expect(screen.getByText("role:readonly")).toBeInTheDocument();
+    expect(screen.getByText("p | role:readonly | applications | get | */* | allow")).toBeInTheDocument();
   });
 });
