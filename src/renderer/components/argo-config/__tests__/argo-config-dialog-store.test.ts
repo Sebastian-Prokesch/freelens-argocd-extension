@@ -50,4 +50,20 @@ describe("argoConfigDialogStore", () => {
     expect(argoConfigDialogStore.isOpen).toBe(false);
     expect(argoConfigDialogStore.target).toBeNull();
   });
+
+  it("keeps notifications secret read-only by ignoring edit", () => {
+    const notificationsSecret = {
+      ...makeObject({}),
+      metadata: {
+        name: "argocd-notifications-secret",
+        namespace: "argocd",
+        labels: {},
+      },
+    };
+
+    argoConfigDialogStore.openEdit(notificationsSecret as any);
+
+    expect(argoConfigDialogStore.isOpen).toBe(false);
+    expect(argoConfigDialogStore.target).toBeNull();
+  });
 });

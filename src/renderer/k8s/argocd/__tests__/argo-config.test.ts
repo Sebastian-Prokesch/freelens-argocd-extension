@@ -1,11 +1,23 @@
 import {
+  ARGOCD_NOTIFICATIONS_CONFIGMAP_NAME,
+  ARGOCD_NOTIFICATIONS_SECRET_NAME,
   ARGOCD_PART_OF_LABEL,
   ARGOCD_PART_OF_VALUE,
+  ARGOCD_RBAC_CONFIGMAP_NAME,
   ARGOCD_SECRET_TYPE_LABEL,
   getArgoSecretType,
+  getRepoAuthMethod,
   getSecretField,
   isArgoConfigMap,
+  isArgoConfigResource,
+  isArgoNotificationsConfigMap,
+  isArgoNotificationsSecret,
+  isArgoRbacConfigMap,
   isArgoSecret,
+  parseClusterConnection,
+  parseRbacPolicyCsv,
+  parseRepoConnection,
+  summarizeNotificationsData,
 } from "../argo-config";
 
 const makeObject = (overrides: Record<string, any> = {}) => ({
@@ -67,5 +79,110 @@ describe("argo-config helpers", () => {
     });
 
     expect(getSecretField(secret, "url")).toBe("https://example.com");
+  });
+
+  it("detects notifications and rbac config resources", () => {
+    const notificationsConfigMap = makeObject({
+      metadata: {
+        name: ARGOCD_NOTIFICATIONS_CONFIGMAP_NAME,
+        namespace: "argocd",
+        labels: {},
+      },
+    });
+    const notificationsSecret = makeObject({
+      metadata: {
+        name: ARGOCD_NOTIFICATIONS_SECRET_NAME,
+        namespace: "argocd",
+        labels: {},
+      },
+    });
+    const rbacConfigMap = makeObject({
+      metadata: {
+        name: ARGOCD_RBAC_CONFIGMAP_NAME,
+        namespace: "argocd",
+        labels: {},
+      },
+    });
+
+    expect(isArgoNotificationsConfigMap(notificationsConfigMap)).toBe(true);
+    expect(isArgoNotificationsSecret(notificationsSecret)).toBe(true);
+    expect(isArgoRbacConfigMap(rbacConfigMap)).toBe(true);
+    expect(isArgoConfigResource(notificationsConfigMap)).toBe(true);
+    expect(isArgoConfigResource(notificationsSecret)).toBe(true);
+    expect(isArgoConfigResource(rbacConfigMap)).toBe(true);
+  });
+
+  it("parses repository and cluster connection metadata", () => {
+    const repoSecret = makeObject({
+      stringData: {
+        type: "helm",
+        url: "https://charts.example.com",
+        username: "example-user",
+      },
+    });
+    const clusterSecret = makeObject({
+      stringData: {
+        server: "https://kubernetes.default.svc",
+        namespaces: "apps,ops",
+        config: JSON.stringify({
+          tlsClientConfig: {
+            caData: "base64-certificate",
+            insecure: true,
+          },
+        }),
+      },
+    });
+
+    expect(parseRepoConnection(repoSecret)).toEqual({
+      repositoryType: "helm",
+      protocol: "https",
+      host: "charts.example.com",
+      authMethod: "https",
+      hasTlsClientConfig: false,
+    });
+    expect(parseClusterConnection(clusterSecret)).toEqual({
+      protocol: "https",
+      host: "kubernetes.default.svc",
+      hasTlsClientConfig: true,
+      insecureTls: true,
+      namespaceScope: "namespaced",
+    });
+  });
+
+  it("summarizes notifications data and parses rbac policy csv", () => {
+    const summary = summarizeNotificationsData({
+      "trigger.on-deployed": "value",
+      "template.app-sync": "value",
+      subscriptions: "- recipients:\n  - slack",
+    });
+    const parsedPolicy = parseRbacPolicyCsv(
+      `
+      p, role:readonly, applications, get, */*, allow
+      g, sebastian, role:readonly
+      invalid-line
+    `,
+    );
+
+    expect(summary).toEqual({
+      triggerKeys: ["trigger.on-deployed"],
+      templateKeys: ["template.app-sync"],
+      subscriptionEntries: ["subscriptions"],
+    });
+    expect(parsedPolicy.rules).toHaveLength(2);
+    expect(parsedPolicy.rules[0]).toMatchObject({
+      kind: "p",
+      subject: "role:readonly",
+      resourceOrRole: "applications",
+      actionOrGroup: "get",
+      object: "*/*",
+      effect: "allow",
+    });
+    expect(parsedPolicy.rules[1]).toMatchObject({
+      kind: "g",
+      subject: "sebastian",
+      resourceOrRole: "role:readonly",
+    });
+    expect(parsedPolicy.parseErrors).toEqual(["invalid-line"]);
+    expect(getRepoAuthMethod(makeObject({ stringData: {} }))).toBe("none");
   });
 });

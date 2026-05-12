@@ -1,11 +1,10 @@
-import { Renderer } from "@freelensapp/extensions";
 import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { ArgoConfigMenuItem } from "../argo-config-menu";
 
 const extension = { name: "argocd-test-extension" } as any;
 
-const makeObject = (labels: Record<string, string>) => ({
+const makeObject = (labels: Record<string, string>, kind?: string) => ({
+  kind,
   metadata: {
     name: "test",
     namespace: "argocd",
@@ -23,7 +22,7 @@ describe("ArgoConfigMenuItem", () => {
 
     rerender(
       <ArgoConfigMenuItem
-        object={makeObject({ "argocd.argoproj.io/secret-type": "repository" }) as any}
+        object={makeObject({ "argocd.argoproj.io/secret-type": "repository" }, "Secret") as any}
         extension={extension}
       />,
     );
@@ -31,15 +30,57 @@ describe("ArgoConfigMenuItem", () => {
     expect(screen.getByText("Edit ArgoCD Config")).toBeInTheDocument();
   });
 
-  it("invokes remove on delete", async () => {
-    const object = makeObject({ "argocd.argoproj.io/secret-type": "repository" });
-    const secretsStore = Renderer.K8sApi.secretsStore as any;
-    const user = userEvent.setup();
+  it("does not render for notifications secret without Argo secret label", () => {
+    render(
+      <ArgoConfigMenuItem
+        object={
+          {
+            ...makeObject({}),
+            metadata: {
+              name: "argocd-notifications-secret",
+              namespace: "argocd",
+              labels: {},
+            },
+          } as any
+        }
+        extension={extension}
+      />,
+    );
 
-    render(<ArgoConfigMenuItem object={object as any} extension={extension} />);
+    expect(screen.queryByTestId("MenuItem")).not.toBeInTheDocument();
+  });
 
-    await user.click(screen.getByText("Delete ArgoCD Config"));
+  it("does not render Argo-specific action in toolbar mode", () => {
+    render(
+      <ArgoConfigMenuItem
+        object={makeObject({ "argocd.argoproj.io/secret-type": "repository" }, "Secret") as any}
+        extension={extension}
+        toolbar
+      />,
+    );
 
-    expect(secretsStore.remove).toHaveBeenCalledWith(object);
+    expect(screen.queryByTestId("MenuItem")).not.toBeInTheDocument();
+  });
+
+  it("does not render when kind and label type mismatch", () => {
+    render(
+      <ArgoConfigMenuItem
+        object={makeObject({ "argocd.argoproj.io/secret-type": "repository" }, "ConfigMap") as any}
+        extension={extension}
+      />,
+    );
+
+    expect(screen.queryByTestId("MenuItem")).not.toBeInTheDocument();
+  });
+
+  it("renders a distinct Argo config edit action", () => {
+    render(
+      <ArgoConfigMenuItem
+        object={makeObject({ "argocd.argoproj.io/secret-type": "repository" }, "Secret") as any}
+        extension={extension}
+      />,
+    );
+
+    expect(screen.getByText("Edit ArgoCD Config")).toBeInTheDocument();
   });
 });

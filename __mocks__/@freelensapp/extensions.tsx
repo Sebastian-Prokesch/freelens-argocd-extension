@@ -48,8 +48,18 @@ export const Renderer = {
     Events: passthrough("Events"),
     NamespaceSelectFilter: passthrough("NamespaceSelectFilter"),
     TabLayout: passthrough("TabLayout"),
-    Tabs: ({ children }: AnyRecord) => <div data-testid="Tabs">{children}</div>,
-    Tab: ({ label }: AnyRecord) => <div data-testid="Tab">{label}</div>,
+    Tabs: ({ children, onChange }: AnyRecord) => (
+      <div data-testid="Tabs">
+        {React.Children.map(children, (child) =>
+          React.isValidElement(child) ? React.cloneElement(child, { onSelect: onChange }) : child,
+        )}
+      </div>
+    ),
+    Tab: ({ label, value, onSelect }: AnyRecord) => (
+      <button type="button" data-testid="Tab" onClick={() => onSelect?.(value)}>
+        {label}
+      </button>
+    ),
 
     // details page
     BadgeBoolean: ({ value }: { value: boolean }) => <span data-testid="BadgeBoolean">{value ? "true" : "false"}</span>,
