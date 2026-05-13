@@ -40,7 +40,6 @@ import {
   ArgoSyncMenuItem,
   ArgoTerminateMenuItem,
 } from "./menus";
-import { ArgoPreferenceHint, ArgoPreferenceInput } from "./preferences";
 import { buildClusterPageMenus, buildClusterPages } from "./registration/cluster-registration";
 import {
   createKubeObjectDetailRegistration,
@@ -59,15 +58,7 @@ export default class ArgoRenderer extends Renderer.LensExtension {
     ArgoPreferencesStore.getInstanceOrCreate().loadExtension(this);
   }
 
-  appPreferences = [
-    {
-      title: "Argo Preferences",
-      components: {
-        Input: () => <ArgoPreferenceInput />,
-        Hint: () => <ArgoPreferenceHint />,
-      },
-    },
-  ];
+  appPreferences = [];
 
   kubeObjectDetailItems = [
     createKubeObjectDetailRegistration({
