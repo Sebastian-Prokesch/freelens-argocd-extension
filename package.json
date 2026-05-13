@@ -1,6 +1,6 @@
 {
   "name": "@sebastian-prokesch/freelens-argocd-extension",
-  "version": "0.1.0-beta.1",
+  "version": "0.1.0-beta.2",
   "description": "Freelens Extension for ArgoCD resources",
   "repository": {
     "type": "git",
