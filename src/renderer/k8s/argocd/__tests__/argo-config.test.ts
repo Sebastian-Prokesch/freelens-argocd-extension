@@ -18,6 +18,8 @@ import {
   parseClusterConnection,
   parseRbacPolicyCsv,
   parseRepoConnection,
+  redactUrlUserinfoForDisplay,
+  secretHasStringOrDataKey,
   summarizeNotificationsData,
 } from "../argo-config";
 
@@ -202,5 +204,24 @@ describe("argo-config helpers", () => {
     });
     expect(parsedPolicy.parseErrors).toEqual(["invalid-line"]);
     expect(getRepoAuthMethod(makeObject({ stringData: {} }))).toBe("none");
+  });
+
+  it("detects repo auth from data keys without decoding base64 material", () => {
+    const secret = makeObject({
+      data: {
+        sshPrivateKey: Buffer.from("not-actually-read", "utf8").toString("base64"),
+      },
+    });
+
+    expect(secretHasStringOrDataKey(secret, "sshPrivateKey")).toBe(true);
+    expect(getRepoAuthMethod(secret)).toBe("ssh");
+  });
+
+  it("redacts embedded credentials from common URL shapes", () => {
+    expect(redactUrlUserinfoForDisplay("https://user:token@github.com/org/repo.git")).toBe(
+      "https://github.com/org/repo.git",
+    );
+    expect(redactUrlUserinfoForDisplay("https://github.com/plain.git")).toBe("https://github.com/plain.git");
+    expect(redactUrlUserinfoForDisplay(undefined)).toBeUndefined();
   });
 });

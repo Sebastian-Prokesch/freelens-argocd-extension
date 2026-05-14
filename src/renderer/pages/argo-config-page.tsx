@@ -1,17 +1,22 @@
 import { Renderer } from "@freelensapp/extensions";
+import { reaction } from "mobx";
 import { observer } from "mobx-react";
 import React from "react";
 import { argoConfigDialogStore } from "../components/argo-config";
 import { withErrorPage } from "../components/error-page";
 import {
   getArgoSecretType,
+  getNamespacesForArgoConfigQuery,
   getSecretField,
   isArgoConfigMap,
   isArgoNotificationsConfigMap,
   isArgoNotificationsSecret,
   type LabeledObject,
+  loadArgoConfigMaps,
+  loadArgoConfigSecrets,
   parseClusterConnection,
   parseRepoConnection,
+  redactUrlUserinfoForDisplay,
   summarizeNotificationsData,
 } from "../k8s/argocd";
 import styles from "./argo-config-page.module.scss";
@@ -77,7 +82,7 @@ const renderRepoList = (secrets: any[], title: string) => {
       sortingCallbacks={{
         name: (object) => object.getName(),
         namespace: (object) => object.getNs(),
-        url: (object) => getSecretField(object, "url") ?? "",
+        url: (object) => redactUrlUserinfoForDisplay(getSecretField(object, "url")) ?? "",
         host: (object) => parseRepoConnection(object).host,
         protocol: (object) => parseRepoConnection(object).protocol,
         type: (object) => getSecretField(object, "type") ?? "",
@@ -106,7 +111,7 @@ const renderRepoList = (secrets: any[], title: string) => {
         return [
           <WithTooltip>{object.getName()}</WithTooltip>,
           <WithTooltip>{object.getNs()}</WithTooltip>,
-          <WithTooltip>{getSecretField(object, "url") ?? "N/A"}</WithTooltip>,
+          <WithTooltip>{redactUrlUserinfoForDisplay(getSecretField(object, "url")) ?? "N/A"}</WithTooltip>,
           <WithTooltip>{connection.host}</WithTooltip>,
           <WithTooltip>{connection.protocol}</WithTooltip>,
           <WithTooltip>{getSecretField(object, "type") ?? "N/A"}</WithTooltip>,
@@ -236,13 +241,52 @@ export const ArgoConfigTabContent = observer(() => {
   const [activeTab, setActiveTab] = React.useState<ArgoConfigTab>("repositories");
   const [isLoaded, setIsLoaded] = React.useState(false);
   const [loadError, setLoadError] = React.useState<string | null>(null);
+  const [secretItems, setSecretItems] = React.useState<LabeledObject[]>([]);
+  const [configMapItems, setConfigMapItems] = React.useState<LabeledObject[]>([]);
   const watches = React.useRef<(() => void)[]>([]);
+  const loadGeneration = React.useRef(0);
 
   React.useEffect(() => {
     let isMounted = true;
+    const { namespaceStore } = Renderer.K8sApi;
+
+    const loadArgoResources = async (options?: { withLoading?: boolean }) => {
+      const generation = ++loadGeneration.current;
+      const withLoading = options?.withLoading ?? true;
+
+      try {
+        setLoadError(null);
+
+        if (withLoading) {
+          setIsLoaded(false);
+        }
+
+        const namespaces = getNamespacesForArgoConfigQuery(namespaceStore);
+
+        const [secrets, configMaps] = await Promise.all([
+          loadArgoConfigSecrets(namespaces, secretsStore.api),
+          loadArgoConfigMaps(namespaces, configMapStore.api),
+        ]);
+
+        if (!isMounted || generation !== loadGeneration.current) {
+          return;
+        }
+
+        setSecretItems(secrets as LabeledObject[]);
+        setConfigMapItems(configMaps as LabeledObject[]);
+        setIsLoaded(true);
+      } catch (error) {
+        if (!isMounted || generation !== loadGeneration.current) {
+          return;
+        }
+
+        const message = error instanceof Error ? error.message : "Failed to load ArgoCD config resources.";
+        setLoadError(message);
+        setIsLoaded(true);
+      }
+    };
 
     (async () => {
-      const { namespaceStore } = Renderer.K8sApi;
       try {
         setLoadError(null);
         setIsLoaded(false);
@@ -251,39 +295,42 @@ export const ArgoConfigTabContent = observer(() => {
           return;
         }
         watches.current.push(namespaceStore.subscribe());
-
-        const namespaces = namespaceStore.items.map((ns) => ns.getName());
-        await Promise.all([secretsStore.loadAll({ namespaces }), configMapStore.loadAll({ namespaces })]);
-        if (!isMounted) {
-          return;
-        }
-
-        watches.current.push(secretsStore.subscribe());
-        watches.current.push(configMapStore.subscribe());
-
-        if (isMounted) {
-          setIsLoaded(true);
-        }
+        await loadArgoResources();
       } catch (error) {
         if (isMounted) {
-          const message = error instanceof Error ? error.message : "Failed to load ArgoCD config resources.";
+          const message = error instanceof Error ? error.message : "Failed to load namespaces.";
           setLoadError(message);
           setIsLoaded(true);
         }
       }
     })();
 
+    const contextDisposer = namespaceStore.onContextChange(() => {
+      void loadArgoResources({ withLoading: false });
+    });
+
+    let wasDialogOpen = argoConfigDialogStore.isOpen;
+    const dialogDisposer = reaction(
+      () => argoConfigDialogStore.isOpen,
+      (isOpen) => {
+        if (wasDialogOpen && !isOpen) {
+          void loadArgoResources({ withLoading: false });
+        }
+
+        wasDialogOpen = isOpen;
+      },
+    );
+
     return () => {
       isMounted = false;
+      contextDisposer();
+      dialogDisposer();
       for (const unsubscribe of watches.current) {
         unsubscribe();
       }
       watches.current = [];
     };
   }, []);
-
-  const secretItems = secretsStore.contextItems as any[];
-  const configMapItems = configMapStore.contextItems as any[];
 
   const repositorySecrets = secretItems.filter((item) => getArgoSecretType(item as LabeledObject) === "repository");
   const repoCredsSecrets = secretItems.filter((item) => getArgoSecretType(item as LabeledObject) === "repo-creds");

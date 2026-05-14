@@ -114,6 +114,46 @@ export const decodeBase64 = (value?: string): string | undefined => {
   }
 };
 
+/** True if the key exists in stringData or in opaque data without decoding base64. */
+export const secretHasStringOrDataKey = (secret: LabeledObject, key: string): boolean =>
+  Boolean(secret.stringData?.[key] ?? secret.data?.[key]);
+
+/**
+ * Strips RFC 3986 userinfo from absolute URLs for safe display (avoids leaking embedded credentials).
+ * Non-URL and scp-style strings are returned unchanged.
+ */
+export const redactUrlUserinfoForDisplay = (url: string | undefined): string | undefined => {
+  if (!url) {
+    return undefined;
+  }
+
+  const trimmed = url.trim();
+
+  if (!trimmed) {
+    return undefined;
+  }
+
+  const withoutUserinfo = trimmed.replace(/^([a-z][a-z0-9+.-]*:\/\/)([^/?#]+@)/i, "$1");
+
+  if (withoutUserinfo !== trimmed) {
+    return withoutUserinfo;
+  }
+
+  try {
+    const parsed = new URL(trimmed);
+
+    if (parsed.username || parsed.password) {
+      parsed.username = "";
+      parsed.password = "";
+      return parsed.toString();
+    }
+  } catch {
+    return trimmed;
+  }
+
+  return trimmed;
+};
+
 export const getSecretField = (secret: LabeledObject, key: string): string | undefined =>
   secret.stringData?.[key] ?? decodeBase64(secret.data?.[key]);
 
@@ -148,15 +188,15 @@ const parseUrl = (value?: string): URL | undefined => {
 };
 
 export const getRepoAuthMethod = (secret: LabeledObject): ParsedRepoConnection["authMethod"] => {
-  if (getSecretField(secret, "sshPrivateKey")) {
+  if (secretHasStringOrDataKey(secret, "sshPrivateKey")) {
     return "ssh";
   }
 
-  if (getSecretField(secret, "githubAppPrivateKey") || getSecretField(secret, "githubAppID")) {
+  if (secretHasStringOrDataKey(secret, "githubAppPrivateKey") || secretHasStringOrDataKey(secret, "githubAppID")) {
     return "githubApp";
   }
 
-  if (getSecretField(secret, "username") || getSecretField(secret, "password")) {
+  if (secretHasStringOrDataKey(secret, "username") || secretHasStringOrDataKey(secret, "password")) {
     return "https";
   }
 
