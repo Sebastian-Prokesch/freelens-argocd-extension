@@ -44,6 +44,27 @@ describe("ArgoConfigDetails", () => {
     expect(screen.getByText("HTTPS")).toBeInTheDocument();
   });
 
+  it("redacts userinfo from repository URL in details", () => {
+    const secret = makeObject({
+      metadata: {
+        name: "repo",
+        namespace: "argocd",
+        labels: {
+          "argocd.argoproj.io/secret-type": "repository",
+        },
+      },
+      stringData: {
+        url: "https://user:secrettoken@example.com/org/repo.git",
+        type: "git",
+      },
+    });
+
+    render(<ArgoConfigDetails object={secret as any} extension={extension} />);
+
+    expect(screen.getByText("https://example.com/org/repo.git")).toBeInTheDocument();
+    expect(screen.queryByText("https://user:secrettoken@example.com/org/repo.git")).not.toBeInTheDocument();
+  });
+
   it("renders cluster secret details", () => {
     const secret = makeObject({
       metadata: {

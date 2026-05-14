@@ -14,6 +14,7 @@ import {
   parseClusterConnection,
   parseRbacPolicyCsv,
   parseRepoConnection,
+  redactUrlUserinfoForDisplay,
   summarizeNotificationsData,
 } from "../k8s/argocd";
 
@@ -70,7 +71,7 @@ const renderSecretDetails = (secret: LabeledObject) => {
       <>
         <DrawerTitle title="ArgoCD Config" />
         <DrawerItem name="Secret Type">{secretType}</DrawerItem>
-        <DrawerItem name="URL">{getSecretField(secret, "url") ?? "N/A"}</DrawerItem>
+        <DrawerItem name="URL">{redactUrlUserinfoForDisplay(getSecretField(secret, "url")) ?? "N/A"}</DrawerItem>
         <DrawerItem name="Host">{connection.host}</DrawerItem>
         <DrawerItem name="Protocol">{connection.protocol}</DrawerItem>
         <DrawerItem name="Type">{connection.repositoryType}</DrawerItem>

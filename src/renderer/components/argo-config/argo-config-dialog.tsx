@@ -6,6 +6,7 @@ import {
   ARGOCD_PART_OF_VALUE,
   ARGOCD_SECRET_TYPE_LABEL,
   type ArgoSecretType,
+  getRepoAuthMethod,
   getSecretField,
   type LabeledObject,
 } from "../../k8s/argocd";
@@ -117,28 +118,8 @@ const emptyConfigMapForm = (): ConfigMapFormState => ({
   dataJson: '{\n  "key": "value"\n}',
 });
 
-const getAuthMethod = (secret: LabeledObject | undefined): AuthMethod => {
-  if (!secret) {
-    return "none";
-  }
-
-  if (getSecretField(secret, "sshPrivateKey")) {
-    return "ssh";
-  }
-
-  if (getSecretField(secret, "githubAppPrivateKey") || getSecretField(secret, "githubAppID")) {
-    return "githubApp";
-  }
-
-  if (getSecretField(secret, "username") || getSecretField(secret, "password")) {
-    return "https";
-  }
-
-  return "none";
-};
-
 const loadRepoFormFromSecret = (secret: LabeledObject | undefined): RepoFormState => {
-  const authMethod = getAuthMethod(secret);
+  const authMethod = secret ? getRepoAuthMethod(secret) : "none";
 
   return {
     name: secret?.metadata?.name ?? "",
