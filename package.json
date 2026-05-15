@@ -19,8 +19,7 @@
   "copyright": "© 2025 Freelens Authors",
   "license": "MIT",
   "author": {
-    "name": "Sebastian Prokesch",
-    "email": "mail@example.com"
+    "name": "Sebastian Prokesch"
   },
   "publishConfig": {
     "access": "public",

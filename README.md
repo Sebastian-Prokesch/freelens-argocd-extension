@@ -40,7 +40,7 @@ This project is in beta (`0.1.0-beta.3`).
 
 ## Install
 
-Install from a release tarball (the npm package install flow is not available yet):
+Install from a release tarball (official beta distribution channel):
 
 1. Download the latest `.tgz` from the [GitHub Releases page](https://github.com/Sebastian-Prokesch/freelens-argocd-extension/releases).
 2. Open Freelens and go to Extensions (`ctrl`+`shift`+`E` or `cmd`+`shift`+`E`).
