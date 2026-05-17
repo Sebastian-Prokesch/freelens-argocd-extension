@@ -1,7 +1,7 @@
 {
-  "name": "@sebastian-prokesch/freelens-argocd-extension",
-  "version": "0.1.0-beta.3",
-  "description": "Freelens Extension for ArgoCD resources",
+  "name": "@sebastian-prokesch/freelens-argo-extension",
+  "version": "0.1.0",
+  "description": "Freelens Extension for Argo resources",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Sebastian-Prokesch/freelens-argocd-extension.git",
@@ -16,10 +16,10 @@
     "node": ">= 22.16.0",
     "freelens": "^1.9.0"
   },
-  "copyright": "© 2025 Freelens Authors",
+  "copyright": "© 2026 Freelens Authors & Sebastian Prokesch",
   "license": "MIT",
   "author": {
-    "name": "Sebastian Prokesch"
+    "name": "Freelens Authors & Sebastian Prokesch"
   },
   "publishConfig": {
     "access": "public",
@@ -97,7 +97,9 @@
     "freelensapp",
     "lens",
     "openlens",
-    "freelens"
+    "freelens",
+    "argo",
+    "argocd"
   ],
   "packageManager": "pnpm@11.1.1"
 }

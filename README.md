@@ -1,17 +1,19 @@
 # Freelens ArgoCD Extension
 
 [![Freelens](https://img.shields.io/badge/freelens.app-02a7a0?style=flat-square)](https://www.freelens.app)
-[![npm](https://img.shields.io/npm/v/@sebastian-prokesch/freelens-argocd-extension?style=flat-square)](https://www.npmjs.com/package/@sebastian-prokesch/freelens-argocd-extension)
+[![npm](https://img.shields.io/npm/v/@sebastian-prokesch/freelens-argo-extension?style=flat-square)](https://www.npmjs.com/package/@sebastian-prokesch/freelens-argo-extension)
 
 This extension integrates Argo workloads into [Freelens](https://www.freelens.app), with cluster pages and resource details for ArgoCD and Argo Rollouts, plus early Argo Workflows support.
 
-## Beta status
+## Status
 
-This project is in beta (`0.1.0-beta.3`).
+Current release: **`0.1.0`** (first stable public release).
 
 - ArgoCD pages are available for Overview, Applications, ApplicationSets, AppProjects, and Config.
 - Argo Rollouts pages and actions are available for common rollout operations.
 - Argo Workflows pages are present, but still considered early and may evolve quickly.
+
+Pre-release builds remain available on npm as `@sebastian-prokesch/freelens-argo-extension@next`.
 
 ### Known limitations
 
@@ -40,11 +42,20 @@ This project is in beta (`0.1.0-beta.3`).
 
 ## Install
 
-Install from a release tarball (official beta distribution channel):
+### From npm
 
-1. Download the latest `.tgz` from the [GitHub Releases page](https://github.com/Sebastian-Prokesch/freelens-argocd-extension/releases).
-2. Open Freelens and go to Extensions (`ctrl`+`shift`+`E` or `cmd`+`shift`+`E`).
-3. Load the downloaded tarball path, or drag and drop the `.tgz` into the Freelens window.
+1. Open Freelens and go to **Extensions** (`Ctrl`+`Shift`+`E` or `Cmd`+`Shift`+`E`).
+2. Enter the package name in the install field:
+   - **Stable:** `@sebastian-prokesch/freelens-argo-extension`
+   - **Pre-release:** `@sebastian-prokesch/freelens-argo-extension@next`
+
+See the package on [npm](https://www.npmjs.com/package/@sebastian-prokesch/freelens-argo-extension).
+
+### From GitHub release
+
+1. Download the latest `.tgz` from the [GitHub Releases](https://github.com/Sebastian-Prokesch/freelens-argocd-extension/releases) page.
+2. Open Freelens → **Extensions** (`Ctrl`+`Shift`+`E` or `Cmd`+`Shift`+`E`).
+3. Load the tarball path, or drag and drop the `.tgz` into the Freelens window.
 
 ## Supported APIs and resources
 
@@ -131,15 +142,15 @@ export FREELENS_EXECUTABLE_PATH="/Applications/Freelens.app/Contents/MacOS/Freel
 
 ## Contributing
 
-To add another Argo product:
+Contributions are welcome.
 
-1. Add route segments in [`src/renderer/routes/argo-routes.ts`](src/renderer/routes/argo-routes.ts).
-2. Add Kubernetes resource types/stores under `src/renderer/k8s/<product>/`.
-3. Add pages, details, and menu items under `src/renderer/pages/`, `src/renderer/details/`, and `src/renderer/menus/`.
-4. Register cluster pages and sidebar entries in [`src/renderer/registration/cluster-registration.tsx`](src/renderer/registration/cluster-registration.tsx), and register related detail/menu items in [`src/renderer/index.tsx`](src/renderer/index.tsx).
+- **Bug reports and ideas** — open an [issue](https://github.com/Sebastian-Prokesch/freelens-argocd-extension/issues) with steps to reproduce, expected behavior, and your Freelens/Kubernetes setup when relevant.
+- **Code changes** — open a [pull request](https://github.com/Sebastian-Prokesch/freelens-argocd-extension/pulls) against `main` with a short description of what changed and why. For larger changes, open an issue first so we can align on approach.
+
+If you are developing locally, see [Build from source](#build-from-source) for setup, checks, and tests.
 
 ## License
 
-Copyright (c) 2026 Sebastian Prokesch.
+Copyright (c) 2026 Freelens Authors & Sebastian Prokesch.
 
 [MIT License](https://opensource.org/licenses/MIT)

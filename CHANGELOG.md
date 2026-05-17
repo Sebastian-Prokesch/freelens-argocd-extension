@@ -8,13 +8,27 @@ with pre-release identifiers for beta builds.
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-05-17
+
+First stable public release. Same extension artifacts as `0.1.0-beta.4`; published to npm with the `latest` dist-tag.
+
 ### Added
 
-- Beta release governance artifacts: release runbook, compatibility matrix, QA checklist, and security policy.
+- Stable install path: `@sebastian-prokesch/freelens-argo-extension` (without `@next`).
+
+## [0.1.0-beta.4] - 2026-05-17
+
+### Added
+
+- npm distribution at `@sebastian-prokesch/freelens-argo-extension` (Trusted Publishing from GitHub Actions).
+- Tag-driven release workflow: verify, publish to npm, and create a draft GitHub Release with `.tgz` assets.
+- README install instructions for npm and updated contributing guidance.
+- Release runbook for the tag-push and draft-release process.
 
 ### Changed
 
-- Release workflow now runs full quality gates and integration smoke validation before attaching artifacts.
+- GitHub Releases are created as drafts with generated release notes; prerelease/latest flags follow semver pre-release tags.
+- Release CI split into `verify`, `publish-npm`, and `github-release` jobs.
 
 ## [0.1.0-beta.3] - 2026-05-14
 
