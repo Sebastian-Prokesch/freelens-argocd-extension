@@ -8,6 +8,17 @@ with pre-release identifiers for beta builds.
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-05-17
+
+### Fixed
+
+- Renderer loading failure in published builds caused by references to `node_modules/.vite_external/*` stubs.
+
+### Changed
+
+- Release and CI builds now force `VITE_PRESERVE_MODULES=false` to produce portable bundle output for npm and GitHub release tarballs.
+- Build pipelines now fail if compiled `out/` assets still reference `.vite_external`.
+
 ## [0.1.0] - 2026-05-17
 
 First stable public release. Same extension artifacts as `0.1.0-beta.4`; published to npm with the `latest` dist-tag.

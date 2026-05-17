@@ -44,6 +44,8 @@ jobs:
 
       - name: Build extension
         run: pnpm build
+        env:
+          VITE_PRESERVE_MODULES: "false"
 
       - name: Upload build output
         uses: actions/upload-artifact@v4
