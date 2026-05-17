@@ -7,7 +7,7 @@ This extension integrates Argo workloads into [Freelens](https://www.freelens.ap
 
 ## Status
 
-Current release: **`0.1.0`** (first stable public release).
+Current release: **`0.1.1`** (stable public release).
 
 - ArgoCD pages are available for Overview, Applications, ApplicationSets, AppProjects, and Config.
 - Argo Rollouts pages and actions are available for common rollout operations.

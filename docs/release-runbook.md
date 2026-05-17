@@ -33,7 +33,7 @@ pnpm install --frozen-lockfile
 pnpm type:check
 pnpm lint:check
 pnpm test:unit
-pnpm build
+VITE_PRESERVE_MODULES=false pnpm build
 pnpm pack
 tar -tzf sebastian-prokesch-freelens-argo-extension-*.tgz   # optional: inspect bundle contents
 ```
@@ -52,6 +52,8 @@ GitHub Actions runs [`.github/workflows/release.yml`](../.github/workflows/relea
 ### Job: `verify`
 
 - Typecheck, lint, unit tests, build
+- Build runs with `VITE_PRESERVE_MODULES=false` for release-safe output
+- Fails fast if `out/` still contains `.vite_external` references
 - Uploads `out/` as artifact `extension-build-out`
 
 ### Job: `publish-npm` (tag pushes only)
