@@ -1,5 +1,6 @@
 import { Renderer } from "@freelensapp/extensions";
 import { withErrorPage } from "../components/error-page";
+import { terminateApplicationOperation } from "../endpoints/argo-application-endpoints";
 import { ArgoApplication, getArgoApplicationStore } from "../k8s/argocd";
 
 const {
@@ -28,7 +29,7 @@ export const ArgoTerminateMenuItem = (props: ArgoTerminateMenuItemProps) =>
     const terminateOperation = async () => {
       const appName = object.getName?.() ?? object.metadata?.name ?? "application";
       try {
-        await store.patch(object, [{ op: "remove", path: "/operation" }], "json");
+        await terminateApplicationOperation(store, object);
         Notifications.ok(`Terminate requested for ${appName}`);
       } catch (error) {
         const message = error instanceof Error ? error.message : "Failed to terminate operation.";

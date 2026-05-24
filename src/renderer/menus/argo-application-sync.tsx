@@ -1,5 +1,6 @@
 import { Renderer } from "@freelensapp/extensions";
 import { withErrorPage } from "../components/error-page";
+import { syncApplication } from "../endpoints/argo-application-endpoints";
 import { ArgoApplication, getArgoApplicationStore } from "../k8s/argocd";
 
 const {
@@ -18,41 +19,10 @@ export const ArgoSyncMenuItem = (props: ArgoSyncMenuItemProps) =>
 
     const store = getArgoApplicationStore();
 
-    // const sync = async () => {
-    //   await store.patch(
-    //     object,
-    //     [
-    //       {
-    //         op: "add",
-    //         path: "/operation",
-    //         value: {
-    //           initiatedBy: { username: "LensApp" },
-    //           sync: { syncStrategy: { hook: {} } },
-    //         },
-    //       },
-    //     ],
-    //     "json",
-    //   );
-    // };
     const sync = async () => {
       const appName = object.getName?.() ?? object.metadata?.name ?? "application";
       try {
-        await store.patch(
-          object,
-          {
-            operation: {
-              initiatedBy: {
-                username: "LensApp",
-              },
-              sync: {
-                syncStrategy: {
-                  hook: {},
-                },
-              },
-            },
-          },
-          "merge",
-        );
+        await syncApplication(store, object);
         Notifications.ok(`Sync started for ${appName}`);
       } catch (error) {
         const message = error instanceof Error ? error.message : "Failed to start sync.";
