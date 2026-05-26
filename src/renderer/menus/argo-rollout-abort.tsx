@@ -1,6 +1,8 @@
 import { Renderer } from "@freelensapp/extensions";
 import { withErrorPage } from "../components/error-page";
-import { type ArgoRollout, canAbortRollout, getAbortMergePatch, getArgoRolloutStore } from "../k8s/rollouts";
+import { abortRollout } from "../endpoints/argo-rollout-endpoints";
+import { getMutationErrorMessage } from "../endpoints/mutation-errors";
+import { type ArgoRollout, canAbortRollout, getArgoRolloutStore } from "../k8s/rollouts";
 
 const {
   Component: { Icon, MenuItem, Notifications },
@@ -20,19 +22,19 @@ export const ArgoRolloutAbortMenuItem = (props: ArgoRolloutAbortMenuItemProps) =
 
     const rolloutStore = getArgoRolloutStore();
 
-    const abortRollout = async () => {
+    const handleAbortRollout = async () => {
       const rolloutName = object.getName?.() ?? object.metadata?.name ?? "rollout";
       try {
-        await rolloutStore.patch(object, getAbortMergePatch(object), "merge");
+        await abortRollout(rolloutStore, object);
         Notifications.ok(`Abort requested for ${rolloutName}`);
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to abort rollout.";
+        const message = getMutationErrorMessage(error, "Failed to abort rollout.");
         Notifications.error(message);
       }
     };
 
     return (
-      <MenuItem onClick={abortRollout}>
+      <MenuItem onClick={handleAbortRollout}>
         <Icon material="stop_circle" interactive={toolbar} title="Abort" />
         <span className="title">Abort</span>
       </MenuItem>

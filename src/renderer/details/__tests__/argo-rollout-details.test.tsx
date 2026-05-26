@@ -1,4 +1,6 @@
+import { Renderer } from "@freelensapp/extensions";
 import { fireEvent, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { ArgoRolloutDetails } from "../argo-rollout-details";
 
@@ -34,6 +36,8 @@ describe("ArgoRolloutDetails", () => {
     patchMock.mockClear();
     requestPatchMock.mockClear();
     requestPatchMock.mockResolvedValue({});
+    (Renderer.Component.Notifications.ok as jest.Mock).mockReset();
+    (Renderer.Component.Notifications.error as jest.Mock).mockReset();
   });
 
   it("renders strategy and replica summary", () => {
@@ -200,5 +204,30 @@ describe("ArgoRolloutDetails", () => {
       },
       "merge",
     );
+  });
+
+  it("shows abort error notification when abort request fails", async () => {
+    const { patchMock } = getPromoteMocks();
+    patchMock.mockRejectedValueOnce(new Error("abort denied"));
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter>
+        <ArgoRolloutDetails
+          extension={extension}
+          object={
+            {
+              status: {
+                phase: "Progressing",
+              },
+            } as any
+          }
+        />
+      </MemoryRouter>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Abort" }));
+
+    expect(Renderer.Component.Notifications.error).toHaveBeenCalledWith("abort denied");
   });
 });

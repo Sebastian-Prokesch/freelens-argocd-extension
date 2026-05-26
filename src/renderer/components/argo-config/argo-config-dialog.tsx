@@ -2,9 +2,15 @@ import { Renderer } from "@freelensapp/extensions";
 import { observer } from "mobx-react";
 import React from "react";
 import {
+  createArgoSecretConfig,
+  createConfigMapConfig,
+  updateArgoSecretConfig,
+  updateConfigMapConfig,
+} from "../../endpoints/argo-config-endpoints";
+import { getMutationErrorMessage } from "../../endpoints/mutation-errors";
+import {
   ARGOCD_PART_OF_LABEL,
   ARGOCD_PART_OF_VALUE,
-  ARGOCD_SECRET_TYPE_LABEL,
   type ArgoSecretType,
   getRepoAuthMethod,
   getSecretField,
@@ -199,9 +205,6 @@ const buildSecretStringData = (form: RepoFormState | ClusterFormState, secretTyp
 
   return stringData;
 };
-
-const getSecretName = (secret: LabeledObject) => secret.metadata?.name ?? secret.getName();
-const getSecretNamespace = (secret: LabeledObject) => secret.metadata?.namespace ?? secret.getNs();
 const ensureRequiredField = (value: string, label: string): string => {
   const trimmed = value.trim();
 
@@ -312,21 +315,20 @@ export const ArgoConfigDialog = observer(() => {
           ...(target.object?.metadata?.labels ?? {}),
           [ARGOCD_PART_OF_LABEL]: ARGOCD_PART_OF_VALUE,
         };
-        const base = {
-          apiVersion: "v1",
-          kind: "ConfigMap",
-          metadata: {
+        if (mode === "create") {
+          await createConfigMapConfig(configMapStore as any, {
             name,
             namespace,
             labels,
-          },
-          data,
-        };
-
-        if (mode === "create") {
-          await configMapStore.create({ name, namespace }, base);
+            data,
+          });
         } else if (target.object) {
-          await configMapStore.patch(target.object as any, { metadata: { labels }, data }, "merge");
+          await updateConfigMapConfig(configMapStore as any, target.object, {
+            name,
+            namespace,
+            labels,
+            data,
+          });
         }
       }
 
@@ -334,73 +336,28 @@ export const ArgoConfigDialog = observer(() => {
         const stringData = buildSecretStringData(target.kind === "cluster" ? clusterForm : repoForm, target.kind);
         const name = target.kind === "cluster" ? clusterForm.name.trim() : repoForm.name.trim();
         const namespace = target.kind === "cluster" ? clusterForm.namespace.trim() : repoForm.namespace.trim();
-        const base = {
-          apiVersion: "v1",
-          kind: "Secret",
-          metadata: {
-            name,
-            namespace,
-            labels: {
-              [ARGOCD_SECRET_TYPE_LABEL]: target.kind,
-            },
-          },
-          type: "Opaque",
-          stringData,
-        };
 
         if (mode === "create") {
-          await secretsStore.create(
-            {
-              name: base.metadata.name,
-              namespace: base.metadata.namespace,
-            },
-            base as any,
-          );
+          await createArgoSecretConfig(secretsStore as any, {
+            name,
+            namespace,
+            secretType: target.kind,
+            stringData,
+          });
         } else if (target.object) {
-          const secretName = getSecretName(target.object);
-          const secretNamespace = getSecretNamespace(target.object);
-          await secretsStore.patch(
-            target.object as any,
-            [
-              {
-                op: "add",
-                path: "/metadata/name",
-                value: secretName,
-              },
-              {
-                op: "add",
-                path: "/metadata/namespace",
-                value: secretNamespace,
-              },
-              {
-                op: "add",
-                path: "/metadata/labels",
-                value: {
-                  ...(target.object.metadata?.labels ?? {}),
-                  [ARGOCD_SECRET_TYPE_LABEL]: target.kind,
-                },
-              },
-              {
-                // Clear previous key material to avoid stale credentials after auth-method changes.
-                op: "add",
-                path: "/data",
-                value: {},
-              },
-              {
-                op: "add",
-                path: "/stringData",
-                value: stringData,
-              },
-            ],
-            "json",
-          );
+          await updateArgoSecretConfig(secretsStore as any, target.object, {
+            name,
+            namespace,
+            secretType: target.kind,
+            stringData,
+          });
         }
       }
 
       closeDialog();
       Notifications.ok("ArgoCD config saved.");
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to save ArgoCD config.";
+      const message = getMutationErrorMessage(err, "Failed to save ArgoCD config.");
       setError(message);
       Notifications.error(message);
     }

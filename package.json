@@ -1,6 +1,6 @@
 {
   "name": "@sebastian-prokesch/freelens-argo-extension",
-  "version": "0.1.1",
+  "version": "0.1.4",
   "description": "Freelens Extension for Argo resources",
   "repository": {
     "type": "git",
