@@ -3,8 +3,8 @@ import { observer } from "mobx-react";
 import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { withErrorPage } from "../components/error-page";
-import { abortRollout, requestRolloutPromotion, retryRollout } from "../endpoints/argo-rollout-endpoints";
 import { ConditionsList, ResourceEventsSection, StatusBadge } from "../components/shared";
+import { abortRollout, requestRolloutPromotion, retryRollout } from "../endpoints/argo-rollout-endpoints";
 import {
   type ArgoAnalysisRun,
   type ArgoRollout,

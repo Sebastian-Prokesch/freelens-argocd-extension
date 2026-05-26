@@ -1,3 +1,4 @@
+import { ANALYSIS_PHASE_INCONCLUSIVE } from "../../k8s/rollouts/canary-step";
 import {
   abortRollout,
   buildPromotePatches,
@@ -8,7 +9,6 @@ import {
   retryRollout,
   validatePromoteOptions,
 } from "../argo-rollout-endpoints";
-import { ANALYSIS_PHASE_INCONCLUSIVE } from "../../k8s/rollouts/canary-step";
 
 const rolloutApiUrl = "/apis/argoproj.io/v1alpha1/namespaces/ns/rollouts/demo";
 

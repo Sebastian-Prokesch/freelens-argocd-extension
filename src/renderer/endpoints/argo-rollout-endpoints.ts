@@ -1,5 +1,6 @@
-import type { ArgoRollout, ArgoRolloutStore } from "../k8s/rollouts";
 import { getCurrentCanaryStep, isInconclusiveCanaryAnalysis } from "../k8s/rollouts/canary-step";
+
+import type { ArgoRollout, ArgoRolloutStore } from "../k8s/rollouts";
 
 export function buildRolloutAbortMergePatch(): Record<string, unknown> {
   return {
