@@ -1,6 +1,7 @@
 import { Renderer } from "@freelensapp/extensions";
 import { withErrorPage } from "../components/error-page";
 import { requestRolloutPromotion } from "../endpoints/argo-rollout-endpoints";
+import { getMutationErrorMessage } from "../endpoints/mutation-errors";
 import {
   type ArgoRollout,
   canShowPromoteAction,
@@ -48,7 +49,7 @@ export const ArgoRolloutPromoteMenuItem = (props: ArgoRolloutPromoteMenuItemProp
         await requestRolloutPromotion(rolloutStore, object, {});
         Notifications.ok(`Promote requested for ${rolloutName(object)}`);
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to promote rollout.";
+        const message = getMutationErrorMessage(error, "Failed to promote rollout.");
         Notifications.error(message);
       }
     };
@@ -76,7 +77,7 @@ export const ArgoRolloutPromoteFullMenuItem = (props: ArgoRolloutPromoteFullMenu
         await requestRolloutPromotion(rolloutStore, object, { full: true });
         Notifications.ok(`Full promote requested for ${rolloutName(object)}`);
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to fully promote rollout.";
+        const message = getMutationErrorMessage(error, "Failed to fully promote rollout.");
         Notifications.error(message);
       }
     };
@@ -104,7 +105,7 @@ export const ArgoRolloutPromoteSkipCurrentMenuItem = (props: ArgoRolloutPromoteS
         await requestRolloutPromotion(rolloutStore, object, { skipCurrentStep: true });
         Notifications.ok(`Skip current step requested for ${rolloutName(object)}`);
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to skip current step.";
+        const message = getMutationErrorMessage(error, "Failed to skip current step.");
         Notifications.error(message);
       }
     };
@@ -132,7 +133,7 @@ export const ArgoRolloutPromoteSkipAllMenuItem = (props: ArgoRolloutPromoteSkipA
         await requestRolloutPromotion(rolloutStore, object, { skipAllSteps: true });
         Notifications.ok(`Skip all steps requested for ${rolloutName(object)}`);
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to skip all steps.";
+        const message = getMutationErrorMessage(error, "Failed to skip all steps.");
         Notifications.error(message);
       }
     };

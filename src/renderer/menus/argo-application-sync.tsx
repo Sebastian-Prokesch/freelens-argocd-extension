@@ -1,6 +1,7 @@
 import { Renderer } from "@freelensapp/extensions";
 import { withErrorPage } from "../components/error-page";
 import { syncApplication } from "../endpoints/argo-application-endpoints";
+import { getMutationErrorMessage } from "../endpoints/mutation-errors";
 import { ArgoApplication, getArgoApplicationStore } from "../k8s/argocd";
 
 const {
@@ -25,7 +26,7 @@ export const ArgoSyncMenuItem = (props: ArgoSyncMenuItemProps) =>
         await syncApplication(store, object);
         Notifications.ok(`Sync started for ${appName}`);
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to start sync.";
+        const message = getMutationErrorMessage(error, "Failed to start sync.");
         Notifications.error(message);
       }
     };

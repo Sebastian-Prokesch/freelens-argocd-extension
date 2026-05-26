@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { withErrorPage } from "../components/error-page";
 import { ConditionsList, ResourceEventsSection, StatusBadge } from "../components/shared";
 import { abortRollout, requestRolloutPromotion, retryRollout } from "../endpoints/argo-rollout-endpoints";
+import { getMutationErrorMessage } from "../endpoints/mutation-errors";
 import {
   type ArgoAnalysisRun,
   type ArgoRollout,
@@ -93,7 +94,7 @@ export const ArgoRolloutDetails = observer((props: ArgoRolloutDetailsProps) => {
         await requestRolloutPromotion(rolloutStore, object, {});
         Notifications.ok(`Promote requested for ${rolloutDisplayName}`);
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to promote rollout.";
+        const message = getMutationErrorMessage(error, "Failed to promote rollout.");
         Notifications.error(message);
       }
     };
@@ -103,7 +104,7 @@ export const ArgoRolloutDetails = observer((props: ArgoRolloutDetailsProps) => {
         await requestRolloutPromotion(rolloutStore, object, { full: true });
         Notifications.ok(`Full promote requested for ${rolloutDisplayName}`);
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to fully promote rollout.";
+        const message = getMutationErrorMessage(error, "Failed to fully promote rollout.");
         Notifications.error(message);
       }
     };
@@ -113,7 +114,7 @@ export const ArgoRolloutDetails = observer((props: ArgoRolloutDetailsProps) => {
         await requestRolloutPromotion(rolloutStore, object, { skipCurrentStep: true });
         Notifications.ok(`Skip current step requested for ${rolloutDisplayName}`);
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to skip current step.";
+        const message = getMutationErrorMessage(error, "Failed to skip current step.");
         Notifications.error(message);
       }
     };
@@ -123,7 +124,7 @@ export const ArgoRolloutDetails = observer((props: ArgoRolloutDetailsProps) => {
         await requestRolloutPromotion(rolloutStore, object, { skipAllSteps: true });
         Notifications.ok(`Skip all steps requested for ${rolloutDisplayName}`);
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to skip all steps.";
+        const message = getMutationErrorMessage(error, "Failed to skip all steps.");
         Notifications.error(message);
       }
     };
@@ -133,7 +134,7 @@ export const ArgoRolloutDetails = observer((props: ArgoRolloutDetailsProps) => {
         await abortRollout(rolloutStore, object);
         Notifications.ok(`Abort requested for ${object.getName?.() ?? object.metadata?.name ?? "rollout"}`);
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to abort rollout.";
+        const message = getMutationErrorMessage(error, "Failed to abort rollout.");
         Notifications.error(message);
       }
     };
@@ -143,7 +144,7 @@ export const ArgoRolloutDetails = observer((props: ArgoRolloutDetailsProps) => {
         await retryRollout(rolloutStore, object);
         Notifications.ok(`Retry requested for ${object.getName?.() ?? object.metadata?.name ?? "rollout"}`);
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to retry rollout.";
+        const message = getMutationErrorMessage(error, "Failed to retry rollout.");
         Notifications.error(message);
       }
     };

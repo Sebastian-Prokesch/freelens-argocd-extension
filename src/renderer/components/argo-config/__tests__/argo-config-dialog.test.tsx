@@ -76,4 +76,22 @@ describe("ArgoConfigDialog", () => {
       'ConfigMap data key "enabled" must have a string value.',
     );
   });
+
+  it("shows save error notification and inline error when request fails", async () => {
+    const user = userEvent.setup();
+    (Renderer.K8sApi.secretsStore.create as jest.Mock).mockRejectedValueOnce(new Error("forbidden"));
+    argoConfigDialogStore.openCreate("repository");
+
+    render(<ArgoConfigDialog />);
+
+    await user.type(screen.getByPlaceholderText("Name"), "repo-secret");
+    const namespaceInput = screen.getByPlaceholderText("Namespace");
+    await user.clear(namespaceInput);
+    await user.type(namespaceInput, "argocd");
+    await user.type(screen.getByPlaceholderText("Repository URL"), "https://github.com/example/repo.git");
+    await user.click(screen.getByRole("button", { name: "Create" }));
+
+    expect(Renderer.Component.Notifications.error).toHaveBeenCalledWith("forbidden");
+    expect(screen.getByText("forbidden")).toBeInTheDocument();
+  });
 });

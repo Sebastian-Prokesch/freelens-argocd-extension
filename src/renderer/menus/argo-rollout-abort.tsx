@@ -1,6 +1,7 @@
 import { Renderer } from "@freelensapp/extensions";
 import { withErrorPage } from "../components/error-page";
 import { abortRollout } from "../endpoints/argo-rollout-endpoints";
+import { getMutationErrorMessage } from "../endpoints/mutation-errors";
 import { type ArgoRollout, canAbortRollout, getArgoRolloutStore } from "../k8s/rollouts";
 
 const {
@@ -27,7 +28,7 @@ export const ArgoRolloutAbortMenuItem = (props: ArgoRolloutAbortMenuItemProps) =
         await abortRollout(rolloutStore, object);
         Notifications.ok(`Abort requested for ${rolloutName}`);
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to abort rollout.";
+        const message = getMutationErrorMessage(error, "Failed to abort rollout.");
         Notifications.error(message);
       }
     };

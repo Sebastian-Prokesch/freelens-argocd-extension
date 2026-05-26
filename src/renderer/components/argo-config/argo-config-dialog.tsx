@@ -7,6 +7,7 @@ import {
   updateArgoSecretConfig,
   updateConfigMapConfig,
 } from "../../endpoints/argo-config-endpoints";
+import { getMutationErrorMessage } from "../../endpoints/mutation-errors";
 import {
   ARGOCD_PART_OF_LABEL,
   ARGOCD_PART_OF_VALUE,
@@ -356,7 +357,7 @@ export const ArgoConfigDialog = observer(() => {
       closeDialog();
       Notifications.ok("ArgoCD config saved.");
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to save ArgoCD config.";
+      const message = getMutationErrorMessage(err, "Failed to save ArgoCD config.");
       setError(message);
       Notifications.error(message);
     }

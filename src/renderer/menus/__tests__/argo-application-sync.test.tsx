@@ -55,4 +55,26 @@ describe("ArgoSyncMenuItem", () => {
     );
     expect(Renderer.Component.Notifications.ok).toHaveBeenCalledWith("Sync started for demo-app");
   });
+
+  it("shows endpoint error message when sync fails", async () => {
+    patchMock.mockRejectedValueOnce(new Error("sync denied"));
+    const user = userEvent.setup();
+
+    render(<ArgoSyncMenuItem object={{ getName: () => "demo-app" } as any} extension={extension} />);
+
+    await user.click(screen.getByText("Sync"));
+
+    expect(Renderer.Component.Notifications.error).toHaveBeenCalledWith("sync denied");
+  });
+
+  it("shows fallback error message when sync fails with non-Error", async () => {
+    patchMock.mockRejectedValueOnce({ code: 403 });
+    const user = userEvent.setup();
+
+    render(<ArgoSyncMenuItem object={{ getName: () => "demo-app" } as any} extension={extension} />);
+
+    await user.click(screen.getByText("Sync"));
+
+    expect(Renderer.Component.Notifications.error).toHaveBeenCalledWith("Failed to start sync.");
+  });
 });
