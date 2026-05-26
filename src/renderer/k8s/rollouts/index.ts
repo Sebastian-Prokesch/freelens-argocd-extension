@@ -39,19 +39,21 @@ let _argoRolloutStore: ArgoRolloutStore | undefined;
 export { getAbortMergePatch, getRetryMergePatch } from "./actions";
 export { ANALYSIS_PHASE_INCONCLUSIVE, getCurrentCanaryStep, isInconclusiveCanaryAnalysis } from "./canary-step";
 export {
-  buildPromotePatches,
   canShowPromoteAction,
   canShowPromoteFullAction,
   canShowPromoteSkipAllStepsAction,
   canShowPromoteSkipCurrentStepAction,
   getPromotablePauseReasons,
+} from "./promotion";
+export {
+  buildPromotePatches,
   getPromoteMergePatch,
   PROMOTE_ERRORS,
   type PromoteMergePatch,
   type PromoteOptions,
   requestRolloutPromotion,
   validatePromoteOptions,
-} from "./promotion";
+} from "../../endpoints/argo-rollout-endpoints";
 export {
   type BlueGreenPromotionState,
   canAbortRollout,

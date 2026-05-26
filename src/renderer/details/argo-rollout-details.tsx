@@ -3,6 +3,7 @@ import { observer } from "mobx-react";
 import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { withErrorPage } from "../components/error-page";
+import { abortRollout, requestRolloutPromotion, retryRollout } from "../endpoints/argo-rollout-endpoints";
 import { ConditionsList, ResourceEventsSection, StatusBadge } from "../components/shared";
 import {
   type ArgoAnalysisRun,
@@ -13,18 +14,15 @@ import {
   canShowPromoteSkipAllStepsAction,
   canShowPromoteSkipCurrentStepAction,
   deriveRolloutState,
-  getAbortMergePatch,
   getAnalysisRunPhase,
   getAnalysisRunsForRollout,
   getArgoAnalysisRunStore,
   getArgoRolloutStore,
   getBlueGreenPromotionLabel,
   getBlueGreenPromotionState,
-  getRetryMergePatch,
   getRolloutStateLabel,
   getRolloutStateReason,
   getRolloutStrategyLabel,
-  requestRolloutPromotion,
 } from "../k8s/rollouts";
 import { formatOptionalValue } from "../utils";
 
@@ -130,9 +128,9 @@ export const ArgoRolloutDetails = observer((props: ArgoRolloutDetailsProps) => {
       }
     };
 
-    const abortRollout = async () => {
+    const handleAbortRollout = async () => {
       try {
-        await rolloutStore.patch(object, getAbortMergePatch(object), "merge");
+        await abortRollout(rolloutStore, object);
         Notifications.ok(`Abort requested for ${object.getName?.() ?? object.metadata?.name ?? "rollout"}`);
       } catch (error) {
         const message = error instanceof Error ? error.message : "Failed to abort rollout.";
@@ -140,9 +138,9 @@ export const ArgoRolloutDetails = observer((props: ArgoRolloutDetailsProps) => {
       }
     };
 
-    const retryRollout = async () => {
+    const handleRetryRollout = async () => {
       try {
-        await rolloutStore.patch(object, getRetryMergePatch(object), "merge");
+        await retryRollout(rolloutStore, object);
         Notifications.ok(`Retry requested for ${object.getName?.() ?? object.metadata?.name ?? "rollout"}`);
       } catch (error) {
         const message = error instanceof Error ? error.message : "Failed to retry rollout.";
@@ -180,8 +178,8 @@ export const ArgoRolloutDetails = observer((props: ArgoRolloutDetailsProps) => {
             {showPromoteFullAction ? <Button onClick={promoteFullRollout}>Promote full</Button> : null}
             {showPromoteSkipCurrent ? <Button onClick={promoteSkipCurrentRollout}>Skip current step</Button> : null}
             {showPromoteSkipAll ? <Button onClick={promoteSkipAllRollout}>Skip all steps</Button> : null}
-            {showAbortAction ? <Button onClick={abortRollout}>Abort</Button> : null}
-            {showRetryAction ? <Button onClick={retryRollout}>Retry</Button> : null}
+            {showAbortAction ? <Button onClick={handleAbortRollout}>Abort</Button> : null}
+            {showRetryAction ? <Button onClick={handleRetryRollout}>Retry</Button> : null}
           </DrawerItem>
         ) : null}
         <DrawerItem name="Current pod hash">{formatOptionalValue(status?.currentPodHash)}</DrawerItem>

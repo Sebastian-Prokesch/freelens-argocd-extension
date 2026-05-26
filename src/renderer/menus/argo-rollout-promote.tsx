@@ -1,5 +1,6 @@
 import { Renderer } from "@freelensapp/extensions";
 import { withErrorPage } from "../components/error-page";
+import { requestRolloutPromotion } from "../endpoints/argo-rollout-endpoints";
 import {
   type ArgoRollout,
   canShowPromoteAction,
@@ -7,7 +8,6 @@ import {
   canShowPromoteSkipAllStepsAction,
   canShowPromoteSkipCurrentStepAction,
   getArgoRolloutStore,
-  requestRolloutPromotion,
 } from "../k8s/rollouts";
 
 const {
