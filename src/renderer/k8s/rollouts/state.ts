@@ -123,7 +123,9 @@ export function getRolloutStateReason(rollout: ArgoRollout): string {
 }
 
 export function canAbortRollout(rollout: ArgoRollout): boolean {
-  return deriveRolloutState(rollout) === "progressing";
+  const state = deriveRolloutState(rollout);
+
+  return state === "progressing" || state === "paused_promotable" || state === "paused_analysis_pending";
 }
 
 export function canRetryRollout(rollout: ArgoRollout): boolean {

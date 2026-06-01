@@ -40,6 +40,24 @@ describe("ArgoRolloutAbortMenuItem", () => {
     expect(screen.getByText("Abort")).toBeInTheDocument();
   });
 
+  it("renders when rollout is paused", () => {
+    render(
+      <ArgoRolloutAbortMenuItem
+        object={
+          {
+            status: {
+              phase: "Paused",
+              pauseConditions: [{ reason: "CanaryPauseStep" }],
+            },
+          } as any
+        }
+        extension={extension}
+      />,
+    );
+
+    expect(screen.getByText("Abort")).toBeInTheDocument();
+  });
+
   it("confirms and patches rollout when clicked", async () => {
     patchMock.mockResolvedValueOnce(undefined);
     (Renderer.Component.ConfirmDialog.confirm as jest.Mock).mockResolvedValueOnce(true);

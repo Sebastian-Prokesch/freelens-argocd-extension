@@ -19,11 +19,55 @@ export function buildRolloutRetryMergePatch(): Record<string, unknown> {
 }
 
 export async function abortRollout(store: ArgoRolloutStore, rollout: ArgoRollout): Promise<void> {
-  await store.patch(rollout, buildRolloutAbortMergePatch(), "merge");
+  await patchRolloutStatusWithFallback(store, rollout, buildRolloutAbortMergePatch());
 }
 
 export async function retryRollout(store: ArgoRolloutStore, rollout: ArgoRollout): Promise<void> {
-  await store.patch(rollout, buildRolloutRetryMergePatch(), "merge");
+  await patchRolloutStatusWithFallback(store, rollout, buildRolloutRetryMergePatch());
+}
+
+async function patchRolloutStatusWithFallback(
+  store: ArgoRolloutStore,
+  rollout: ArgoRollout,
+  statusPatch: Record<string, unknown>,
+): Promise<void> {
+  const api = (store.api ?? {}) as unknown as {
+    formatUrlForNotListing?: (desc: { namespace?: string; name: string }) => string;
+    request?: {
+      patch: (url: string, params: { data: unknown }, init?: { headers?: Record<string, string> }) => Promise<unknown>;
+    };
+  };
+
+  const rolloutName = typeof rollout.getName === "function" ? rollout.getName() : undefined;
+
+  if (api.formatUrlForNotListing && api.request?.patch && rolloutName) {
+    const rolloutNamespace =
+      typeof rollout.getNs === "function" ? (rollout.getNs() ?? "") : ((rollout as { metadata?: { namespace?: string } }).metadata?.namespace ?? "");
+    const baseUrl = api.formatUrlForNotListing({
+      namespace: rolloutNamespace,
+      name: rolloutName,
+    });
+
+    try {
+      await api.request.patch(
+        `${baseUrl}/status`,
+        { data: statusPatch },
+        {
+          headers: {
+            "content-type": "application/merge-patch+json",
+          },
+        },
+      );
+
+      return;
+    } catch (error) {
+      if (!isKubeNotFoundError(error)) {
+        throw error;
+      }
+    }
+  }
+
+  await store.patch(rollout, statusPatch, "merge");
 }
 
 export type PromoteMergePatch = Record<string, unknown>;

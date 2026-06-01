@@ -67,6 +67,28 @@ describe("rollout state helpers", () => {
     expect(canRetryRollout(rollout)).toBe(false);
   });
 
+  it("allows abort when rollout is paused at promotable step", () => {
+    const rollout = {
+      status: {
+        phase: "Paused",
+        pauseConditions: [{ reason: "CanaryPauseStep" }],
+      },
+    } as any;
+
+    expect(canAbortRollout(rollout)).toBe(true);
+  });
+
+  it("allows abort when rollout is paused with analysis pending", () => {
+    const rollout = {
+      status: {
+        phase: "Paused",
+        pauseConditions: [{ reason: "PauseReasonAnalysisRunPending" }],
+      },
+    } as any;
+
+    expect(canAbortRollout(rollout)).toBe(true);
+  });
+
   it("returns empty blue-green traffic tooltip when strategy is not blue-green", () => {
     const rollout = {
       spec: { strategy: { canary: { steps: [] } } },
