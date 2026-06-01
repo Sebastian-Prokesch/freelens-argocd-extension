@@ -42,7 +42,9 @@ async function patchRolloutStatusWithFallback(
 
   if (api.formatUrlForNotListing && api.request?.patch && rolloutName) {
     const rolloutNamespace =
-      typeof rollout.getNs === "function" ? (rollout.getNs() ?? "") : ((rollout as { metadata?: { namespace?: string } }).metadata?.namespace ?? "");
+      typeof rollout.getNs === "function"
+        ? (rollout.getNs() ?? "")
+        : ((rollout as { metadata?: { namespace?: string } }).metadata?.namespace ?? "");
     const baseUrl = api.formatUrlForNotListing({
       namespace: rolloutNamespace,
       name: rolloutName,
