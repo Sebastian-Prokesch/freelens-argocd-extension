@@ -1,8 +1,11 @@
 import { Renderer } from "@freelensapp/extensions";
-import { fireEvent, render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { ArgoConfigDialog } from "../argo-config-dialog";
 import { argoConfigDialogStore } from "../argo-config-dialog-store";
+
+const setInputValue = (placeholder: string, value: string) => {
+  fireEvent.change(screen.getByPlaceholderText(placeholder), { target: { value } });
+};
 
 describe("ArgoConfigDialog", () => {
   beforeEach(() => {
@@ -16,82 +19,78 @@ describe("ArgoConfigDialog", () => {
   });
 
   it("creates repository secret in create mode", async () => {
-    const user = userEvent.setup();
     argoConfigDialogStore.openCreate("repository");
 
     render(<ArgoConfigDialog />);
 
-    await user.type(screen.getByPlaceholderText("Name"), "repo-secret");
-    const namespaceInput = screen.getByPlaceholderText("Namespace");
-    await user.clear(namespaceInput);
-    await user.type(namespaceInput, "argocd");
-    await user.type(screen.getByPlaceholderText("Repository URL"), "https://github.com/example/repo.git");
-    await user.click(screen.getByRole("button", { name: "Create" }));
+    setInputValue("Name", "repo-secret");
+    setInputValue("Namespace", "argocd");
+    setInputValue("Repository URL", "https://github.com/example/repo.git");
+    fireEvent.click(screen.getByRole("button", { name: "Create" }));
 
-    expect(Renderer.K8sApi.secretsStore.create).toHaveBeenCalledWith(
-      { name: "repo-secret", namespace: "argocd" },
-      expect.objectContaining({
-        metadata: expect.objectContaining({
-          name: "repo-secret",
-          namespace: "argocd",
-          labels: { "argocd.argoproj.io/secret-type": "repository" },
+    await waitFor(() =>
+      expect(Renderer.K8sApi.secretsStore.create).toHaveBeenCalledWith(
+        { name: "repo-secret", namespace: "argocd" },
+        expect.objectContaining({
+          metadata: expect.objectContaining({
+            name: "repo-secret",
+            namespace: "argocd",
+            labels: { "argocd.argoproj.io/secret-type": "repository" },
+          }),
+          stringData: expect.objectContaining({
+            url: "https://github.com/example/repo.git",
+            type: "git",
+          }),
         }),
-        stringData: expect.objectContaining({
-          url: "https://github.com/example/repo.git",
-          type: "git",
-        }),
-      }),
+      ),
     );
-    expect(Renderer.Component.Notifications.ok).toHaveBeenCalledWith("ArgoCD config saved.");
+    await waitFor(() => expect(Renderer.Component.Notifications.ok).toHaveBeenCalledWith("ArgoCD config saved."));
   });
 
   it("shows validation error for invalid configmap JSON", async () => {
-    const user = userEvent.setup();
     argoConfigDialogStore.openCreate("configmap");
 
     render(<ArgoConfigDialog />);
 
-    await user.type(screen.getByPlaceholderText("Name"), "argocd-cm");
-    const dataInput = screen.getByPlaceholderText("Data JSON");
-    fireEvent.change(dataInput, { target: { value: "{invalid" } });
-    await user.click(screen.getByRole("button", { name: "Create" }));
+    setInputValue("Name", "argocd-cm");
+    setInputValue("Data JSON", "{invalid");
+    fireEvent.click(screen.getByRole("button", { name: "Create" }));
 
-    expect(Renderer.K8sApi.configMapStore.create).not.toHaveBeenCalled();
-    expect(Renderer.Component.Notifications.error).toHaveBeenCalledWith("ConfigMap data must be valid JSON.");
+    await waitFor(() => expect(Renderer.K8sApi.configMapStore.create).not.toHaveBeenCalled());
+    await waitFor(() =>
+      expect(Renderer.Component.Notifications.error).toHaveBeenCalledWith("ConfigMap data must be valid JSON."),
+    );
   });
 
   it("shows validation error when configmap data values are not strings", async () => {
-    const user = userEvent.setup();
     argoConfigDialogStore.openCreate("configmap");
 
     render(<ArgoConfigDialog />);
 
-    await user.type(screen.getByPlaceholderText("Name"), "argocd-cm");
-    const dataInput = screen.getByPlaceholderText("Data JSON");
-    fireEvent.change(dataInput, { target: { value: '{\n  "enabled": true\n}' } });
-    await user.click(screen.getByRole("button", { name: "Create" }));
+    setInputValue("Name", "argocd-cm");
+    setInputValue("Data JSON", '{\n  "enabled": true\n}');
+    fireEvent.click(screen.getByRole("button", { name: "Create" }));
 
-    expect(Renderer.K8sApi.configMapStore.create).not.toHaveBeenCalled();
-    expect(Renderer.Component.Notifications.error).toHaveBeenCalledWith(
-      'ConfigMap data key "enabled" must have a string value.',
+    await waitFor(() => expect(Renderer.K8sApi.configMapStore.create).not.toHaveBeenCalled());
+    await waitFor(() =>
+      expect(Renderer.Component.Notifications.error).toHaveBeenCalledWith(
+        'ConfigMap data key "enabled" must have a string value.',
+      ),
     );
   });
 
   it("shows save error notification and inline error when request fails", async () => {
-    const user = userEvent.setup();
     (Renderer.K8sApi.secretsStore.create as jest.Mock).mockRejectedValueOnce(new Error("forbidden"));
     argoConfigDialogStore.openCreate("repository");
 
     render(<ArgoConfigDialog />);
 
-    await user.type(screen.getByPlaceholderText("Name"), "repo-secret");
-    const namespaceInput = screen.getByPlaceholderText("Namespace");
-    await user.clear(namespaceInput);
-    await user.type(namespaceInput, "argocd");
-    await user.type(screen.getByPlaceholderText("Repository URL"), "https://github.com/example/repo.git");
-    await user.click(screen.getByRole("button", { name: "Create" }));
+    setInputValue("Name", "repo-secret");
+    setInputValue("Namespace", "argocd");
+    setInputValue("Repository URL", "https://github.com/example/repo.git");
+    fireEvent.click(screen.getByRole("button", { name: "Create" }));
 
-    expect(Renderer.Component.Notifications.error).toHaveBeenCalledWith("forbidden");
-    expect(screen.getByText("forbidden")).toBeInTheDocument();
+    await waitFor(() => expect(Renderer.Component.Notifications.error).toHaveBeenCalledWith("forbidden"));
+    expect(await screen.findByText("forbidden")).toBeInTheDocument();
   });
 });

@@ -37,40 +37,111 @@ describe("argo-rollout-endpoints", () => {
     });
   });
 
-  it("abortRollout patches rollout with merge strategy", async () => {
+  it("abortRollout patches rollout /status with merge patch content type", async () => {
+    const requestPatch = jest.fn().mockResolvedValue({});
     const patch = jest.fn().mockResolvedValueOnce(undefined);
-    const store = { patch } as any;
-    const rollout = { getName: () => "demo-rollout" } as any;
+    const store = {
+      patch,
+      api: {
+        formatUrlForNotListing: () => rolloutApiUrl,
+        request: { patch: requestPatch },
+      },
+    } as any;
+    const rollout = mockRollout();
+
+    await abortRollout(store, rollout);
+
+    expect(requestPatch).toHaveBeenCalledWith(
+      `${rolloutApiUrl}/status`,
+      { data: buildRolloutAbortMergePatch() },
+      expect.objectContaining({
+        headers: { "content-type": "application/merge-patch+json" },
+      }),
+    );
+    expect(patch).not.toHaveBeenCalled();
+  });
+
+  it("retryRollout patches rollout /status with merge patch content type", async () => {
+    const requestPatch = jest.fn().mockResolvedValue({});
+    const patch = jest.fn().mockResolvedValueOnce(undefined);
+    const store = {
+      patch,
+      api: {
+        formatUrlForNotListing: () => rolloutApiUrl,
+        request: { patch: requestPatch },
+      },
+    } as any;
+    const rollout = mockRollout();
+
+    await retryRollout(store, rollout);
+
+    expect(requestPatch).toHaveBeenCalledWith(
+      `${rolloutApiUrl}/status`,
+      { data: buildRolloutRetryMergePatch() },
+      expect.objectContaining({
+        headers: { "content-type": "application/merge-patch+json" },
+      }),
+    );
+    expect(patch).not.toHaveBeenCalled();
+  });
+
+  it("abortRollout propagates non-404 /status errors", async () => {
+    const error = new Error("boom");
+    const store = {
+      patch: jest.fn(),
+      api: {
+        formatUrlForNotListing: () => rolloutApiUrl,
+        request: { patch: jest.fn().mockRejectedValueOnce(error) },
+      },
+    } as any;
+    const rollout = mockRollout();
+
+    await expect(abortRollout(store, rollout)).rejects.toThrow("boom");
+  });
+
+  it("retryRollout propagates non-404 /status errors", async () => {
+    const error = new Error("boom");
+    const store = {
+      patch: jest.fn(),
+      api: {
+        formatUrlForNotListing: () => rolloutApiUrl,
+        request: { patch: jest.fn().mockRejectedValueOnce(error) },
+      },
+    } as any;
+    const rollout = mockRollout();
+
+    await expect(retryRollout(store, rollout)).rejects.toThrow("boom");
+  });
+
+  it("abortRollout falls back to store.patch on 404 /status", async () => {
+    const patch = jest.fn().mockResolvedValue(undefined);
+    const store = {
+      patch,
+      api: {
+        formatUrlForNotListing: () => rolloutApiUrl,
+        request: { patch: jest.fn().mockRejectedValueOnce({ code: 404 }) },
+      },
+    } as any;
+    const rollout = mockRollout();
 
     await abortRollout(store, rollout);
 
     expect(patch).toHaveBeenCalledWith(rollout, buildRolloutAbortMergePatch(), "merge");
   });
 
-  it("retryRollout patches rollout with merge strategy", async () => {
-    const patch = jest.fn().mockResolvedValueOnce(undefined);
-    const store = { patch } as any;
-    const rollout = { getName: () => "demo-rollout" } as any;
+  it("retryRollout falls back to store.patch on missing request.patch", async () => {
+    const patch = jest.fn().mockResolvedValue(undefined);
+    const store = {
+      patch,
+      api: {
+        formatUrlForNotListing: () => rolloutApiUrl,
+      },
+    } as any;
+    const rollout = mockRollout();
 
     await retryRollout(store, rollout);
 
     expect(patch).toHaveBeenCalledWith(rollout, buildRolloutRetryMergePatch(), "merge");
-  });
-
-  it("abortRollout propagates patch errors", async () => {
-    const error = new Error("boom");
-    const store = { patch: jest.fn().mockRejectedValueOnce(error) } as any;
-    const rollout = { getName: () => "demo-rollout" } as any;
-
-    await expect(abortRollout(store, rollout)).rejects.toThrow("boom");
-  });
-
-  it("retryRollout propagates patch errors", async () => {
-    const error = new Error("boom");
-    const store = { patch: jest.fn().mockRejectedValueOnce(error) } as any;
-    const rollout = { getName: () => "demo-rollout" } as any;
-
-    await expect(retryRollout(store, rollout)).rejects.toThrow("boom");
   });
 });
 
