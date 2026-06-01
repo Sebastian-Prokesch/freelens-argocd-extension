@@ -1,11 +1,11 @@
 import { Renderer } from "@freelensapp/extensions";
 import { withErrorPage } from "../components/error-page";
 import { abortRollout } from "../endpoints/argo-rollout-endpoints";
-import { getMutationErrorMessage } from "../endpoints/mutation-errors";
 import { type ArgoRollout, canAbortRollout, getArgoRolloutStore } from "../k8s/rollouts";
+import { getAbortRolloutConfirmCopy, runGuardedArgoMutation } from "../mutations";
 
 const {
-  Component: { Icon, MenuItem, Notifications },
+  Component: { Icon, MenuItem },
 } = Renderer;
 
 export interface ArgoRolloutAbortMenuItemProps extends Renderer.Component.KubeObjectMenuProps<ArgoRollout> {
@@ -24,13 +24,15 @@ export const ArgoRolloutAbortMenuItem = (props: ArgoRolloutAbortMenuItemProps) =
 
     const handleAbortRollout = async () => {
       const rolloutName = object.getName?.() ?? object.metadata?.name ?? "rollout";
-      try {
-        await abortRollout(rolloutStore, object);
-        Notifications.ok(`Abort requested for ${rolloutName}`);
-      } catch (error) {
-        const message = getMutationErrorMessage(error, "Failed to abort rollout.");
-        Notifications.error(message);
-      }
+      await runGuardedArgoMutation({
+        risk: "destructive",
+        actionLabel: "Abort",
+        resourceName: rolloutName,
+        run: () => abortRollout(rolloutStore, object),
+        successMessage: `Abort requested for ${rolloutName}`,
+        failureFallback: "Failed to abort rollout.",
+        confirm: getAbortRolloutConfirmCopy(rolloutName),
+      });
     };
 
     return (
