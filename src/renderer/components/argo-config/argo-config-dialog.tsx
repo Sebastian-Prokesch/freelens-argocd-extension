@@ -7,7 +7,6 @@ import {
   updateArgoSecretConfig,
   updateConfigMapConfig,
 } from "../../endpoints/argo-config-endpoints";
-import { getMutationErrorMessage } from "../../endpoints/mutation-errors";
 import {
   ARGOCD_PART_OF_LABEL,
   ARGOCD_PART_OF_VALUE,
@@ -16,12 +15,13 @@ import {
   getSecretField,
   type LabeledObject,
 } from "../../k8s/argocd";
+import { runGuardedArgoMutation } from "../../mutations";
 import styles from "./argo-config-dialog.module.scss";
 import stylesInline from "./argo-config-dialog.module.scss?inline";
 import { type ArgoConfigKind, argoConfigDialogStore } from "./argo-config-dialog-store";
 
 const {
-  Component: { Button, Dialog, Input, Notifications },
+  Component: { Button, Dialog, Input },
   K8sApi: { configMapStore, secretsStore },
 } = Renderer;
 
@@ -281,86 +281,89 @@ export const ArgoConfigDialog = observer(() => {
   const closeDialog = () => argoConfigDialogStore.close();
 
   const handleSave = async () => {
-    try {
-      setError(undefined);
+    setError(undefined);
 
-      if (target.kind === "configmap") {
-        ensureRequiredField(configMapForm.name, "Name");
-        ensureRequiredField(configMapForm.namespace, "Namespace");
-      }
-
-      if (target.kind === "cluster") {
-        ensureRequiredField(clusterForm.name, "Secret name");
-        ensureRequiredField(clusterForm.namespace, "Namespace");
-      }
-
-      if (target.kind === "repository" || target.kind === "repo-creds") {
-        ensureRequiredField(repoForm.name, "Name");
-        ensureRequiredField(repoForm.namespace, "Namespace");
-      }
-
-      if (target.kind === "configmap") {
-        parseConfigMapData(configMapForm.dataJson);
-      }
-
-      if (target.kind === "cluster") {
-        parseJsonObject(clusterForm.configJson, "Cluster config");
-      }
-
-      if (target.kind === "configmap") {
-        const data = parseConfigMapData(configMapForm.dataJson);
-        const name = configMapForm.name.trim();
-        const namespace = configMapForm.namespace.trim();
-        const labels = {
-          ...(target.object?.metadata?.labels ?? {}),
-          [ARGOCD_PART_OF_LABEL]: ARGOCD_PART_OF_VALUE,
-        };
-        if (mode === "create") {
-          await createConfigMapConfig(configMapStore as any, {
-            name,
-            namespace,
-            labels,
-            data,
-          });
-        } else if (target.object) {
-          await updateConfigMapConfig(configMapStore as any, target.object, {
-            name,
-            namespace,
-            labels,
-            data,
-          });
+    await runGuardedArgoMutation({
+      risk: "low",
+      actionLabel: mode === "create" ? "Create ArgoCD Config" : "Save ArgoCD Config",
+      resourceName: target.kind,
+      run: async () => {
+        if (target.kind === "configmap") {
+          ensureRequiredField(configMapForm.name, "Name");
+          ensureRequiredField(configMapForm.namespace, "Namespace");
         }
-      }
 
-      if (target.kind === "repository" || target.kind === "repo-creds" || target.kind === "cluster") {
-        const stringData = buildSecretStringData(target.kind === "cluster" ? clusterForm : repoForm, target.kind);
-        const name = target.kind === "cluster" ? clusterForm.name.trim() : repoForm.name.trim();
-        const namespace = target.kind === "cluster" ? clusterForm.namespace.trim() : repoForm.namespace.trim();
-
-        if (mode === "create") {
-          await createArgoSecretConfig(secretsStore as any, {
-            name,
-            namespace,
-            secretType: target.kind,
-            stringData,
-          });
-        } else if (target.object) {
-          await updateArgoSecretConfig(secretsStore as any, target.object, {
-            name,
-            namespace,
-            secretType: target.kind,
-            stringData,
-          });
+        if (target.kind === "cluster") {
+          ensureRequiredField(clusterForm.name, "Secret name");
+          ensureRequiredField(clusterForm.namespace, "Namespace");
         }
-      }
 
-      closeDialog();
-      Notifications.ok("ArgoCD config saved.");
-    } catch (err) {
-      const message = getMutationErrorMessage(err, "Failed to save ArgoCD config.");
-      setError(message);
-      Notifications.error(message);
-    }
+        if (target.kind === "repository" || target.kind === "repo-creds") {
+          ensureRequiredField(repoForm.name, "Name");
+          ensureRequiredField(repoForm.namespace, "Namespace");
+        }
+
+        if (target.kind === "configmap") {
+          parseConfigMapData(configMapForm.dataJson);
+        }
+
+        if (target.kind === "cluster") {
+          parseJsonObject(clusterForm.configJson, "Cluster config");
+        }
+
+        if (target.kind === "configmap") {
+          const data = parseConfigMapData(configMapForm.dataJson);
+          const name = configMapForm.name.trim();
+          const namespace = configMapForm.namespace.trim();
+          const labels = {
+            ...(target.object?.metadata?.labels ?? {}),
+            [ARGOCD_PART_OF_LABEL]: ARGOCD_PART_OF_VALUE,
+          };
+          if (mode === "create") {
+            await createConfigMapConfig(configMapStore as any, {
+              name,
+              namespace,
+              labels,
+              data,
+            });
+          } else if (target.object) {
+            await updateConfigMapConfig(configMapStore as any, target.object, {
+              name,
+              namespace,
+              labels,
+              data,
+            });
+          }
+        }
+
+        if (target.kind === "repository" || target.kind === "repo-creds" || target.kind === "cluster") {
+          const stringData = buildSecretStringData(target.kind === "cluster" ? clusterForm : repoForm, target.kind);
+          const name = target.kind === "cluster" ? clusterForm.name.trim() : repoForm.name.trim();
+          const namespace = target.kind === "cluster" ? clusterForm.namespace.trim() : repoForm.namespace.trim();
+
+          if (mode === "create") {
+            await createArgoSecretConfig(secretsStore as any, {
+              name,
+              namespace,
+              secretType: target.kind,
+              stringData,
+            });
+          } else if (target.object) {
+            await updateArgoSecretConfig(secretsStore as any, target.object, {
+              name,
+              namespace,
+              secretType: target.kind,
+              stringData,
+            });
+          }
+        }
+
+        closeDialog();
+      },
+      successMessage: "ArgoCD config saved.",
+      failureFallback: "Failed to save ArgoCD config.",
+      onErrorMessage: (message) => setError(message),
+    });
   };
 
   const title = (() => {

@@ -18,6 +18,7 @@ export interface RunGuardedArgoMutationOptions {
   successMessage: string;
   failureFallback: string;
   confirm?: GuardedMutationConfirm;
+  onErrorMessage?: (message: string) => void;
 }
 
 const {
@@ -25,7 +26,7 @@ const {
 } = Renderer;
 
 export async function runGuardedArgoMutation(options: RunGuardedArgoMutationOptions): Promise<GuardedMutationResult> {
-  const { risk, run, successMessage, failureFallback, confirm } = options;
+  const { risk, run, successMessage, failureFallback, confirm, onErrorMessage } = options;
 
   if (risk === "destructive") {
     const isConfirmed = await ConfirmDialog.confirm({
@@ -44,7 +45,9 @@ export async function runGuardedArgoMutation(options: RunGuardedArgoMutationOpti
     Notifications.ok(successMessage);
     return "success";
   } catch (error) {
-    Notifications.error(getMutationErrorMessage(error, failureFallback));
+    const message = getMutationErrorMessage(error, failureFallback);
+    onErrorMessage?.(message);
+    Notifications.error(message);
     return "error";
   }
 }

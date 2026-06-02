@@ -1,11 +1,11 @@
 import { Renderer } from "@freelensapp/extensions";
 import { withErrorPage } from "../components/error-page";
 import { terminateApplicationOperation } from "../endpoints/argo-application-endpoints";
-import { getMutationErrorMessage } from "../endpoints/mutation-errors";
 import { ArgoApplication, getArgoApplicationStore } from "../k8s/argocd";
+import { runGuardedArgoMutation } from "../mutations";
 
 const {
-  Component: { Icon, MenuItem, Notifications },
+  Component: { Icon, MenuItem },
 } = Renderer;
 
 const terminalPhases = new Set(["Succeeded", "Failed", "Error"]);
@@ -29,13 +29,14 @@ export const ArgoTerminateMenuItem = (props: ArgoTerminateMenuItemProps) =>
 
     const terminateOperation = async () => {
       const appName = object.getName?.() ?? object.metadata?.name ?? "application";
-      try {
-        await terminateApplicationOperation(store, object);
-        Notifications.ok(`Terminate requested for ${appName}`);
-      } catch (error) {
-        const message = getMutationErrorMessage(error, "Failed to terminate operation.");
-        Notifications.error(message);
-      }
+      await runGuardedArgoMutation({
+        risk: "low",
+        actionLabel: "Terminate",
+        resourceName: appName,
+        run: () => terminateApplicationOperation(store, object),
+        successMessage: `Terminate requested for ${appName}`,
+        failureFallback: "Failed to terminate operation.",
+      });
     };
 
     return (

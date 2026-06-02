@@ -1,7 +1,6 @@
 import { Renderer } from "@freelensapp/extensions";
 import { withErrorPage } from "../components/error-page";
 import { requestRolloutPromotion } from "../endpoints/argo-rollout-endpoints";
-import { getMutationErrorMessage } from "../endpoints/mutation-errors";
 import {
   type ArgoRollout,
   canShowPromoteAction,
@@ -10,9 +9,10 @@ import {
   canShowPromoteSkipCurrentStepAction,
   getArgoRolloutStore,
 } from "../k8s/rollouts";
+import { runGuardedArgoMutation } from "../mutations";
 
 const {
-  Component: { Icon, MenuItem, Notifications },
+  Component: { Icon, MenuItem },
 } = Renderer;
 
 export interface ArgoRolloutPromoteMenuItemProps extends Renderer.Component.KubeObjectMenuProps<ArgoRollout> {
@@ -45,13 +45,14 @@ export const ArgoRolloutPromoteMenuItem = (props: ArgoRolloutPromoteMenuItemProp
     const rolloutStore = getArgoRolloutStore();
 
     const onPromote = async () => {
-      try {
-        await requestRolloutPromotion(rolloutStore, object, {});
-        Notifications.ok(`Promote requested for ${rolloutName(object)}`);
-      } catch (error) {
-        const message = getMutationErrorMessage(error, "Failed to promote rollout.");
-        Notifications.error(message);
-      }
+      await runGuardedArgoMutation({
+        risk: "low",
+        actionLabel: "Promote",
+        resourceName: rolloutName(object),
+        run: () => requestRolloutPromotion(rolloutStore, object, {}),
+        successMessage: `Promote requested for ${rolloutName(object)}`,
+        failureFallback: "Failed to promote rollout.",
+      });
     };
 
     return (
@@ -73,13 +74,14 @@ export const ArgoRolloutPromoteFullMenuItem = (props: ArgoRolloutPromoteFullMenu
     const rolloutStore = getArgoRolloutStore();
 
     const onPromoteFull = async () => {
-      try {
-        await requestRolloutPromotion(rolloutStore, object, { full: true });
-        Notifications.ok(`Full promote requested for ${rolloutName(object)}`);
-      } catch (error) {
-        const message = getMutationErrorMessage(error, "Failed to fully promote rollout.");
-        Notifications.error(message);
-      }
+      await runGuardedArgoMutation({
+        risk: "low",
+        actionLabel: "Promote Full",
+        resourceName: rolloutName(object),
+        run: () => requestRolloutPromotion(rolloutStore, object, { full: true }),
+        successMessage: `Full promote requested for ${rolloutName(object)}`,
+        failureFallback: "Failed to fully promote rollout.",
+      });
     };
 
     return (
@@ -101,13 +103,14 @@ export const ArgoRolloutPromoteSkipCurrentMenuItem = (props: ArgoRolloutPromoteS
     const rolloutStore = getArgoRolloutStore();
 
     const onSkipCurrent = async () => {
-      try {
-        await requestRolloutPromotion(rolloutStore, object, { skipCurrentStep: true });
-        Notifications.ok(`Skip current step requested for ${rolloutName(object)}`);
-      } catch (error) {
-        const message = getMutationErrorMessage(error, "Failed to skip current step.");
-        Notifications.error(message);
-      }
+      await runGuardedArgoMutation({
+        risk: "low",
+        actionLabel: "Skip Current Step",
+        resourceName: rolloutName(object),
+        run: () => requestRolloutPromotion(rolloutStore, object, { skipCurrentStep: true }),
+        successMessage: `Skip current step requested for ${rolloutName(object)}`,
+        failureFallback: "Failed to skip current step.",
+      });
     };
 
     return (
@@ -129,13 +132,14 @@ export const ArgoRolloutPromoteSkipAllMenuItem = (props: ArgoRolloutPromoteSkipA
     const rolloutStore = getArgoRolloutStore();
 
     const onSkipAll = async () => {
-      try {
-        await requestRolloutPromotion(rolloutStore, object, { skipAllSteps: true });
-        Notifications.ok(`Skip all steps requested for ${rolloutName(object)}`);
-      } catch (error) {
-        const message = getMutationErrorMessage(error, "Failed to skip all steps.");
-        Notifications.error(message);
-      }
+      await runGuardedArgoMutation({
+        risk: "low",
+        actionLabel: "Skip All Steps",
+        resourceName: rolloutName(object),
+        run: () => requestRolloutPromotion(rolloutStore, object, { skipAllSteps: true }),
+        successMessage: `Skip all steps requested for ${rolloutName(object)}`,
+        failureFallback: "Failed to skip all steps.",
+      });
     };
 
     return (

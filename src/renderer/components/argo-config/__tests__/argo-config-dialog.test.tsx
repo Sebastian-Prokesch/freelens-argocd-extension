@@ -93,4 +93,21 @@ describe("ArgoConfigDialog", () => {
     await waitFor(() => expect(Renderer.Component.Notifications.error).toHaveBeenCalledWith("forbidden"));
     expect(await screen.findByText("forbidden")).toBeInTheDocument();
   });
+
+  it("shows fallback save error notification and inline error for non-Error failures", async () => {
+    (Renderer.K8sApi.secretsStore.create as jest.Mock).mockRejectedValueOnce({ code: 403 });
+    argoConfigDialogStore.openCreate("repository");
+
+    render(<ArgoConfigDialog />);
+
+    setInputValue("Name", "repo-secret");
+    setInputValue("Namespace", "argocd");
+    setInputValue("Repository URL", "https://github.com/example/repo.git");
+    fireEvent.click(screen.getByRole("button", { name: "Create" }));
+
+    await waitFor(() =>
+      expect(Renderer.Component.Notifications.error).toHaveBeenCalledWith("Failed to save ArgoCD config."),
+    );
+    expect(await screen.findByText("Failed to save ArgoCD config.")).toBeInTheDocument();
+  });
 });

@@ -5,7 +5,6 @@ import { Link } from "react-router-dom";
 import { withErrorPage } from "../components/error-page";
 import { ConditionsList, ResourceEventsSection, StatusBadge } from "../components/shared";
 import { abortRollout, requestRolloutPromotion, retryRollout } from "../endpoints/argo-rollout-endpoints";
-import { getMutationErrorMessage } from "../endpoints/mutation-errors";
 import {
   type ArgoAnalysisRun,
   type ArgoRollout,
@@ -25,10 +24,11 @@ import {
   getRolloutStateReason,
   getRolloutStrategyLabel,
 } from "../k8s/rollouts";
+import { getAbortRolloutConfirmCopy, runGuardedArgoMutation } from "../mutations";
 import { formatOptionalValue } from "../utils";
 
 const {
-  Component: { Button, DrawerItem, DrawerTitle, Gutter, Notifications, WithTooltip },
+  Component: { Button, DrawerItem, DrawerTitle, Gutter, WithTooltip },
   Navigation: { getDetailsUrl },
 } = Renderer;
 
@@ -90,63 +90,70 @@ export const ArgoRolloutDetails = observer((props: ArgoRolloutDetailsProps) => {
     const rolloutDisplayName = object.getName?.() ?? object.metadata?.name ?? "rollout";
 
     const promoteRollout = async () => {
-      try {
-        await requestRolloutPromotion(rolloutStore, object, {});
-        Notifications.ok(`Promote requested for ${rolloutDisplayName}`);
-      } catch (error) {
-        const message = getMutationErrorMessage(error, "Failed to promote rollout.");
-        Notifications.error(message);
-      }
+      await runGuardedArgoMutation({
+        risk: "low",
+        actionLabel: "Promote",
+        resourceName: rolloutDisplayName,
+        run: () => requestRolloutPromotion(rolloutStore, object, {}),
+        successMessage: `Promote requested for ${rolloutDisplayName}`,
+        failureFallback: "Failed to promote rollout.",
+      });
     };
 
     const promoteFullRollout = async () => {
-      try {
-        await requestRolloutPromotion(rolloutStore, object, { full: true });
-        Notifications.ok(`Full promote requested for ${rolloutDisplayName}`);
-      } catch (error) {
-        const message = getMutationErrorMessage(error, "Failed to fully promote rollout.");
-        Notifications.error(message);
-      }
+      await runGuardedArgoMutation({
+        risk: "low",
+        actionLabel: "Promote Full",
+        resourceName: rolloutDisplayName,
+        run: () => requestRolloutPromotion(rolloutStore, object, { full: true }),
+        successMessage: `Full promote requested for ${rolloutDisplayName}`,
+        failureFallback: "Failed to fully promote rollout.",
+      });
     };
 
     const promoteSkipCurrentRollout = async () => {
-      try {
-        await requestRolloutPromotion(rolloutStore, object, { skipCurrentStep: true });
-        Notifications.ok(`Skip current step requested for ${rolloutDisplayName}`);
-      } catch (error) {
-        const message = getMutationErrorMessage(error, "Failed to skip current step.");
-        Notifications.error(message);
-      }
+      await runGuardedArgoMutation({
+        risk: "low",
+        actionLabel: "Skip Current Step",
+        resourceName: rolloutDisplayName,
+        run: () => requestRolloutPromotion(rolloutStore, object, { skipCurrentStep: true }),
+        successMessage: `Skip current step requested for ${rolloutDisplayName}`,
+        failureFallback: "Failed to skip current step.",
+      });
     };
 
     const promoteSkipAllRollout = async () => {
-      try {
-        await requestRolloutPromotion(rolloutStore, object, { skipAllSteps: true });
-        Notifications.ok(`Skip all steps requested for ${rolloutDisplayName}`);
-      } catch (error) {
-        const message = getMutationErrorMessage(error, "Failed to skip all steps.");
-        Notifications.error(message);
-      }
+      await runGuardedArgoMutation({
+        risk: "low",
+        actionLabel: "Skip All Steps",
+        resourceName: rolloutDisplayName,
+        run: () => requestRolloutPromotion(rolloutStore, object, { skipAllSteps: true }),
+        successMessage: `Skip all steps requested for ${rolloutDisplayName}`,
+        failureFallback: "Failed to skip all steps.",
+      });
     };
 
     const handleAbortRollout = async () => {
-      try {
-        await abortRollout(rolloutStore, object);
-        Notifications.ok(`Abort requested for ${object.getName?.() ?? object.metadata?.name ?? "rollout"}`);
-      } catch (error) {
-        const message = getMutationErrorMessage(error, "Failed to abort rollout.");
-        Notifications.error(message);
-      }
+      await runGuardedArgoMutation({
+        risk: "destructive",
+        actionLabel: "Abort",
+        resourceName: rolloutDisplayName,
+        run: () => abortRollout(rolloutStore, object),
+        successMessage: `Abort requested for ${rolloutDisplayName}`,
+        failureFallback: "Failed to abort rollout.",
+        confirm: getAbortRolloutConfirmCopy(rolloutDisplayName),
+      });
     };
 
     const handleRetryRollout = async () => {
-      try {
-        await retryRollout(rolloutStore, object);
-        Notifications.ok(`Retry requested for ${object.getName?.() ?? object.metadata?.name ?? "rollout"}`);
-      } catch (error) {
-        const message = getMutationErrorMessage(error, "Failed to retry rollout.");
-        Notifications.error(message);
-      }
+      await runGuardedArgoMutation({
+        risk: "low",
+        actionLabel: "Retry",
+        resourceName: rolloutDisplayName,
+        run: () => retryRollout(rolloutStore, object),
+        successMessage: `Retry requested for ${rolloutDisplayName}`,
+        failureFallback: "Failed to retry rollout.",
+      });
     };
 
     return (
