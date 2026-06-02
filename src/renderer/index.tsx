@@ -31,6 +31,8 @@ import {
 import { ArgoClusterWorkflowTemplate, ArgoCronWorkflow, ArgoWorkflow, ArgoWorkflowTemplate } from "./k8s/workflows";
 import {
   ArgoConfigMenuItem,
+  ArgoHardRefreshMenuItem,
+  ArgoRefreshMenuItem,
   ArgoRolloutAbortMenuItem,
   ArgoRolloutPromoteFullMenuItem,
   ArgoRolloutPromoteMenuItem,
@@ -154,6 +156,18 @@ export default class ArgoRenderer extends Renderer.LensExtension {
   clusterPageMenus = buildClusterPageMenus();
 
   kubeObjectMenuItems = [
+    createKubeObjectMenuRegistration({
+      kind: ArgoApplication.kind,
+      apiVersions: ArgoApplication.crd.apiVersions,
+      extension: this,
+      MenuItem: ArgoRefreshMenuItem,
+    }),
+    createKubeObjectMenuRegistration({
+      kind: ArgoApplication.kind,
+      apiVersions: ArgoApplication.crd.apiVersions,
+      extension: this,
+      MenuItem: ArgoHardRefreshMenuItem,
+    }),
     createKubeObjectMenuRegistration({
       kind: ArgoApplication.kind,
       apiVersions: ArgoApplication.crd.apiVersions,

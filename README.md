@@ -27,7 +27,7 @@ Pre-release builds remain available on npm as `@sebastian-prokesch/freelens-argo
 - Argo Workflows pages for `Workflow`, `CronWorkflow`, `WorkflowTemplate`, and `ClusterWorkflowTemplate`.
 - Resource detail drawers for ArgoCD, Rollouts, and Workflows kinds.
 - Context-menu actions:
-  - ArgoCD: sync and terminate.
+  - ArgoCD: refresh, hard refresh, sync, and terminate.
   - Rollouts: promote, promote full, promote skip current, promote skip all, abort, retry.
   - Argo config helpers for `Secret` and `ConfigMap`.
 
