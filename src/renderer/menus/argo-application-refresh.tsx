@@ -66,7 +66,7 @@ export const ArgoHardRefreshMenuItem = (props: ArgoHardRefreshMenuItemProps) =>
 
     return (
       <MenuItem onClick={onHardRefresh}>
-        <Icon material="autorenew" interactive={toolbar} title="Hard Refresh" />
+        <Icon material="downloading" interactive={toolbar} title="Hard Refresh" />
         <span className="title">Hard Refresh</span>
       </MenuItem>
     );
