@@ -91,6 +91,25 @@ describe("runGuardedArgoMutation", () => {
     expect(result).toBe("error");
   });
 
+  it("calls onErrorMessage with normalized message", async () => {
+    const run = jest.fn().mockRejectedValue({ code: 403 });
+    const onErrorMessage = jest.fn();
+
+    const result = await runGuardedArgoMutation({
+      risk: "low",
+      actionLabel: "Save",
+      resourceName: "argo-config",
+      run,
+      successMessage: "ArgoCD config saved.",
+      failureFallback: "Failed to save ArgoCD config.",
+      onErrorMessage,
+    });
+
+    expect(onErrorMessage).toHaveBeenCalledWith("Failed to save ArgoCD config.");
+    expect(Renderer.Component.Notifications.error).toHaveBeenCalledWith("Failed to save ArgoCD config.");
+    expect(result).toBe("error");
+  });
+
   it("skips confirmation for low risk mutations", async () => {
     const run = jest.fn().mockResolvedValue(undefined);
 
@@ -99,13 +118,13 @@ describe("runGuardedArgoMutation", () => {
       actionLabel: "Sync",
       resourceName: "demo-app",
       run,
-      successMessage: "Sync started for demo-app",
+      successMessage: "Sync requested for demo-app",
       failureFallback: "Failed to start sync.",
     });
 
     expect(Renderer.Component.ConfirmDialog.confirm).not.toHaveBeenCalled();
     expect(run).toHaveBeenCalledTimes(1);
-    expect(Renderer.Component.Notifications.ok).toHaveBeenCalledWith("Sync started for demo-app");
+    expect(Renderer.Component.Notifications.ok).toHaveBeenCalledWith("Sync requested for demo-app");
     expect(result).toBe("success");
   });
 });

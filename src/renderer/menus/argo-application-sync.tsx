@@ -1,11 +1,11 @@
 import { Renderer } from "@freelensapp/extensions";
 import { withErrorPage } from "../components/error-page";
 import { syncApplication } from "../endpoints/argo-application-endpoints";
-import { getMutationErrorMessage } from "../endpoints/mutation-errors";
 import { ArgoApplication, getArgoApplicationStore } from "../k8s/argocd";
+import { runGuardedArgoMutation } from "../mutations";
 
 const {
-  Component: { MenuItem, Icon, Notifications },
+  Component: { MenuItem, Icon },
 } = Renderer;
 
 export interface ArgoSyncMenuItemProps extends Renderer.Component.KubeObjectMenuProps<ArgoApplication> {
@@ -22,13 +22,14 @@ export const ArgoSyncMenuItem = (props: ArgoSyncMenuItemProps) =>
 
     const sync = async () => {
       const appName = object.getName?.() ?? object.metadata?.name ?? "application";
-      try {
-        await syncApplication(store, object);
-        Notifications.ok(`Sync started for ${appName}`);
-      } catch (error) {
-        const message = getMutationErrorMessage(error, "Failed to start sync.");
-        Notifications.error(message);
-      }
+      await runGuardedArgoMutation({
+        risk: "low",
+        actionLabel: "Sync",
+        resourceName: appName,
+        run: () => syncApplication(store, object),
+        successMessage: `Sync requested for ${appName}`,
+        failureFallback: "Failed to start sync.",
+      });
     };
 
     return (

@@ -1,11 +1,11 @@
 import { Renderer } from "@freelensapp/extensions";
 import { withErrorPage } from "../components/error-page";
 import { retryRollout } from "../endpoints/argo-rollout-endpoints";
-import { getMutationErrorMessage } from "../endpoints/mutation-errors";
 import { type ArgoRollout, canRetryRollout, getArgoRolloutStore } from "../k8s/rollouts";
+import { runGuardedArgoMutation } from "../mutations";
 
 const {
-  Component: { Icon, MenuItem, Notifications },
+  Component: { Icon, MenuItem },
 } = Renderer;
 
 export interface ArgoRolloutRetryMenuItemProps extends Renderer.Component.KubeObjectMenuProps<ArgoRollout> {
@@ -24,13 +24,14 @@ export const ArgoRolloutRetryMenuItem = (props: ArgoRolloutRetryMenuItemProps) =
 
     const handleRetryRollout = async () => {
       const rolloutName = object.getName?.() ?? object.metadata?.name ?? "rollout";
-      try {
-        await retryRollout(rolloutStore, object);
-        Notifications.ok(`Retry requested for ${rolloutName}`);
-      } catch (error) {
-        const message = getMutationErrorMessage(error, "Failed to retry rollout.");
-        Notifications.error(message);
-      }
+      await runGuardedArgoMutation({
+        risk: "low",
+        actionLabel: "Retry",
+        resourceName: rolloutName,
+        run: () => retryRollout(rolloutStore, object),
+        successMessage: `Retry requested for ${rolloutName}`,
+        failureFallback: "Failed to retry rollout.",
+      });
     };
 
     return (

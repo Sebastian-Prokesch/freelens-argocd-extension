@@ -36,6 +36,7 @@ describe("ArgoRolloutDetails", () => {
     patchMock.mockClear();
     requestPatchMock.mockClear();
     requestPatchMock.mockResolvedValue({});
+    (Renderer.Component.ConfirmDialog.confirm as jest.Mock).mockReset();
     (Renderer.Component.Notifications.ok as jest.Mock).mockReset();
     (Renderer.Component.Notifications.error as jest.Mock).mockReset();
   });
@@ -145,7 +146,10 @@ describe("ArgoRolloutDetails", () => {
     expect(screen.queryByRole("button", { name: "Promote" })).not.toBeInTheDocument();
   });
 
-  it("shows abort button for progressing rollout and triggers patch", () => {
+  it("shows abort button for progressing rollout and triggers patch", async () => {
+    (Renderer.Component.ConfirmDialog.confirm as jest.Mock).mockResolvedValueOnce(true);
+    const user = userEvent.setup();
+
     render(
       <MemoryRouter>
         <ArgoRolloutDetails
@@ -164,7 +168,7 @@ describe("ArgoRolloutDetails", () => {
     const abortButton = screen.getByRole("button", { name: "Abort" });
     expect(abortButton).toBeInTheDocument();
 
-    fireEvent.click(abortButton);
+    await user.click(abortButton);
 
     expect(getPromoteMocks().patchMock).toHaveBeenCalledWith(
       expect.anything(),
@@ -173,6 +177,10 @@ describe("ArgoRolloutDetails", () => {
       },
       "merge",
     );
+    expect(Renderer.Component.ConfirmDialog.confirm).toHaveBeenCalledWith({
+      labelOk: "Abort Rollout",
+      message: "Abort rollout rollout? This interrupts the ongoing rollout operation.",
+    });
   });
 
   it("shows retry button for degraded rollout and triggers patch", () => {
@@ -209,6 +217,7 @@ describe("ArgoRolloutDetails", () => {
   it("shows abort error notification when abort request fails", async () => {
     const { patchMock } = getPromoteMocks();
     patchMock.mockRejectedValueOnce(new Error("abort denied"));
+    (Renderer.Component.ConfirmDialog.confirm as jest.Mock).mockResolvedValueOnce(true);
     const user = userEvent.setup();
 
     render(
@@ -229,5 +238,33 @@ describe("ArgoRolloutDetails", () => {
     await user.click(screen.getByRole("button", { name: "Abort" }));
 
     expect(Renderer.Component.Notifications.error).toHaveBeenCalledWith("abort denied");
+  });
+
+  it("does not patch when abort confirmation is cancelled", async () => {
+    const { patchMock } = getPromoteMocks();
+    (Renderer.Component.ConfirmDialog.confirm as jest.Mock).mockResolvedValueOnce(false);
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter>
+        <ArgoRolloutDetails
+          extension={extension}
+          object={
+            {
+              getName: () => "demo-rollout",
+              status: {
+                phase: "Progressing",
+              },
+            } as any
+          }
+        />
+      </MemoryRouter>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Abort" }));
+
+    expect(patchMock).not.toHaveBeenCalled();
+    expect(Renderer.Component.Notifications.ok).not.toHaveBeenCalled();
+    expect(Renderer.Component.Notifications.error).not.toHaveBeenCalled();
   });
 });

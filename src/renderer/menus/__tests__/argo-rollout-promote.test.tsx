@@ -1,4 +1,6 @@
+import { Renderer } from "@freelensapp/extensions";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import {
   ArgoRolloutPromoteFullMenuItem,
   ArgoRolloutPromoteMenuItem,
@@ -18,12 +20,21 @@ jest.mock("../../k8s/rollouts", () => {
   return {
     ...actual,
     getArgoRolloutStore: jest.fn(() => mockStore),
+    __TEST_PROMOTE_PATCH__: mockStore.api.request.patch,
   };
 });
 
 const extension = { name: "argocd-test-extension" } as any;
+const getPromotePatchMock = () => (jest.requireMock("../../k8s/rollouts") as any).__TEST_PROMOTE_PATCH__ as jest.Mock;
 
 describe("ArgoRolloutPromoteMenuItem", () => {
+  beforeEach(() => {
+    getPromotePatchMock().mockReset();
+    getPromotePatchMock().mockResolvedValue({});
+    (Renderer.Component.Notifications.ok as jest.Mock).mockReset();
+    (Renderer.Component.Notifications.error as jest.Mock).mockReset();
+  });
+
   it("renders when rollout is in promotable paused state", () => {
     render(
       <ArgoRolloutPromoteMenuItem
@@ -41,6 +52,58 @@ describe("ArgoRolloutPromoteMenuItem", () => {
     );
 
     expect(screen.getByText("Promote")).toBeInTheDocument();
+  });
+
+  it("promotes and shows success notification", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <ArgoRolloutPromoteMenuItem
+        object={
+          {
+            getName: () => "demo-rollout",
+            getNs: () => "default",
+            spec: { paused: false },
+            status: {
+              phase: "Paused",
+              pauseConditions: [{ reason: "CanaryPauseStep" }],
+            },
+          } as any
+        }
+        extension={extension}
+      />,
+    );
+
+    await user.click(screen.getByText("Promote"));
+
+    expect(getPromotePatchMock()).toHaveBeenCalled();
+    expect(Renderer.Component.Notifications.ok).toHaveBeenCalledWith("Promote requested for demo-rollout");
+  });
+
+  it("shows fallback message when promotion fails with non-Error", async () => {
+    getPromotePatchMock().mockRejectedValueOnce({ code: 403 });
+    const user = userEvent.setup();
+
+    render(
+      <ArgoRolloutPromoteMenuItem
+        object={
+          {
+            getName: () => "demo-rollout",
+            getNs: () => "default",
+            spec: { paused: false },
+            status: {
+              phase: "Paused",
+              pauseConditions: [{ reason: "CanaryPauseStep" }],
+            },
+          } as any
+        }
+        extension={extension}
+      />,
+    );
+
+    await user.click(screen.getByText("Promote"));
+
+    expect(Renderer.Component.Notifications.error).toHaveBeenCalledWith("Failed to promote rollout.");
   });
 });
 

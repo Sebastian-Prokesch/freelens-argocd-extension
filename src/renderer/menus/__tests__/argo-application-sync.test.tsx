@@ -53,7 +53,7 @@ describe("ArgoSyncMenuItem", () => {
       },
       "merge",
     );
-    expect(Renderer.Component.Notifications.ok).toHaveBeenCalledWith("Sync started for demo-app");
+    expect(Renderer.Component.Notifications.ok).toHaveBeenCalledWith("Sync requested for demo-app");
   });
 
   it("shows endpoint error message when sync fails", async () => {
