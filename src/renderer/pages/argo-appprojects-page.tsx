@@ -2,7 +2,13 @@ import { Common, Renderer } from "@freelensapp/extensions";
 import { observer } from "mobx-react";
 import { Link } from "react-router-dom";
 import { withErrorPage } from "../components/error-page";
-import { ArgoAppProject, type ArgoAppProjectApi, getArgoAppProjectStore } from "../k8s/argocd";
+import {
+  ArgoAppProject,
+  type ArgoAppProjectApi,
+  getAppProjectDestinationCount,
+  getAppProjectSyncWindowCount,
+  getArgoAppProjectStore,
+} from "../k8s/argocd";
 import styles from "./argo-appprojects-page.module.scss";
 import stylesInline from "./argo-appprojects-page.module.scss?inline";
 
@@ -19,6 +25,8 @@ const sortingCallbacks = {
   name: (object: ArgoAppProject) => object.getName(),
   namespace: (object: ArgoAppProject) => object.getNs(),
   description: (object: ArgoAppProject) => object.spec?.description ?? "",
+  destinations: (object: ArgoAppProject) => getAppProjectDestinationCount(object),
+  syncWindows: (object: ArgoAppProject) => getAppProjectSyncWindowCount(object),
   age: (object: ArgoAppProject) => object.getCreationTimestamp(),
 };
 
@@ -26,6 +34,8 @@ const renderTableHeader: { id: string; title: string; sortBy: keyof typeof sorti
   { id: "name", title: "Name", sortBy: "name" },
   { id: "namespace", title: "Namespace", sortBy: "namespace" },
   { id: "description", title: "Description", sortBy: "description", className: styles.description },
+  { id: "destinations", title: "Destinations", sortBy: "destinations", className: styles.destinations },
+  { id: "syncWindows", title: "Sync Windows", sortBy: "syncWindows", className: styles.syncWindows },
   { id: "age", title: "Age", sortBy: "age", className: styles.age },
 ];
 
@@ -61,6 +71,8 @@ export const ArgoAppProjectsTabContent = observer(() => {
           </Link>,
           <WithTooltip>{object.getNs()}</WithTooltip>,
           <WithTooltip>{object.spec?.description ?? "N/A"}</WithTooltip>,
+          <WithTooltip>{String(getAppProjectDestinationCount(object))}</WithTooltip>,
+          <WithTooltip>{String(getAppProjectSyncWindowCount(object))}</WithTooltip>,
           <KubeObjectAge object={object} key="age" />,
         ]}
       />

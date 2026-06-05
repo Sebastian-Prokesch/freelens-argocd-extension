@@ -8,7 +8,11 @@ const mockItems = [
     getNs: () => "argocd",
     getCreationTimestamp: () => "2025-01-01T00:00:00.000Z",
     getSearchFields: () => ["default", "argocd"],
-    spec: { description: "Default project" },
+    spec: {
+      description: "Default project",
+      destinations: [{ namespace: "*" }, { namespace: "prod" }],
+      syncWindows: [{ kind: "allow" }],
+    },
   },
   {
     getName: () => "empty",
@@ -35,6 +39,10 @@ jest.mock("../../k8s/argocd", () => ({
     },
   },
   getArgoAppProjectStore: () => mockStore,
+  getAppProjectDestinationCount: (object: any) =>
+    Array.isArray(object?.spec?.destinations) ? object.spec.destinations.length : 0,
+  getAppProjectSyncWindowCount: (object: any) =>
+    Array.isArray(object?.spec?.syncWindows) ? object.spec.syncWindows.length : 0,
 }));
 
 describe("ArgoAppProjectsTabContent", () => {
@@ -59,5 +67,17 @@ describe("ArgoAppProjectsTabContent", () => {
 
     expect(screen.getByText("Default project")).toBeInTheDocument();
     expect(screen.getByText("N/A")).toBeInTheDocument();
+  });
+
+  it("renders destinations and sync-window signal columns with fallbacks", () => {
+    render(
+      <MemoryRouter>
+        <ArgoAppProjectsTabContent />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText("2")).toBeInTheDocument();
+    expect(screen.getByText("1")).toBeInTheDocument();
+    expect(screen.getAllByText("0").length).toBeGreaterThanOrEqual(2);
   });
 });

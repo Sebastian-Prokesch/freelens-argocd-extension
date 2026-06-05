@@ -8,7 +8,13 @@ const mockItems = [
     getNs: () => "argocd",
     getCreationTimestamp: () => "2025-01-01T00:00:00.000Z",
     getSearchFields: () => ["demo-appset", "argocd"],
-    status: {},
+    status: {
+      resources: [{ name: "guestbook" }, { name: "payments" }],
+      conditions: [
+        { type: "ResourcesUpToDate", status: "True" },
+        { type: "ErrorOccurred", status: "False" },
+      ],
+    },
   },
 ];
 
@@ -28,6 +34,39 @@ jest.mock("../../k8s/argocd", () => ({
     },
   },
   getArgoApplicationSetStore: () => mockStore,
+  getGeneratedApplicationCount: (object: any) => (object?.status?.resources ?? []).length,
+  getApplicationSetResourcesUpToDate: (object: any) => {
+    const condition = (object?.status?.conditions ?? []).find((item: any) => item?.type === "ResourcesUpToDate");
+    if (!condition) {
+      return undefined;
+    }
+
+    if (condition.status === "True") {
+      return true;
+    }
+
+    if (condition.status === "False") {
+      return false;
+    }
+
+    return undefined;
+  },
+  getApplicationSetHasError: (object: any) => {
+    const condition = (object?.status?.conditions ?? []).find((item: any) => item?.type === "ErrorOccurred");
+    if (!condition) {
+      return undefined;
+    }
+
+    if (condition.status === "True") {
+      return true;
+    }
+
+    if (condition.status === "False") {
+      return false;
+    }
+
+    return undefined;
+  },
 }));
 
 describe("ArgoApplicationSetsTabContent", () => {
@@ -46,7 +85,7 @@ describe("ArgoApplicationSetsTabContent", () => {
     );
   });
 
-  it("renders namespace and age columns without app counters", () => {
+  it("renders applicationset signal columns", () => {
     render(
       <MemoryRouter>
         <ArgoApplicationSetsTabContent />
@@ -54,7 +93,24 @@ describe("ArgoApplicationSetsTabContent", () => {
     );
 
     expect(screen.getByRole("link", { name: "argocd" })).toHaveAttribute("href", "/api/v1/namespaces/argocd");
-    expect(screen.queryByText("Planned Applications")).not.toBeInTheDocument();
-    expect(screen.queryByText("Created Applications")).not.toBeInTheDocument();
+    expect(screen.getByText("2")).toBeInTheDocument();
+    expect(screen.getByText("Yes")).toBeInTheDocument();
+    expect(screen.getByText("No")).toBeInTheDocument();
+  });
+
+  it("renders fallback values for missing applicationset status signals", () => {
+    const item = mockItems[0] as any;
+    const originalStatus = item.status;
+    item.status = {};
+
+    render(
+      <MemoryRouter>
+        <ArgoApplicationSetsTabContent />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText("0")).toBeInTheDocument();
+    expect(screen.getAllByText("N/A").length).toBeGreaterThanOrEqual(2);
+    item.status = originalStatus;
   });
 });
