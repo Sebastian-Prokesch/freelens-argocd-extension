@@ -7,6 +7,10 @@ declare const classNames: {
   readonly loadingMessage: "loadingMessage";
   readonly errorMessage: "errorMessage";
   readonly statuses: "statuses";
+  readonly overviewStatusCards: "overviewStatusCards";
+  readonly overviewStatusCard: "overviewStatusCard";
+  readonly overviewStatusLabel: "overviewStatusLabel";
+  readonly overviewStatusValue: "overviewStatusValue";
   readonly healthSummary: "healthSummary";
   readonly summaryTitle: "summaryTitle";
   readonly summaryText: "summaryText";
