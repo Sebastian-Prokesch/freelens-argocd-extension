@@ -20,4 +20,15 @@
       line-height: 1.4;
     }
   }
+
+  .operationTimeline {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    div {
+      font-size: 0.9em;
+      line-height: 1.4;
+    }
+  }
 }

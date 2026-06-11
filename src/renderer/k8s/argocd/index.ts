@@ -1,3 +1,4 @@
+export * from "./application-diagnostics";
 export * from "./applications";
 export * from "./applicationset";
 export * from "./applicationset-signals";
