@@ -3,7 +3,9 @@ import { observer } from "mobx-react";
 import { withErrorPage } from "../components/error-page";
 import { ConditionsList, ResourceEventsSection, StatusBadge } from "../components/shared";
 import { ArgoApplication, ArgoApplicationResourceSyncStatus } from "../k8s/argocd";
+import { buildOperationTimeline, summarizeApplicationHealth } from "../k8s/argocd/application-diagnostics";
 import { createEnumFromKeys } from "../utils";
+import { ApplicationDriftHotspotsTable } from "./application-drift-hotspots-table";
 import styles from "./argo-application-details.module.scss";
 import stylesInline from "./argo-application-details.module.scss?inline";
 
@@ -107,6 +109,8 @@ export const ArgoApplicationDetails = observer((props: ArgoApplicationDetailsPro
     const ignoreDifferences = normalizeArray(object.spec.ignoreDifferences);
     const resources = normalizeArray(object.status?.resources);
     const history = normalizeArray(object.status?.history);
+    const healthSummary = summarizeApplicationHealth(object.status);
+    const operationTimeline = buildOperationTimeline(object.status?.operationState);
 
     return (
       <>
@@ -212,6 +216,40 @@ export const ArgoApplicationDetails = observer((props: ArgoApplicationDetailsPro
             {object.spec.destination?.server || object.spec.destination?.name || "Not specified"}
           </DrawerItem>
           <DrawerItem name="Namespace">{object.spec.destination?.namespace || "Not specified"}</DrawerItem>
+
+          <Gutter size="md" />
+
+          {/* Section 2b: Diagnostics */}
+          <DrawerTitle>Diagnostics</DrawerTitle>
+          <DrawerItem name="Application Sync">
+            <StatusBadge status={healthSummary.appSyncStatus} fallbackLabel="N/A" />
+          </DrawerItem>
+          <DrawerItem name="Application Health">
+            <StatusBadge status={healthSummary.appHealthStatus} fallbackLabel="N/A" />
+          </DrawerItem>
+          <DrawerItem name="Managed Resources">{String(healthSummary.totalResources)}</DrawerItem>
+          <DrawerItem name="Out of Sync">{String(healthSummary.outOfSyncCount)}</DrawerItem>
+          <DrawerItem name="Unhealthy">{String(healthSummary.unhealthyCount)}</DrawerItem>
+          <DrawerItem name="Drift Hotspots">
+            <ApplicationDriftHotspotsTable resources={resources} />
+          </DrawerItem>
+          {operationTimeline ? (
+            <DrawerItem name="Operation Timeline">
+              <div className={styles.operationTimeline}>
+                <div>
+                  <StatusBadge status={operationTimeline.phase} fallbackLabel="Unknown" />
+                </div>
+                {operationTimeline.message ? <div>{operationTimeline.message}</div> : null}
+                <div>
+                  <strong>Started:</strong> {formatDateTime(operationTimeline.startedAt)}
+                </div>
+                <div>
+                  <strong>{operationTimeline.inProgress ? "Status:" : "Finished:"}</strong>{" "}
+                  {operationTimeline.inProgress ? "In progress" : formatDateTime(operationTimeline.finishedAt)}
+                </div>
+              </div>
+            </DrawerItem>
+          ) : null}
 
           <Gutter size="md" />
 

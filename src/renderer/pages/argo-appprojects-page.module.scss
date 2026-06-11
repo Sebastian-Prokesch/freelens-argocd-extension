@@ -1,7 +1,15 @@
 .page {
   :global(.TableCell) {
     &.description {
-      flex-grow: 1.2;
+      flex-grow: 1;
+    }
+
+    &.destinations {
+      flex-grow: 0.45;
+    }
+
+    &.syncWindows {
+      flex-grow: 0.45;
     }
 
     &.age {

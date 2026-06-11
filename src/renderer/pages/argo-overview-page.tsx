@@ -14,6 +14,14 @@ export interface ArgoOverviewPageProps {
   extension: Renderer.LensExtension;
 }
 
+type OverviewStatusCardId = "total-applications" | "out-of-sync" | "degraded" | "progressing" | "total-projects";
+
+interface OverviewStatusCard {
+  id: OverviewStatusCardId;
+  label: string;
+  value: number;
+}
+
 const getHealthStatusCounts = (applications: ArgoApplication[]): Record<string, number> =>
   applications.reduce(
     (counts, app) => {
@@ -23,6 +31,20 @@ const getHealthStatusCounts = (applications: ArgoApplication[]): Record<string, 
     },
     {} as Record<string, number>,
   );
+
+const getOverviewStatusCards = (applications: ArgoApplication[], totalProjects: number): OverviewStatusCard[] => {
+  const outOfSync = applications.filter((app) => app.status?.sync?.status === "OutOfSync").length;
+  const degraded = applications.filter((app) => app.status?.health?.status === "Degraded").length;
+  const progressing = applications.filter((app) => app.status?.health?.status === "Progressing").length;
+
+  return [
+    { id: "total-applications", label: "Total Applications", value: applications.length },
+    { id: "out-of-sync", label: "Out Of Sync", value: outOfSync },
+    { id: "degraded", label: "Degraded", value: degraded },
+    { id: "progressing", label: "Progressing", value: progressing },
+    { id: "total-projects", label: "Total Projects", value: totalProjects },
+  ];
+};
 
 function filterItems(items: Renderer.K8sApi.KubeEvent[]): Renderer.K8sApi.KubeEvent[] {
   const events = items.filter((event) => {
@@ -83,7 +105,10 @@ export const ArgoOverviewTabContent = observer(() => {
   }, []);
 
   const applications = (applicationStore.contextItems as ArgoApplication[]) ?? [];
+  const projects = (appProjectStore.contextItems as unknown[]) ?? [];
   const healthCounts = getHealthStatusCounts(applications);
+  const overviewStatusCards = getOverviewStatusCards(applications, projects.length);
+  const isLoading = !isLoaded && !loadError;
   const isNoApplications = isLoaded && !loadError && applications.length === 0;
   const scopedStyles = styles as Record<string, string>;
 
@@ -99,9 +124,19 @@ export const ArgoOverviewTabContent = observer(() => {
         </div>
 
         <div className={styles.scrollBody}>
-          {!isLoaded ? <div className={styles.loadingMessage}>Loading ArgoCD overview resources...</div> : null}
+          {isLoading ? <div className={styles.loadingMessage}>Loading ArgoCD overview resources...</div> : null}
           {loadError ? <div className={styles.errorMessage}>{loadError}</div> : null}
           <div className={styles.statuses}>
+            <div className={styles.overviewStatusCards}>
+              {overviewStatusCards.map((card) => (
+                <div key={card.id} className={styles.overviewStatusCard}>
+                  <div className={styles.overviewStatusLabel}>{card.label}</div>
+                  <div className={styles.overviewStatusValue} data-testid={`overview-status-${card.id}`}>
+                    {isLoading ? "..." : card.value}
+                  </div>
+                </div>
+              ))}
+            </div>
             <div className={scopedStyles.healthSummary}>
               <h6 className={scopedStyles.summaryTitle}>Health Summary</h6>
               {Object.keys(healthCounts).length > 0 ? (
@@ -117,11 +152,11 @@ export const ArgoOverviewTabContent = observer(() => {
             {isNoApplications ? <div className={scopedStyles.emptyState}>No applications</div> : null}
             <div className={styles.chartsRow}>
               <div className={styles.chart}>
-                <ArgoApplicationStatusChart applications={applications} isLoading={!isLoaded && !loadError} />
+                <ArgoApplicationStatusChart applications={applications} isLoading={isLoading} />
               </div>
 
               <div className={styles.chart}>
-                <ArgoApplicationSyncStatusChart applications={applications} isLoading={!isLoaded && !loadError} />
+                <ArgoApplicationSyncStatusChart applications={applications} isLoading={isLoading} />
               </div>
             </div>
           </div>

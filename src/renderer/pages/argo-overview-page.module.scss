@@ -77,6 +77,33 @@
   background: var(--contentColor);
 }
 
+.overviewStatusCards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: calc(var(--unit) * 1.5);
+  padding: calc(var(--unit) * 2) calc(var(--unit) * 2) 0;
+}
+
+.overviewStatusCard {
+  border: 1px solid var(--borderColor);
+  border-radius: 6px;
+  padding: calc(var(--unit) * 1.5);
+  background: var(--layoutBackground);
+}
+
+.overviewStatusLabel {
+  color: var(--textColorSecondary);
+  font-size: var(--font-size-small);
+  margin-bottom: calc(var(--unit) * 0.5);
+}
+
+.overviewStatusValue {
+  color: var(--textColorPrimary);
+  font-size: var(--font-size-h3);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
 .healthSummary {
   padding: calc(var(--unit) * 2) calc(var(--unit) * 2) 0;
 }

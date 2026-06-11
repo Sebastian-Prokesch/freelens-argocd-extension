@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { ArgoApplicationDetails } from "../argo-application-details";
 
 const extension = { name: "argocd-test-extension" } as any;
@@ -167,8 +167,83 @@ describe("ArgoApplicationDetails", () => {
     expect(screen.getAllByText("Deployment").length).toBeGreaterThan(0);
 
     // fallback for missing status
-    expect(screen.getByText("db")).toBeInTheDocument();
+    expect(screen.getAllByText("db").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Unknown").length).toBeGreaterThan(0);
+  });
+
+  it("renders diagnostics health summary and operation timeline", () => {
+    renderDetails({
+      spec: {
+        source: { repoURL: "https://github.com/org/repo.git" },
+        destination: { namespace: "apps" },
+      },
+      status: {
+        sync: { status: "OutOfSync", revision: "rev-current" },
+        health: { status: "Degraded" },
+        operationState: {
+          phase: "Running",
+          message: "Sync in progress",
+          startedAt: "2025-01-01T09:00:00.000Z",
+        },
+        resources: [
+          { name: "web", kind: "Deployment", status: "OutOfSync", health: { status: "Degraded" } },
+          { name: "db", kind: "Service", status: "Synced", health: { status: "Healthy" } },
+        ],
+      },
+    });
+
+    expect(screen.getByText("Diagnostics")).toBeInTheDocument();
+    expect(screen.getByText("Application Sync")).toBeInTheDocument();
+    expect(screen.getAllByText("OutOfSync").length).toBeGreaterThan(0);
+    expect(screen.getByText("Application Health")).toBeInTheDocument();
+    expect(screen.getAllByText("Degraded").length).toBeGreaterThan(0);
+    expect(screen.getByText("Managed Resources")).toBeInTheDocument();
+    expect(screen.getByText("2")).toBeInTheDocument();
+    expect(screen.getByText("Out of Sync")).toBeInTheDocument();
+    expect(screen.getByText("Unhealthy")).toBeInTheDocument();
+    expect(screen.getByText("Drift Hotspots")).toBeInTheDocument();
+    expect(screen.getAllByText("web").length).toBeGreaterThan(0);
+    expect(screen.getByText("Operation Timeline")).toBeInTheDocument();
+    expect(screen.getAllByText("Sync in progress").length).toBeGreaterThan(0);
+    expect(screen.getByText("In progress")).toBeInTheDocument();
+  });
+
+  it("renders no drift detected when all resources are synced and healthy", () => {
+    renderDetails({
+      spec: {
+        source: { repoURL: "https://github.com/org/repo.git" },
+        destination: { namespace: "apps" },
+      },
+      status: {
+        sync: { status: "Synced" },
+        health: { status: "Healthy" },
+        resources: [{ name: "web", kind: "Deployment", status: "Synced", health: { status: "Healthy" } }],
+      },
+    });
+
+    expect(screen.getByText("No drift detected")).toBeInTheDocument();
+  });
+
+  it("expands drift hotspots when more than five resources need attention", () => {
+    renderDetails({
+      spec: {
+        source: { repoURL: "https://github.com/org/repo.git" },
+        destination: { namespace: "apps" },
+      },
+      status: {
+        resources: [
+          { name: "a", kind: "Deployment", status: "OutOfSync", health: { status: "Degraded" } },
+          { name: "b", kind: "Deployment", status: "OutOfSync", health: { status: "Healthy" } },
+          { name: "c", kind: "Deployment", status: "OutOfSync", health: { status: "Healthy" } },
+          { name: "d", kind: "Secret", status: "OutOfSync", health: { status: "Healthy" } },
+          { name: "e", kind: "Service", status: "OutOfSync", health: { status: "Healthy" } },
+          { name: "f", kind: "ConfigMap", status: "Unknown", health: { status: "Healthy" } },
+        ],
+      },
+    });
+
+    fireEvent.click(screen.getByText("Show all 6 hotspots"));
+    expect(screen.getByText("Show top 5")).toBeInTheDocument();
   });
 
   it("renders operation state and last sync information", () => {
@@ -202,12 +277,12 @@ describe("ArgoApplicationDetails", () => {
     });
 
     expect(screen.getByText("Operation State")).toBeInTheDocument();
-    expect(screen.getByText("Running")).toBeInTheDocument();
-    expect(screen.getByText("Sync in progress")).toBeInTheDocument();
+    expect(screen.getAllByText("Running").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Sync in progress").length).toBeGreaterThan(0);
 
     expect(screen.getByText("Last Sync Information")).toBeInTheDocument();
     expect(screen.getByText("rev-current")).toBeInTheDocument();
-    expect(screen.getByText("OutOfSync")).toBeInTheDocument();
+    expect(screen.getAllByText("OutOfSync").length).toBeGreaterThan(0);
     expect(screen.getAllByText("rev-prev").length).toBeGreaterThan(0);
   });
 
