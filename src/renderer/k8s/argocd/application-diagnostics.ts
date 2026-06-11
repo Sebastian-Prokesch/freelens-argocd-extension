@@ -136,9 +136,7 @@ const compareHotspots = (left: ApplicationResourceDiagnostic, right: Application
   return left.name.localeCompare(right.name);
 };
 
-export const sortDriftHotspots = (
-  resources: unknown[] | undefined | null,
-): ApplicationResourceDiagnostic[] => {
+export const sortDriftHotspots = (resources: unknown[] | undefined | null): ApplicationResourceDiagnostic[] => {
   return (resources ?? [])
     .map(normalizeResource)
     .filter((resource): resource is ApplicationResourceDiagnostic => resource !== undefined)

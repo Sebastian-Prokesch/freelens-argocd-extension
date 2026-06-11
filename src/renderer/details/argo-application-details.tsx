@@ -245,9 +245,7 @@ export const ArgoApplicationDetails = observer((props: ArgoApplicationDetailsPro
                 </div>
                 <div>
                   <strong>{operationTimeline.inProgress ? "Status:" : "Finished:"}</strong>{" "}
-                  {operationTimeline.inProgress
-                    ? "In progress"
-                    : formatDateTime(operationTimeline.finishedAt)}
+                  {operationTimeline.inProgress ? "In progress" : formatDateTime(operationTimeline.finishedAt)}
                 </div>
               </div>
             </DrawerItem>
