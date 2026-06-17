@@ -1,6 +1,6 @@
 import { Renderer } from "@freelensapp/extensions";
-import { withErrorPage } from "../components/error-page";
 import { applicationSyncDialogStore } from "../components/application-sync";
+import { withErrorPage } from "../components/error-page";
 import { ArgoApplication } from "../k8s/argocd";
 
 const {

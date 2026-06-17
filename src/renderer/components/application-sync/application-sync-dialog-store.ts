@@ -1,4 +1,5 @@
 import { action, makeObservable, observable } from "mobx";
+
 import type { ArgoApplication } from "../../k8s/argocd/applications";
 
 class ApplicationSyncDialogStore {

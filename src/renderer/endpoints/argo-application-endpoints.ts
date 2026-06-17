@@ -1,9 +1,10 @@
-import type { ArgoApplication, ArgoApplicationStore } from "../k8s/argocd/applications";
 import {
   type ApplicationSyncOptions,
   type ApplicationSyncStrategy,
   DEFAULT_APPLICATION_SYNC_OPTIONS,
 } from "./application-sync-options";
+
+import type { ArgoApplication, ArgoApplicationStore } from "../k8s/argocd/applications";
 
 export const ARGO_APPLICATION_REFRESH_ANNOTATION = "argocd.argoproj.io/refresh";
 

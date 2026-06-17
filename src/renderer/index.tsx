@@ -6,8 +6,8 @@
 import { Renderer } from "@freelensapp/extensions";
 import { computed } from "mobx";
 import { ArgoPreferencesStore } from "../common/store";
-import { ArgoConfigDialog } from "./components/argo-config";
 import { ApplicationSyncDialog } from "./components/application-sync";
+import { ArgoConfigDialog } from "./components/argo-config";
 import { ArgoAnalysisRunDetails } from "./details/argo-analysis-run-details";
 import { ArgoAnalysisTemplateDetails } from "./details/argo-analysis-template-details";
 import { ArgoApplicationDetails } from "./details/argo-application-details";

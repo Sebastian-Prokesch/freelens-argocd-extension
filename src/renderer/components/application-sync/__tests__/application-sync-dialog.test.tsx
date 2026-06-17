@@ -106,9 +106,7 @@ describe("ApplicationSyncDialog", () => {
     applicationSyncDialogStore.open(application);
     render(<ApplicationSyncDialog />);
 
-    expect(
-      screen.getByText("Revision targeting for multi-source apps is not supported in v1."),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Revision targeting for multi-source apps is not supported in v1.")).toBeInTheDocument();
     expect(screen.queryByPlaceholderText("main")).not.toBeInTheDocument();
   });
 

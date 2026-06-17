@@ -14,12 +14,13 @@ import {
   showsReplaceWarning,
 } from "../../endpoints/application-sync-options";
 import { syncApplication } from "../../endpoints/argo-application-endpoints";
-import type { ArgoApplication } from "../../k8s/argocd/applications";
 import { getArgoApplicationStore } from "../../k8s/argocd";
 import { runGuardedArgoMutation } from "../../mutations";
 import styles from "./application-sync-dialog.module.scss";
 import stylesInline from "./application-sync-dialog.module.scss?inline";
 import { applicationSyncDialogStore } from "./application-sync-dialog-store";
+
+import type { ArgoApplication } from "../../k8s/argocd/applications";
 
 const {
   Component: { Button, Checkbox, Dialog, Input },
@@ -125,9 +126,7 @@ export const ApplicationSyncDialog = observer(() => {
               {showPruneWarning && (
                 <div className={styles.dialogWarning}>Prune will delete cluster resources no longer in Git.</div>
               )}
-              {showReplaceWarning && (
-                <div className={styles.dialogWarning}>Replace will recreate resources.</div>
-              )}
+              {showReplaceWarning && <div className={styles.dialogWarning}>Replace will recreate resources.</div>}
             </div>
           )}
 

@@ -47,9 +47,7 @@ export function getRevisionPlaceholder(application: ArgoApplication): string | u
 }
 
 export function buildSelectedSyncOptions(selectedValues: string[]): string[] {
-  return KNOWN_APPLICATION_SYNC_OPTIONS.map((option) => option.value).filter((value) =>
-    selectedValues.includes(value),
-  );
+  return KNOWN_APPLICATION_SYNC_OPTIONS.map((option) => option.value).filter((value) => selectedValues.includes(value));
 }
 
 export function showsForceWarning(options: ApplicationSyncOptions): boolean {
