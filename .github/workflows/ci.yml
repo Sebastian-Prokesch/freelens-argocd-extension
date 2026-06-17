@@ -27,7 +27,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '>=24.0.0'
+          node-version: ">=24.0.0"
           cache: pnpm
 
       - name: Install dependencies
@@ -114,7 +114,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '>=24.0.0'
+          node-version: ">=24.0.0"
           cache: pnpm
 
       - name: Install dependencies
@@ -149,7 +149,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '>=24.0.0'
+          node-version: ">=24.0.0"
           cache: pnpm
 
       - name: Download build output
