@@ -11,7 +11,7 @@ import {
 } from "../argo-application-endpoints";
 
 describe("argo-application-endpoints", () => {
-  it("buildApplicationSyncMergePatch returns sync operation payload", () => {
+  it("buildApplicationSyncMergePatch returns default sync operation payload", () => {
     expect(buildApplicationSyncMergePatch()).toEqual({
       operation: {
         initiatedBy: {
@@ -21,6 +21,54 @@ describe("argo-application-endpoints", () => {
           syncStrategy: {
             hook: {},
           },
+        },
+      },
+    });
+  });
+
+  it("buildApplicationSyncMergePatch maps advanced sync options", () => {
+    expect(
+      buildApplicationSyncMergePatch({
+        prune: true,
+        dryRun: true,
+        force: true,
+        syncStrategy: "apply",
+        revision: "abc123",
+        syncOptions: ["CreateNamespace=true", "Validate=false"],
+      }),
+    ).toEqual({
+      operation: {
+        initiatedBy: {
+          username: "LensApp",
+        },
+        sync: {
+          prune: true,
+          dryRun: true,
+          revision: "abc123",
+          syncOptions: ["CreateNamespace=true", "Validate=false"],
+          syncStrategy: {
+            apply: {
+              force: true,
+            },
+          },
+        },
+      },
+    });
+  });
+
+  it("buildApplicationSyncMergePatch omits empty revision and syncOptions", () => {
+    expect(
+      buildApplicationSyncMergePatch({
+        revision: "   ",
+        syncOptions: [],
+      }).operation,
+    ).toEqual({
+      initiatedBy: {
+        username: "LensApp",
+      },
+      sync: {
+        syncStrategy: {
+          hook: {},
         },
       },
     });
@@ -58,6 +106,21 @@ describe("argo-application-endpoints", () => {
     await syncApplication(store, application);
 
     expect(patch).toHaveBeenCalledWith(application, buildApplicationSyncMergePatch(), "merge");
+  });
+
+  it("syncApplication passes selected options to patch payload", async () => {
+    const patch = jest.fn().mockResolvedValueOnce(undefined);
+    const store = { patch } as any;
+    const application = { getName: () => "demo-app" } as any;
+    const options = {
+      prune: true,
+      syncStrategy: "apply" as const,
+      syncOptions: ["PruneLast=true"],
+    };
+
+    await syncApplication(store, application, options);
+
+    expect(patch).toHaveBeenCalledWith(application, buildApplicationSyncMergePatch(options), "merge");
   });
 
   it("terminateApplicationOperation patches application using json strategy", async () => {

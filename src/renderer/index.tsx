@@ -7,6 +7,7 @@ import { Renderer } from "@freelensapp/extensions";
 import { computed } from "mobx";
 import { ArgoPreferencesStore } from "../common/store";
 import { ArgoConfigDialog } from "./components/argo-config";
+import { ApplicationSyncDialog } from "./components/application-sync";
 import { ArgoAnalysisRunDetails } from "./details/argo-analysis-run-details";
 import { ArgoAnalysisTemplateDetails } from "./details/argo-analysis-template-details";
 import { ArgoApplicationDetails } from "./details/argo-application-details";
@@ -40,6 +41,7 @@ import {
   ArgoRolloutPromoteSkipCurrentMenuItem,
   ArgoRolloutRetryMenuItem,
   ArgoSyncMenuItem,
+  ArgoSyncWithOptionsMenuItem,
   ArgoTerminateMenuItem,
 } from "./menus";
 import { buildClusterPageMenus, buildClusterPages } from "./registration/cluster-registration";
@@ -53,6 +55,11 @@ export default class ArgoRenderer extends Renderer.LensExtension {
     {
       id: "argocd-config-dialog",
       Component: ArgoConfigDialog,
+      shouldRender: computed(() => true),
+    },
+    {
+      id: "argocd-application-sync-dialog",
+      Component: ApplicationSyncDialog,
       shouldRender: computed(() => true),
     },
   ];
@@ -173,6 +180,12 @@ export default class ArgoRenderer extends Renderer.LensExtension {
       apiVersions: ArgoApplication.crd.apiVersions,
       extension: this,
       MenuItem: ArgoSyncMenuItem,
+    }),
+    createKubeObjectMenuRegistration({
+      kind: ArgoApplication.kind,
+      apiVersions: ArgoApplication.crd.apiVersions,
+      extension: this,
+      MenuItem: ArgoSyncWithOptionsMenuItem,
     }),
     createKubeObjectMenuRegistration({
       kind: ArgoApplication.kind,

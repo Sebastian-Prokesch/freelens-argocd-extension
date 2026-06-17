@@ -101,6 +101,17 @@ export const Renderer = {
         {children}
       </button>
     ),
+    Checkbox: ({ label, value, onChange }: AnyRecord) => (
+      <label>
+        <input
+          type="checkbox"
+          aria-label={label}
+          checked={!!value}
+          onChange={(event) => onChange?.(event.target.checked)}
+        />
+        {label}
+      </label>
+    ),
     Notifications: {
       ok: jest.fn(),
       error: jest.fn(),
