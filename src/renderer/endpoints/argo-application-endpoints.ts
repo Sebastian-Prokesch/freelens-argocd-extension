@@ -104,3 +104,77 @@ export async function terminateApplicationOperation(
 ): Promise<void> {
   await store.patch(application, buildApplicationTerminateJsonPatch(), "json");
 }
+
+export interface ApplicationHistoryEntry {
+  id?: number;
+  revision?: string;
+  revisions?: string[];
+  source?: Record<string, unknown>;
+  sources?: Record<string, unknown>[];
+  deployedAt?: string;
+  initiatedBy?: {
+    username?: string;
+    automated?: boolean;
+  };
+}
+
+function isNonEmptyRecord(value: unknown): boolean {
+  return typeof value === "object" && value !== null && Object.keys(value).length > 0;
+}
+
+export function hasRollbackSourceMetadata(entry: ApplicationHistoryEntry): boolean {
+  if (entry.sources && entry.sources.length > 0) {
+    return true;
+  }
+
+  return isNonEmptyRecord(entry.source);
+}
+
+export function buildApplicationRollbackMergePatch(
+  entry: ApplicationHistoryEntry,
+  syncOptions?: string[],
+): Record<string, unknown> {
+  const sync: Record<string, unknown> = {
+    syncStrategy: {
+      apply: {},
+    },
+  };
+
+  if (entry.revision) {
+    sync.revision = entry.revision;
+  }
+
+  if (entry.revisions && entry.revisions.length > 0) {
+    sync.revisions = entry.revisions;
+  }
+
+  if (isNonEmptyRecord(entry.source)) {
+    sync.source = entry.source;
+  }
+
+  if (entry.sources && entry.sources.length > 0) {
+    sync.sources = entry.sources;
+  }
+
+  if (syncOptions && syncOptions.length > 0) {
+    sync.syncOptions = syncOptions;
+  }
+
+  return {
+    operation: {
+      initiatedBy: {
+        username: "LensApp",
+      },
+      sync,
+    },
+  };
+}
+
+export async function rollbackApplication(
+  store: ArgoApplicationStore,
+  application: ArgoApplication,
+  entry: ApplicationHistoryEntry,
+): Promise<void> {
+  const syncOptions = application.spec?.syncPolicy?.syncOptions;
+  await store.patch(application, buildApplicationRollbackMergePatch(entry, syncOptions), "merge");
+}
