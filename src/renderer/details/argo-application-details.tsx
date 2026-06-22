@@ -16,7 +16,18 @@ import styles from "./argo-application-details.module.scss";
 import stylesInline from "./argo-application-details.module.scss?inline";
 
 const {
-  Component: { BadgeBoolean, Button, DrawerTitle, DrawerItem, Gutter, Table, TableHead, TableRow, TableCell, WithTooltip },
+  Component: {
+    BadgeBoolean,
+    Button,
+    DrawerTitle,
+    DrawerItem,
+    Gutter,
+    Table,
+    TableHead,
+    TableRow,
+    TableCell,
+    WithTooltip,
+  },
 } = Renderer;
 
 const terminalOperationPhases = new Set(["Succeeded", "Failed", "Error"]);
@@ -105,10 +116,7 @@ const formatPluginEnv = (entries: Array<{ name?: string; value?: string } | null
   return pairs.length > 0 ? pairs.join(", ") : "None";
 };
 
-function getRollbackDisabledReason(
-  application: ArgoApplication,
-  entry: ApplicationHistoryEntry,
-): string | undefined {
+function getRollbackDisabledReason(application: ArgoApplication, entry: ApplicationHistoryEntry): string | undefined {
   if (application.spec?.syncPolicy?.automated) {
     return "Auto-sync must be disabled before rollback";
   }

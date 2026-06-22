@@ -479,10 +479,7 @@ describe("ArgoApplicationDetails", () => {
 
       const rollbackButton = screen.getByRole("button", { name: "Rollback" });
       expect(rollbackButton).toBeDisabled();
-      expect(screen.getByTestId("WithTooltip")).toHaveAttribute(
-        "data-tooltip",
-        "An operation is already in progress",
-      );
+      expect(screen.getByTestId("WithTooltip")).toHaveAttribute("data-tooltip", "An operation is already in progress");
 
       await user.click(rollbackButton);
       expect(patchMock).not.toHaveBeenCalled();
@@ -503,11 +500,7 @@ describe("ArgoApplicationDetails", () => {
         labelOk: "Rollback Application",
         message: expect.stringContaining("history ID 10"),
       });
-      expect(patchMock).toHaveBeenCalledWith(
-        app,
-        buildApplicationRollbackMergePatch(historyEntry, undefined),
-        "merge",
-      );
+      expect(patchMock).toHaveBeenCalledWith(app, buildApplicationRollbackMergePatch(historyEntry, undefined), "merge");
       expect(Renderer.Component.Notifications.ok).toHaveBeenCalledWith(
         "Rollback to revision abc123 requested for demo-app",
       );
