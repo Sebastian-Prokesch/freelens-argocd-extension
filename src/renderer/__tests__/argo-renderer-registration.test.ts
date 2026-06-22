@@ -46,8 +46,9 @@ describe("ArgoRenderer registrations", () => {
     const components = renderer.clusterFrameComponents;
 
     expect(Array.isArray(components)).toBe(true);
-    expect(components).toHaveLength(1);
+    expect(components).toHaveLength(2);
     expect(components[0]?.id).toBe("argocd-config-dialog");
+    expect(components[1]?.id).toBe("argocd-application-sync-dialog");
     expect(components[0]?.Component).toBeDefined();
     expect(typeof components[0]?.shouldRender?.get).toBe("function");
   });
@@ -115,11 +116,11 @@ describe("ArgoRenderer registrations", () => {
     expect(detailKinds).toContain("ClusterWorkflowTemplate");
   });
 
-  it("registers refresh, hard refresh, sync and terminate menu items for applications", () => {
+  it("registers refresh, hard refresh, sync, adv sync and terminate menu items for applications", () => {
     const renderer = createRenderer();
     const applicationMenuItems = renderer.kubeObjectMenuItems.filter((item: any) => item.kind === "Application");
 
-    expect(applicationMenuItems.length).toBeGreaterThanOrEqual(4);
+    expect(applicationMenuItems.length).toBeGreaterThanOrEqual(5);
   });
 
   it("registers promote, abort and retry menu items for rollouts", () => {

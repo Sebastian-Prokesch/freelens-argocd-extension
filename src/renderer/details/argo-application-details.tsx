@@ -2,16 +2,35 @@ import { Renderer } from "@freelensapp/extensions";
 import { observer } from "mobx-react";
 import { withErrorPage } from "../components/error-page";
 import { ConditionsList, ResourceEventsSection, StatusBadge } from "../components/shared";
-import { ArgoApplication, ArgoApplicationResourceSyncStatus } from "../k8s/argocd";
+import {
+  type ApplicationHistoryEntry,
+  hasRollbackSourceMetadata,
+  rollbackApplication,
+} from "../endpoints/argo-application-endpoints";
+import { ArgoApplication, ArgoApplicationResourceSyncStatus, getArgoApplicationStore } from "../k8s/argocd";
 import { buildOperationTimeline, summarizeApplicationHealth } from "../k8s/argocd/application-diagnostics";
+import { getRollbackApplicationConfirmCopy, runGuardedArgoMutation } from "../mutations";
 import { createEnumFromKeys } from "../utils";
 import { ApplicationDriftHotspotsTable } from "./application-drift-hotspots-table";
 import styles from "./argo-application-details.module.scss";
 import stylesInline from "./argo-application-details.module.scss?inline";
 
 const {
-  Component: { BadgeBoolean, DrawerTitle, DrawerItem, Gutter, Table, TableHead, TableRow, TableCell },
+  Component: {
+    BadgeBoolean,
+    Button,
+    DrawerTitle,
+    DrawerItem,
+    Gutter,
+    Table,
+    TableHead,
+    TableRow,
+    TableCell,
+    WithTooltip,
+  },
 } = Renderer;
+
+const terminalOperationPhases = new Set(["Succeeded", "Failed", "Error"]);
 
 const resourcesSortable = {
   name: (appResourceStatus: ArgoApplicationResourceSyncStatus) => appResourceStatus.name,
@@ -97,6 +116,23 @@ const formatPluginEnv = (entries: Array<{ name?: string; value?: string } | null
   return pairs.length > 0 ? pairs.join(", ") : "None";
 };
 
+function getRollbackDisabledReason(application: ArgoApplication, entry: ApplicationHistoryEntry): string | undefined {
+  if (application.spec?.syncPolicy?.automated) {
+    return "Auto-sync must be disabled before rollback";
+  }
+
+  if (!hasRollbackSourceMetadata(entry)) {
+    return "Source metadata unavailable for this history entry";
+  }
+
+  const phase = application.status?.operationState?.phase;
+  if (phase && !terminalOperationPhases.has(phase)) {
+    return "An operation is already in progress";
+  }
+
+  return undefined;
+}
+
 export interface ArgoApplicationDetailsProps extends Renderer.Component.KubeObjectDetailsProps<ArgoApplication> {
   extension: Renderer.LensExtension;
 }
@@ -111,6 +147,21 @@ export const ArgoApplicationDetails = observer((props: ArgoApplicationDetailsPro
     const history = normalizeArray(object.status?.history);
     const healthSummary = summarizeApplicationHealth(object.status);
     const operationTimeline = buildOperationTimeline(object.status?.operationState);
+    const applicationStore = getArgoApplicationStore();
+    const applicationName = object.getName?.() ?? object.metadata?.name ?? "application";
+
+    const handleRollback = async (entry: ApplicationHistoryEntry) => {
+      const revision = entry.revision ?? "unknown";
+      await runGuardedArgoMutation({
+        risk: "destructive",
+        actionLabel: "Rollback",
+        resourceName: applicationName,
+        run: () => rollbackApplication(applicationStore, object, entry),
+        successMessage: `Rollback to revision ${revision} requested for ${applicationName}`,
+        failureFallback: "Failed to rollback application.",
+        confirm: getRollbackApplicationConfirmCopy(applicationName, entry),
+      });
+    };
 
     return (
       <>
@@ -424,9 +475,11 @@ export const ArgoApplicationDetails = observer((props: ArgoApplicationDetailsPro
                   <TableCell sortBy={historySortByNames.deployedAt}>Deployed At</TableCell>
                   <TableCell>Initiated By</TableCell>
                   <TableCell>Source</TableCell>
+                  <TableCell>Actions</TableCell>
                 </TableHead>
                 {history.map((entry, index) => {
-                  const safeEntry = (entry ?? {}) as Record<string, any>;
+                  const safeEntry = (entry ?? {}) as ApplicationHistoryEntry;
+                  const rollbackDisabledReason = getRollbackDisabledReason(object, safeEntry);
                   return (
                     <TableRow key={`history-${safeEntry.id ?? index}`} sortItem={safeEntry}>
                       <TableCell>{safeEntry.id ?? "N/A"}</TableCell>
@@ -437,6 +490,17 @@ export const ArgoApplicationDetails = observer((props: ArgoApplicationDetailsPro
                           (safeEntry.initiatedBy?.automated ? "Automated" : "Unknown")}
                       </TableCell>
                       <TableCell>{safeEntry.source?.repoURL ?? safeEntry.source?.chart ?? "N/A"}</TableCell>
+                      <TableCell>
+                        {rollbackDisabledReason ? (
+                          <WithTooltip tooltip={rollbackDisabledReason}>
+                            <Button disabled onClick={() => undefined}>
+                              Rollback
+                            </Button>
+                          </WithTooltip>
+                        ) : (
+                          <Button onClick={() => handleRollback(safeEntry)}>Rollback</Button>
+                        )}
+                      </TableCell>
                     </TableRow>
                   );
                 })}

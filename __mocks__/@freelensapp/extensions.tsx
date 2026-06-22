@@ -96,10 +96,21 @@ export const Renderer = {
         {...props}
       />
     ),
-    Button: ({ onClick, children }: AnyRecord) => (
-      <button type="button" data-testid="Button" onClick={onClick}>
+    Button: ({ onClick, children, disabled }: AnyRecord) => (
+      <button type="button" data-testid="Button" onClick={onClick} disabled={disabled}>
         {children}
       </button>
+    ),
+    Checkbox: ({ label, value, onChange }: AnyRecord) => (
+      <label>
+        <input
+          type="checkbox"
+          aria-label={label}
+          checked={!!value}
+          onChange={(event) => onChange?.(event.target.checked)}
+        />
+        {label}
+      </label>
     ),
     Notifications: {
       ok: jest.fn(),

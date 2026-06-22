@@ -1,13 +1,60 @@
+import { Renderer } from "@freelensapp/extensions";
 import { fireEvent, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { buildApplicationRollbackMergePatch } from "../../endpoints/argo-application-endpoints";
 import { ArgoApplicationDetails } from "../argo-application-details";
 
+const patchMock = jest.fn();
+
+jest.mock("../../k8s/argocd", () => {
+  const actual = jest.requireActual("../../k8s/argocd");
+  return {
+    ...actual,
+    getArgoApplicationStore: () => ({
+      patch: patchMock,
+    }),
+  };
+});
+
 const extension = { name: "argocd-test-extension" } as any;
+
+const historySource = { repoURL: "https://github.com/org/repo.git" };
 
 function renderDetails(object: any) {
   render(<ArgoApplicationDetails object={object} extension={extension} />);
 }
 
+function createRollbackApp(overrides: Record<string, unknown> = {}) {
+  return {
+    getName: () => "demo-app",
+    metadata: { name: "demo-app" },
+    spec: {
+      source: { repoURL: "https://github.com/org/repo.git" },
+      destination: { namespace: "apps" },
+    },
+    status: {
+      history: [
+        {
+          id: 10,
+          revision: "abc123",
+          deployedAt: "2025-01-01T08:00:00.000Z",
+          initiatedBy: { username: "admin" },
+          source: historySource,
+        },
+      ],
+      resources: [],
+    },
+    ...overrides,
+  };
+}
+
 describe("ArgoApplicationDetails", () => {
+  beforeEach(() => {
+    patchMock.mockReset();
+    (Renderer.Component.ConfirmDialog.confirm as jest.Mock).mockReset();
+    (Renderer.Component.Notifications.ok as jest.Mock).mockReset();
+    (Renderer.Component.Notifications.error as jest.Mock).mockReset();
+  });
   it("renders single-source configuration (Helm) and destination defaults", () => {
     renderDetails({
       spec: {
@@ -334,5 +381,153 @@ describe("ArgoApplicationDetails", () => {
     expect(screen.getByText(/Unnamed parameter/)).toBeInTheDocument();
     expect(screen.getAllByText("Unknown").length).toBeGreaterThan(0);
     expect(screen.getByText("app-chart")).toBeInTheDocument();
+  });
+
+  describe("sync history rollback", () => {
+    it("shows rollback button on every history row", () => {
+      renderDetails(
+        createRollbackApp({
+          status: {
+            history: [
+              {
+                id: 10,
+                revision: "abc123",
+                source: historySource,
+              },
+              {
+                id: 11,
+                revision: "def456",
+                source: historySource,
+              },
+            ],
+            resources: [],
+          },
+        }),
+      );
+
+      expect(screen.getAllByRole("button", { name: "Rollback" })).toHaveLength(2);
+    });
+
+    it("disables rollback when auto-sync is enabled", async () => {
+      const user = userEvent.setup();
+      renderDetails(
+        createRollbackApp({
+          spec: {
+            source: { repoURL: "https://github.com/org/repo.git" },
+            destination: { namespace: "apps" },
+            syncPolicy: {
+              automated: {
+                prune: true,
+              },
+            },
+          },
+        }),
+      );
+
+      const rollbackButton = screen.getByRole("button", { name: "Rollback" });
+      expect(rollbackButton).toBeDisabled();
+      expect(screen.getByTestId("WithTooltip")).toHaveAttribute(
+        "data-tooltip",
+        "Auto-sync must be disabled before rollback",
+      );
+
+      await user.click(rollbackButton);
+      expect(patchMock).not.toHaveBeenCalled();
+    });
+
+    it("disables rollback for legacy history entries without source metadata", async () => {
+      const user = userEvent.setup();
+      renderDetails(
+        createRollbackApp({
+          status: {
+            history: [{ id: 1, revision: "legacy-rev" }],
+            resources: [],
+          },
+        }),
+      );
+
+      const rollbackButton = screen.getByRole("button", { name: "Rollback" });
+      expect(rollbackButton).toBeDisabled();
+      expect(screen.getByTestId("WithTooltip")).toHaveAttribute(
+        "data-tooltip",
+        "Source metadata unavailable for this history entry",
+      );
+
+      await user.click(rollbackButton);
+      expect(patchMock).not.toHaveBeenCalled();
+    });
+
+    it("disables rollback when an operation is in progress", async () => {
+      const user = userEvent.setup();
+      renderDetails(
+        createRollbackApp({
+          status: {
+            operationState: {
+              phase: "Running",
+            },
+            history: [
+              {
+                id: 10,
+                revision: "abc123",
+                source: historySource,
+              },
+            ],
+            resources: [],
+          },
+        }),
+      );
+
+      const rollbackButton = screen.getByRole("button", { name: "Rollback" });
+      expect(rollbackButton).toBeDisabled();
+      expect(screen.getByTestId("WithTooltip")).toHaveAttribute("data-tooltip", "An operation is already in progress");
+
+      await user.click(rollbackButton);
+      expect(patchMock).not.toHaveBeenCalled();
+    });
+
+    it("confirms and patches rollback when clicked", async () => {
+      patchMock.mockResolvedValueOnce(undefined);
+      (Renderer.Component.ConfirmDialog.confirm as jest.Mock).mockResolvedValueOnce(true);
+      const user = userEvent.setup();
+      const app = createRollbackApp();
+      const historyEntry = app.status.history[0]!;
+
+      renderDetails(app);
+
+      await user.click(screen.getByRole("button", { name: "Rollback" }));
+
+      expect(Renderer.Component.ConfirmDialog.confirm).toHaveBeenCalledWith({
+        labelOk: "Rollback Application",
+        message: expect.stringContaining("history ID 10"),
+      });
+      expect(patchMock).toHaveBeenCalledWith(app, buildApplicationRollbackMergePatch(historyEntry, undefined), "merge");
+      expect(Renderer.Component.Notifications.ok).toHaveBeenCalledWith(
+        "Rollback to revision abc123 requested for demo-app",
+      );
+    });
+
+    it("does not patch when rollback confirmation is cancelled", async () => {
+      (Renderer.Component.ConfirmDialog.confirm as jest.Mock).mockResolvedValueOnce(false);
+      const user = userEvent.setup();
+
+      renderDetails(createRollbackApp());
+
+      await user.click(screen.getByRole("button", { name: "Rollback" }));
+
+      expect(patchMock).not.toHaveBeenCalled();
+      expect(Renderer.Component.Notifications.ok).not.toHaveBeenCalled();
+    });
+
+    it("shows error notification when rollback patch fails", async () => {
+      patchMock.mockRejectedValueOnce(new Error("rollback denied"));
+      (Renderer.Component.ConfirmDialog.confirm as jest.Mock).mockResolvedValueOnce(true);
+      const user = userEvent.setup();
+
+      renderDetails(createRollbackApp());
+
+      await user.click(screen.getByRole("button", { name: "Rollback" }));
+
+      expect(Renderer.Component.Notifications.error).toHaveBeenCalledWith("rollback denied");
+    });
   });
 });

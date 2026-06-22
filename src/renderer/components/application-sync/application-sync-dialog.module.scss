@@ -1,0 +1,67 @@
+.dialogContent {
+  background: var(--contentBackground, #1e1e1e);
+  color: var(--textColor, #ffffff);
+  border: 1px solid var(--borderColor, rgba(255, 255, 255, 0.1));
+  border-radius: 8px;
+  padding: 16px;
+  min-width: 480px;
+  max-width: 640px;
+  max-height: 80vh;
+  overflow: auto;
+}
+
+.dialogHeader {
+  margin: 0 0 8px;
+}
+
+.dialogSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.dialogSectionTitle {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.dialogWarning {
+  background: var(--warningBackground, rgba(255, 193, 7, 0.1));
+  border: 1px solid var(--warningColor, #ffc107);
+  color: var(--textColor, #ffffff);
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.dialogHelper {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.dialogActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.strategyGroup {
+  display: flex;
+  gap: 16px;
+}
+
+.strategyOption {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.syncOptionsGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
