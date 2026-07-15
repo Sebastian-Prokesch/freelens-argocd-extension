@@ -1,6 +1,8 @@
 import {
   buildOperationTimeline,
+  filterOutOfSyncResources,
   getDriftHotspotRank,
+  groupDiffResourcesByNamespaceAndKind,
   isOutOfSyncStatus,
   isUnhealthyHealthStatus,
   rankDriftHotspots,
@@ -167,6 +169,70 @@ describe("application diagnostics", () => {
     it("matches OutOfSync only", () => {
       expect(isOutOfSyncStatus("OutOfSync")).toBe(true);
       expect(isOutOfSyncStatus("Synced")).toBe(false);
+    });
+  });
+
+  describe("filterOutOfSyncResources", () => {
+    const resources = [
+      { name: "synced", kind: "Deployment", status: "Synced", health: { status: "Healthy" } },
+      { name: "out", kind: "Deployment", status: "OutOfSync", health: { status: "Healthy" } },
+      { name: "unknown", kind: "Service", status: "Unknown", health: { status: "Healthy" } },
+      { name: "synced-unhealthy", kind: "Service", status: "Synced", health: { status: "Degraded" } },
+    ];
+
+    it("returns only OutOfSync resources", () => {
+      expect(filterOutOfSyncResources(resources).map((item) => item.name)).toEqual(["out"]);
+    });
+
+    it("handles missing resources gracefully", () => {
+      expect(filterOutOfSyncResources(undefined)).toEqual([]);
+      expect(filterOutOfSyncResources([null, undefined])).toEqual([]);
+    });
+  });
+
+  describe("groupDiffResourcesByNamespaceAndKind", () => {
+    const resources = [
+      { name: "web-b", kind: "Deployment", namespace: "apps", status: "OutOfSync", health: { status: "Healthy" } },
+      { name: "web-a", kind: "Deployment", namespace: "apps", status: "OutOfSync", health: { status: "Degraded" } },
+      { name: "api", kind: "Service", namespace: "apps", status: "OutOfSync", health: { status: "Healthy" } },
+      { name: "crb", kind: "ClusterRoleBinding", status: "OutOfSync", health: { status: "Healthy" } },
+      { name: "synced", kind: "ConfigMap", namespace: "apps", status: "Synced", health: { status: "Healthy" } },
+    ];
+
+    it("groups OutOfSync resources by namespace then kind", () => {
+      const groups = groupDiffResourcesByNamespaceAndKind(resources);
+
+      expect(groups.map((group) => group.namespace)).toEqual(["(cluster)", "apps"]);
+      expect(groups[1]?.kinds.map((kind) => kind.kind)).toEqual(["Deployment", "Service"]);
+      expect(groups[1]?.kinds[0]?.resources.map((resource) => resource.name)).toEqual(["web-a", "web-b"]);
+      expect(groups[0]?.kinds[0]?.resources.map((resource) => resource.name)).toEqual(["crb"]);
+    });
+
+    it("uses defaultNamespace when resource namespace is missing", () => {
+      const groups = groupDiffResourcesByNamespaceAndKind(
+        [{ name: "crb", kind: "ClusterRoleBinding", status: "OutOfSync", health: { status: "Healthy" } }],
+        { defaultNamespace: "platform" },
+      );
+
+      expect(groups).toEqual([
+        {
+          namespace: "platform",
+          kinds: [
+            {
+              kind: "ClusterRoleBinding",
+              resources: [expect.objectContaining({ name: "crb" })],
+            },
+          ],
+        },
+      ]);
+    });
+
+    it("returns empty groups when no OutOfSync resources exist", () => {
+      expect(
+        groupDiffResourcesByNamespaceAndKind([
+          { name: "web", kind: "Deployment", status: "Synced", health: { status: "Healthy" } },
+        ]),
+      ).toEqual([]);
     });
   });
 });

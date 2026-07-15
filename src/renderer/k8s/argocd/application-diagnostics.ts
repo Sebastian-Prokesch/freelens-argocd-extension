@@ -188,6 +188,69 @@ export const summarizeApplicationHealth = (status: ApplicationStatus | undefined
   };
 };
 
+export interface ApplicationDiffKindGroup {
+  kind: string;
+  resources: ApplicationResourceDiagnostic[];
+}
+
+export interface ApplicationDiffNamespaceGroup {
+  namespace: string;
+  kinds: ApplicationDiffKindGroup[];
+}
+
+export interface GroupDiffResourcesOptions {
+  defaultNamespace?: string;
+}
+
+const CLUSTER_SCOPED_NAMESPACE = "(cluster)";
+
+const resolveResourceNamespace = (resource: ApplicationResourceDiagnostic, defaultNamespace?: string): string =>
+  resource.namespace ?? defaultNamespace ?? CLUSTER_SCOPED_NAMESPACE;
+
+export const filterOutOfSyncResources = (resources: unknown[] | undefined | null): ApplicationResourceDiagnostic[] =>
+  (resources ?? [])
+    .map(normalizeResource)
+    .filter((resource): resource is ApplicationResourceDiagnostic => resource !== undefined)
+    .filter((resource) => isOutOfSyncStatus(resource.syncStatus));
+
+export const groupDiffResourcesByNamespaceAndKind = (
+  resources: unknown[] | undefined | null,
+  options: GroupDiffResourcesOptions = {},
+): ApplicationDiffNamespaceGroup[] => {
+  const outOfSync = filterOutOfSyncResources(resources);
+  const namespaceMap = new Map<string, Map<string, ApplicationResourceDiagnostic[]>>();
+
+  for (const resource of outOfSync) {
+    const namespace = resolveResourceNamespace(resource, options.defaultNamespace);
+    let kindMap = namespaceMap.get(namespace);
+    if (!kindMap) {
+      kindMap = new Map();
+      namespaceMap.set(namespace, kindMap);
+    }
+    let kindResources = kindMap.get(resource.kind);
+    if (!kindResources) {
+      kindResources = [];
+      kindMap.set(resource.kind, kindResources);
+    }
+    kindResources.push(resource);
+  }
+
+  return [...namespaceMap.keys()]
+    .sort((left, right) => left.localeCompare(right))
+    .map((namespace) => {
+      const kindMap = namespaceMap.get(namespace)!;
+      return {
+        namespace,
+        kinds: [...kindMap.keys()]
+          .sort((left, right) => left.localeCompare(right))
+          .map((kind) => ({
+            kind,
+            resources: kindMap.get(kind)!.sort((left, right) => left.name.localeCompare(right.name)),
+          })),
+      };
+    });
+};
+
 export const buildOperationTimeline = (
   operationState: ApplicationOperationState | undefined,
 ): OperationTimeline | undefined => {

@@ -11,6 +11,7 @@ import { ArgoApplication, ArgoApplicationResourceSyncStatus, getArgoApplicationS
 import { buildOperationTimeline, summarizeApplicationHealth } from "../k8s/argocd/application-diagnostics";
 import { getRollbackApplicationConfirmCopy, runGuardedArgoMutation } from "../mutations";
 import { createEnumFromKeys } from "../utils";
+import { ApplicationDiffPanel } from "./application-diff-panel";
 import { ApplicationDriftHotspotsTable } from "./application-drift-hotspots-table";
 import styles from "./argo-application-details.module.scss";
 import stylesInline from "./argo-application-details.module.scss?inline";
@@ -301,6 +302,12 @@ export const ArgoApplicationDetails = observer((props: ArgoApplicationDetailsPro
               </div>
             </DrawerItem>
           ) : null}
+
+          <Gutter size="md" />
+
+          {/* Section 2c: Resource Diff */}
+          <DrawerTitle>Resource Diff</DrawerTitle>
+          <ApplicationDiffPanel resources={resources} defaultNamespace={object.spec.destination?.namespace} />
 
           <Gutter size="md" />
 

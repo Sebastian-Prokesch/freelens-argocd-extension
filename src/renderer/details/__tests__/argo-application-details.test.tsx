@@ -271,6 +271,44 @@ describe("ArgoApplicationDetails", () => {
     expect(screen.getByText("No drift detected")).toBeInTheDocument();
   });
 
+  it("renders resource diff section with OutOfSync resources grouped by namespace and kind", () => {
+    renderDetails({
+      spec: {
+        source: { repoURL: "https://github.com/org/repo.git" },
+        destination: { namespace: "apps" },
+      },
+      status: {
+        sync: { status: "OutOfSync" },
+        resources: [
+          { name: "web", kind: "Deployment", namespace: "apps", status: "OutOfSync", health: { status: "Degraded" } },
+          { name: "db", kind: "Service", namespace: "apps", status: "Synced", health: { status: "Healthy" } },
+        ],
+      },
+    });
+
+    expect(screen.getByText("Resource Diff")).toBeInTheDocument();
+    expect(screen.getAllByText("apps").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("web").length).toBeGreaterThan(0);
+  });
+
+  it("renders resource diff empty state when all resources are in sync", () => {
+    renderDetails({
+      spec: {
+        source: { repoURL: "https://github.com/org/repo.git" },
+        destination: { namespace: "apps" },
+      },
+      status: {
+        sync: { status: "Synced" },
+        resources: [
+          { name: "web", kind: "Deployment", namespace: "apps", status: "Synced", health: { status: "Healthy" } },
+        ],
+      },
+    });
+
+    expect(screen.getByText("Resource Diff")).toBeInTheDocument();
+    expect(screen.getByText("All resources in sync")).toBeInTheDocument();
+  });
+
   it("expands drift hotspots when more than five resources need attention", () => {
     renderDetails({
       spec: {

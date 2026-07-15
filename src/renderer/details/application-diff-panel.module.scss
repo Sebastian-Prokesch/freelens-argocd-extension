@@ -1,0 +1,28 @@
+.diffPanel {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--unit) * 1.5);
+}
+
+.namespaceGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--unit);
+}
+
+.namespaceHeading {
+  font-weight: 600;
+  font-size: 0.95em;
+}
+
+.kindGroup {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--unit) * 0.5);
+  padding-left: var(--unit);
+}
+
+.kindHeading {
+  font-size: 0.9em;
+  color: var(--textColorSecondary);
+}
