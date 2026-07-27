@@ -1,0 +1,41 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: demo-list-apps
+  namespace: argocd
+  labels:
+    freelens.dev/demo: "true"
+spec:
+  goTemplate: true
+  goTemplateOptions:
+    - missingkey=error
+  generators:
+    - list:
+        elements:
+          - name: list-app-a
+            path: guestbook
+            namespace: demo-apps-a
+          - name: list-app-b
+            path: guestbook
+            namespace: demo-apps-b
+  template:
+    metadata:
+      name: "{{.name}}"
+      labels:
+        freelens.dev/demo: "true"
+        freelens.dev/scenario: applicationset
+    spec:
+      project: freelens-demo
+      source:
+        repoURL: https://github.com/argoproj/argocd-example-apps.git
+        targetRevision: HEAD
+        path: "{{.path}}"
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "{{.namespace}}"
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true

@@ -1,0 +1,75 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: canary-demo
+  namespace: demo-rollouts
+  labels:
+    freelens.dev/demo: "true"
+spec:
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app: canary-demo
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: canary-demo-canary
+  namespace: demo-rollouts
+  labels:
+    freelens.dev/demo: "true"
+spec:
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app: canary-demo
+---
+# Canary with indefinite pause — exercise promote / promote-full / skip menus
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: canary-demo
+  namespace: demo-rollouts
+  labels:
+    freelens.dev/demo: "true"
+    freelens.dev/scenario: canary-pause
+spec:
+  replicas: 4
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app: canary-demo
+  template:
+    metadata:
+      labels:
+        app: canary-demo
+    spec:
+      containers:
+        - name: rollouts-demo
+          image: argoproj/rollouts-demo:blue
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          resources:
+            requests:
+              memory: 32Mi
+              cpu: 5m
+  strategy:
+    canary:
+      canaryService: canary-demo-canary
+      stableService: canary-demo
+      steps:
+        - setWeight: 25
+        - pause: {}
+        - setWeight: 50
+        - pause: {}
+        - setWeight: 75
+        - pause: { duration: 10 }

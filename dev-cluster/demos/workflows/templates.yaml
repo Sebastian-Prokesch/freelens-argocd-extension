@@ -1,0 +1,87 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: hello-template
+  namespace: demo-workflows
+  labels:
+    freelens.dev/demo: "true"
+spec:
+  entrypoint: main
+  serviceAccountName: argo-workflow
+  templates:
+    - name: main
+      container:
+        image: busybox:1.36
+        imagePullPolicy: IfNotPresent
+        command: [sh, -c]
+        args: ["echo from workflow template"]
+---
+# Instance submitted from the WorkflowTemplate (templateRef)
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  name: from-template
+  namespace: demo-workflows
+  labels:
+    freelens.dev/demo: "true"
+    freelens.dev/scenario: from-template
+spec:
+  workflowTemplateRef:
+    name: hello-template
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ClusterWorkflowTemplate
+metadata:
+  name: hello-cluster-template
+  labels:
+    freelens.dev/demo: "true"
+spec:
+  entrypoint: main
+  serviceAccountName: argo-workflow
+  templates:
+    - name: main
+      container:
+        image: busybox:1.36
+        imagePullPolicy: IfNotPresent
+        command: [sh, -c]
+        args: ["echo from cluster workflow template"]
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  name: from-cluster-template
+  namespace: demo-workflows
+  labels:
+    freelens.dev/demo: "true"
+    freelens.dev/scenario: from-cluster-template
+spec:
+  serviceAccountName: argo-workflow
+  workflowTemplateRef:
+    name: hello-cluster-template
+    clusterScope: true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  name: hello-cron
+  namespace: demo-workflows
+  labels:
+    freelens.dev/demo: "true"
+spec:
+  # Argo Workflows v4+ uses schedules (plural); `schedule` was removed
+  schedules:
+    - "*/5 * * * *"
+  concurrencyPolicy: Replace
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 1
+  suspend: false
+  workflowSpec:
+    entrypoint: main
+    serviceAccountName: argo-workflow
+    templates:
+      - name: main
+        container:
+          image: busybox:1.36
+          imagePullPolicy: IfNotPresent
+          command: [sh, -c]
+          args: ["echo hello cron"]

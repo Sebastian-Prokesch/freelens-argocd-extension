@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: guestbook
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kustomize-guestbook
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: broken-guestbook
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: demo-rollouts
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: demo-workflows

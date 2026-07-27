@@ -1,0 +1,79 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: guestbook
+  namespace: argocd
+  labels:
+    freelens.dev/demo: "true"
+    freelens.dev/scenario: healthy
+spec:
+  project: freelens-demo
+  source:
+    repoURL: https://github.com/argoproj/argocd-example-apps.git
+    targetRevision: HEAD
+    path: guestbook
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: guestbook
+  # Auto-sync once; selfHeal off so intentional drift stays OutOfSync
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: false
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kustomize-guestbook
+  namespace: argocd
+  labels:
+    freelens.dev/demo: "true"
+    freelens.dev/scenario: healthy
+spec:
+  project: freelens-demo
+  source:
+    repoURL: https://github.com/argoproj/argocd-example-apps.git
+    targetRevision: HEAD
+    path: kustomize-guestbook
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kustomize-guestbook
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+# Intentionally unhealthy: Helm image that cannot be pulled → Degraded/Progressing
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: broken-guestbook
+  namespace: argocd
+  labels:
+    freelens.dev/demo: "true"
+    freelens.dev/scenario: degraded
+spec:
+  project: freelens-demo
+  source:
+    repoURL: https://github.com/argoproj/argocd-example-apps.git
+    targetRevision: HEAD
+    path: helm-guestbook
+    helm:
+      parameters:
+        - name: image.repository
+          value: invalid.example/does-not-exist
+        - name: image.tag
+          value: broken
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: broken-guestbook
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: false
+    syncOptions:
+      - CreateNamespace=true

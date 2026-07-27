@@ -1,0 +1,55 @@
+# Lightweight Experiment for Experiments page / details coverage
+apiVersion: argoproj.io/v1alpha1
+kind: Experiment
+metadata:
+  name: demo-experiment
+  namespace: demo-rollouts
+  labels:
+    freelens.dev/demo: "true"
+spec:
+  duration: 2m
+  templates:
+    - name: purple
+      replicas: 1
+      selector:
+        matchLabels:
+          app: demo-experiment
+          color: purple
+      template:
+        metadata:
+          labels:
+            app: demo-experiment
+            color: purple
+        spec:
+          containers:
+            - name: rollouts-demo
+              image: argoproj/rollouts-demo:purple
+              imagePullPolicy: IfNotPresent
+              ports:
+                - containerPort: 8080
+              resources:
+                requests:
+                  memory: 32Mi
+                  cpu: 5m
+    - name: orange
+      replicas: 1
+      selector:
+        matchLabels:
+          app: demo-experiment
+          color: orange
+      template:
+        metadata:
+          labels:
+            app: demo-experiment
+            color: orange
+        spec:
+          containers:
+            - name: rollouts-demo
+              image: argoproj/rollouts-demo:orange
+              imagePullPolicy: IfNotPresent
+              ports:
+                - containerPort: 8080
+              resources:
+                requests:
+                  memory: 32Mi
+                  cpu: 5m
