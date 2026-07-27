@@ -4,7 +4,7 @@ Thanks for contributing to the Freelens ArgoCD Extension.
 
 ## Development Prerequisites
 
-- Node.js `>=22.16.0`
+- Node.js `>=24.0.0`
 - pnpm `11.x`
 - Freelens installation for manual validation
 
