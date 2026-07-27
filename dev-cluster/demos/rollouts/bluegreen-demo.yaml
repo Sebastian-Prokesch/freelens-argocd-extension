@@ -1,0 +1,70 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: bluegreen-demo-active
+  namespace: demo-rollouts
+  labels:
+    freelens.dev/demo: "true"
+spec:
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app: bluegreen-demo
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bluegreen-demo-preview
+  namespace: demo-rollouts
+  labels:
+    freelens.dev/demo: "true"
+spec:
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app: bluegreen-demo
+---
+# BlueGreen with manual promotion — exercise promote / abort
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: bluegreen-demo
+  namespace: demo-rollouts
+  labels:
+    freelens.dev/demo: "true"
+    freelens.dev/scenario: bluegreen
+spec:
+  replicas: 2
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app: bluegreen-demo
+  template:
+    metadata:
+      labels:
+        app: bluegreen-demo
+    spec:
+      containers:
+        - name: rollouts-demo
+          image: argoproj/rollouts-demo:blue
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          resources:
+            requests:
+              memory: 32Mi
+              cpu: 5m
+  strategy:
+    blueGreen:
+      activeService: bluegreen-demo-active
+      previewService: bluegreen-demo-preview
+      autoPromotionEnabled: false
+      scaleDownDelaySeconds: 10

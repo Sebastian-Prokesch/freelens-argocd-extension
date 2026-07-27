@@ -1,0 +1,37 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: freelens-demo
+  namespace: argocd
+spec:
+  description: Demo project for Freelens ArgoCD extension testing
+  sourceRepos:
+    - "*"
+  destinations:
+    - namespace: guestbook
+      server: https://kubernetes.default.svc
+    - namespace: kustomize-guestbook
+      server: https://kubernetes.default.svc
+    - namespace: broken-guestbook
+      server: https://kubernetes.default.svc
+    - namespace: demo-apps-a
+      server: https://kubernetes.default.svc
+    - namespace: demo-apps-b
+      server: https://kubernetes.default.svc
+    - namespace: demo-rollouts
+      server: https://kubernetes.default.svc
+    - namespace: "*"
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"
+  syncWindows:
+    - kind: allow
+      schedule: "* * * * *"
+      duration: 24h
+      applications:
+        - "*"
+      manualSync: true

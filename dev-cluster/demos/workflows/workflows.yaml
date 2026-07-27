@@ -1,0 +1,57 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  name: hello-world
+  namespace: demo-workflows
+  labels:
+    freelens.dev/demo: "true"
+    freelens.dev/scenario: succeeded
+spec:
+  entrypoint: main
+  serviceAccountName: argo-workflow
+  templates:
+    - name: main
+      container:
+        image: busybox:1.36
+        imagePullPolicy: IfNotPresent
+        command: [sh, -c]
+        args: ["echo hello freelens"]
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  name: intentional-fail
+  namespace: demo-workflows
+  labels:
+    freelens.dev/demo: "true"
+    freelens.dev/scenario: failed
+spec:
+  entrypoint: intentional-fail
+  serviceAccountName: argo-workflow
+  templates:
+    - name: intentional-fail
+      container:
+        image: busybox:1.36
+        imagePullPolicy: IfNotPresent
+        command: [sh, -c]
+        args: ["echo intentional failure; exit 1"]
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  name: long-running
+  namespace: demo-workflows
+  labels:
+    freelens.dev/demo: "true"
+    freelens.dev/scenario: running
+spec:
+  entrypoint: sleep
+  serviceAccountName: argo-workflow
+  activeDeadlineSeconds: 600
+  templates:
+    - name: sleep
+      container:
+        image: busybox:1.36
+        imagePullPolicy: IfNotPresent
+        command: [sh, -c]
+        args: ["echo sleeping; sleep 300; echo done"]

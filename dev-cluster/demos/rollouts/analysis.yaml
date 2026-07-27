@@ -1,0 +1,126 @@
+# Always-pass job analysis for AnalysisTemplate / AnalysisRun coverage
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: always-pass
+  namespace: demo-rollouts
+  labels:
+    freelens.dev/demo: "true"
+spec:
+  metrics:
+    - name: always-pass
+      count: 1
+      interval: 5s
+      successCondition: "true"
+      provider:
+        job:
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: sleep
+                    image: busybox:1.36
+                    imagePullPolicy: IfNotPresent
+                    command: [sh, -c, "echo pass && exit 0"]
+                restartPolicy: Never
+            backoffLimit: 0
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ClusterAnalysisTemplate
+metadata:
+  name: always-pass-cluster
+  labels:
+    freelens.dev/demo: "true"
+spec:
+  metrics:
+    - name: always-pass
+      count: 1
+      interval: 5s
+      successCondition: "true"
+      provider:
+        job:
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: sleep
+                    image: busybox:1.36
+                    imagePullPolicy: IfNotPresent
+                    command: [sh, -c, "echo pass && exit 0"]
+                restartPolicy: Never
+            backoffLimit: 0
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: analysis-canary
+  namespace: demo-rollouts
+  labels:
+    freelens.dev/demo: "true"
+spec:
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app: analysis-canary
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: analysis-canary-canary
+  namespace: demo-rollouts
+  labels:
+    freelens.dev/demo: "true"
+spec:
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app: analysis-canary
+---
+# Canary that runs analysis at a pause step — produces AnalysisRuns
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: analysis-canary
+  namespace: demo-rollouts
+  labels:
+    freelens.dev/demo: "true"
+    freelens.dev/scenario: analysis
+spec:
+  replicas: 2
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app: analysis-canary
+  template:
+    metadata:
+      labels:
+        app: analysis-canary
+    spec:
+      containers:
+        - name: rollouts-demo
+          image: argoproj/rollouts-demo:blue
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          resources:
+            requests:
+              memory: 32Mi
+              cpu: 5m
+  strategy:
+    canary:
+      canaryService: analysis-canary-canary
+      stableService: analysis-canary
+      steps:
+        - setWeight: 50
+        - analysis:
+            templates:
+              - templateName: always-pass
+        - pause: {}
