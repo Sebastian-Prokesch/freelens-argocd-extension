@@ -1,7 +1,7 @@
 import { getCurrentCanaryStep, isInconclusiveCanaryAnalysis } from "../k8s/rollouts/canary-step";
+import { isKubeNotFoundError, patchStatusSubresource } from "./kube-patch-transport";
 
 import type { ArgoRollout, ArgoRolloutStore } from "../k8s/rollouts";
-import { isKubeNotFoundError, patchStatusSubresource } from "./kube-patch-transport";
 
 export function buildRolloutAbortMergePatch(): Record<string, unknown> {
   return {

@@ -95,9 +95,7 @@ describe("patchStatusSubresource", () => {
       },
     };
 
-    await expect(patchStatusSubresource(store, mockObject({ getName: () => "" }), { status: {} })).resolves.toBe(
-      false,
-    );
+    await expect(patchStatusSubresource(store, mockObject({ getName: () => "" }), { status: {} })).resolves.toBe(false);
     expect(requestPatch).not.toHaveBeenCalled();
   });
 
@@ -125,9 +123,9 @@ describe("patchStatusSubresource", () => {
       },
     };
 
-    await expect(
-      patchStatusSubresource(store, mockObject({ getNs: () => undefined }), { status: {} }),
-    ).resolves.toBe(true);
+    await expect(patchStatusSubresource(store, mockObject({ getNs: () => undefined }), { status: {} })).resolves.toBe(
+      true,
+    );
 
     expect(formatUrlForNotListing).toHaveBeenCalledWith({
       namespace: "",
