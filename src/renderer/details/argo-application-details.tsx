@@ -1,5 +1,6 @@
 import { Renderer } from "@freelensapp/extensions";
 import { observer } from "mobx-react";
+import { useRef, useState } from "react";
 import { withErrorPage } from "../components/error-page";
 import { ConditionsList, ResourceEventsSection, StatusBadge } from "../components/shared";
 import {
@@ -8,7 +9,13 @@ import {
   rollbackApplication,
 } from "../endpoints/argo-application-endpoints";
 import { ArgoApplication, ArgoApplicationResourceSyncStatus, getArgoApplicationStore } from "../k8s/argocd";
-import { buildOperationTimeline, summarizeApplicationHealth } from "../k8s/argocd/application-diagnostics";
+import {
+  type ApplicationResourceDiagnostic,
+  buildApplicationResourceKey,
+  buildOperationTimeline,
+  isOutOfSyncStatus,
+  summarizeApplicationHealth,
+} from "../k8s/argocd/application-diagnostics";
 import { getRollbackApplicationConfirmCopy, runGuardedArgoMutation } from "../mutations";
 import { createEnumFromKeys } from "../utils";
 import { ApplicationDiffPanel } from "./application-diff-panel";
@@ -138,8 +145,11 @@ export interface ArgoApplicationDetailsProps extends Renderer.Component.KubeObje
   extension: Renderer.LensExtension;
 }
 
-export const ArgoApplicationDetails = observer((props: ArgoApplicationDetailsProps) =>
-  withErrorPage(props, () => {
+export const ArgoApplicationDetails = observer((props: ArgoApplicationDetailsProps) => {
+  const [highlightedResourceKey, setHighlightedResourceKey] = useState<string | undefined>();
+  const resourceDiffSectionRef = useRef<HTMLDivElement>(null);
+
+  return withErrorPage(props, () => {
     const { object } = props;
     const pluginEnv = normalizeArray(object.spec.source?.plugin?.env);
     const pluginParameters = normalizeArray(object.spec.source?.plugin?.parameters);
@@ -150,6 +160,25 @@ export const ArgoApplicationDetails = observer((props: ArgoApplicationDetailsPro
     const operationTimeline = buildOperationTimeline(object.status?.operationState);
     const applicationStore = getArgoApplicationStore();
     const applicationName = object.getName?.() ?? object.metadata?.name ?? "application";
+    const defaultNamespace = object.spec.destination?.namespace;
+
+    const handleViewDiff = (resource: ApplicationResourceDiagnostic) => {
+      const resourceKey = buildApplicationResourceKey(resource, defaultNamespace);
+      setHighlightedResourceKey(resourceKey);
+      requestAnimationFrame(() => {
+        resourceDiffSectionRef.current?.scrollIntoView?.({ behavior: "smooth", block: "start" });
+      });
+    };
+
+    const toDiffResource = (
+      resource: ArgoApplicationResourceSyncStatus & { namespace?: string; health?: { status?: string } },
+    ): ApplicationResourceDiagnostic => ({
+      name: resource.name ?? "Unknown",
+      kind: resource.kind ?? "Unknown",
+      namespace: resource.namespace,
+      syncStatus: resource.status,
+      healthStatus: resource.health?.status,
+    });
 
     const handleRollback = async (entry: ApplicationHistoryEntry) => {
       const revision = entry.revision ?? "unknown";
@@ -283,7 +312,7 @@ export const ArgoApplicationDetails = observer((props: ArgoApplicationDetailsPro
           <DrawerItem name="Out of Sync">{String(healthSummary.outOfSyncCount)}</DrawerItem>
           <DrawerItem name="Unhealthy">{String(healthSummary.unhealthyCount)}</DrawerItem>
           <DrawerItem name="Drift Hotspots">
-            <ApplicationDriftHotspotsTable resources={resources} />
+            <ApplicationDriftHotspotsTable resources={resources} onViewDiff={handleViewDiff} />
           </DrawerItem>
           {operationTimeline ? (
             <DrawerItem name="Operation Timeline">
@@ -306,8 +335,14 @@ export const ArgoApplicationDetails = observer((props: ArgoApplicationDetailsPro
           <Gutter size="md" />
 
           {/* Section 2c: Resource Diff */}
-          <DrawerTitle>Resource Diff</DrawerTitle>
-          <ApplicationDiffPanel resources={resources} defaultNamespace={object.spec.destination?.namespace} />
+          <div ref={resourceDiffSectionRef}>
+            <DrawerTitle>Resource Diff</DrawerTitle>
+            <ApplicationDiffPanel
+              resources={resources}
+              defaultNamespace={defaultNamespace}
+              highlightedResourceKey={highlightedResourceKey}
+            />
+          </div>
 
           <Gutter size="md" />
 
@@ -441,12 +476,17 @@ export const ArgoApplicationDetails = observer((props: ArgoApplicationDetailsPro
               <TableCell sortBy={resourcesSortByNames.status}>Sync Status</TableCell>
               <TableCell sortBy={resourcesSortByNames.health}>Health</TableCell>
               <TableCell sortBy={resourcesSortByNames.kind}>Kind</TableCell>
+              <TableCell>Actions</TableCell>
             </TableHead>
             {resources.map((resource, index) => {
-              const safeResource = (resource ?? {}) as ArgoApplicationResourceSyncStatus;
+              const safeResource = (resource ?? {}) as ArgoApplicationResourceSyncStatus & {
+                namespace?: string;
+                health?: { status?: string };
+              };
               const resourceName = safeResource.name ?? "Unknown";
               const resourceKind = safeResource.kind ?? "Unknown";
-              const resourceHealthStatus = (safeResource as { health?: { status?: string } }).health?.status;
+              const resourceHealthStatus = safeResource.health?.status;
+              const diffResource = toDiffResource(safeResource);
               return (
                 <TableRow key={`${resourceName}-${resourceKind}-${index}`} sortItem={safeResource}>
                   <TableCell>{resourceName}</TableCell>
@@ -457,6 +497,11 @@ export const ArgoApplicationDetails = observer((props: ArgoApplicationDetailsPro
                     <StatusBadge status={resourceHealthStatus} />
                   </TableCell>
                   <TableCell>{resourceKind}</TableCell>
+                  <TableCell>
+                    {isOutOfSyncStatus(safeResource.status) ? (
+                      <Button onClick={() => handleViewDiff(diffResource)}>View diff</Button>
+                    ) : null}
+                  </TableCell>
                 </TableRow>
               );
             })}
@@ -528,5 +573,5 @@ export const ArgoApplicationDetails = observer((props: ArgoApplicationDetailsPro
         </div>
       </>
     );
-  }),
-);
+  });
+});

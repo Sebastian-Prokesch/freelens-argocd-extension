@@ -202,10 +202,28 @@ export interface GroupDiffResourcesOptions {
   defaultNamespace?: string;
 }
 
-const CLUSTER_SCOPED_NAMESPACE = "(cluster)";
+export const CLUSTER_SCOPED_NAMESPACE = "(cluster)";
+
+const RESOURCE_KEY_SEPARATOR = "\u001f";
+
+export const resolveApplicationResourceNamespace = (
+  resource: Pick<ApplicationResourceDiagnostic, "namespace">,
+  defaultNamespace?: string,
+): string => resource.namespace ?? defaultNamespace ?? CLUSTER_SCOPED_NAMESPACE;
+
+export const buildApplicationResourceKey = (
+  resource: Pick<ApplicationResourceDiagnostic, "name" | "kind" | "namespace">,
+  defaultNamespace?: string,
+): string => {
+  const namespace = resolveApplicationResourceNamespace(resource, defaultNamespace);
+  return [namespace, resource.kind, resource.name].join(RESOURCE_KEY_SEPARATOR);
+};
+
+export const getApplicationResourceRowElementId = (resourceKey: string): string =>
+  `resource-diff-row-${resourceKey.replace(/[^\w-]/g, "-")}`;
 
 const resolveResourceNamespace = (resource: ApplicationResourceDiagnostic, defaultNamespace?: string): string =>
-  resource.namespace ?? defaultNamespace ?? CLUSTER_SCOPED_NAMESPACE;
+  resolveApplicationResourceNamespace(resource, defaultNamespace);
 
 export const filterOutOfSyncResources = (resources: unknown[] | undefined | null): ApplicationResourceDiagnostic[] =>
   (resources ?? [])

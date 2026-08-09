@@ -55,6 +55,16 @@ export interface ParsedRepoConnection {
   host: string;
   authMethod: "none" | "https" | "ssh" | "githubApp";
   hasTlsClientConfig: boolean;
+  enableOci: boolean;
+  /** Argo CD 3.5+ (Helm 4): repo secret key `insecureOCIForceHttp` for plain HTTP OCI registries. */
+  insecureOciForceHttp: boolean;
+  /** Repo secret key `insecure` (CLI: --insecure-skip-server-verification). */
+  insecureSkipServerVerification: boolean;
+  /**
+   * Helm 4 known limitation: `insecure` takes precedence over `insecureOCIForceHttp`,
+   * silently dropping plain-HTTP mode and breaking plain HTTP OCI registry operations.
+   */
+  hasConflictingHelm4TlsFlags: boolean;
 }
 
 export interface ParsedClusterConnection {
@@ -157,6 +167,10 @@ export const redactUrlUserinfoForDisplay = (url: string | undefined): string | u
 export const getSecretField = (secret: LabeledObject, key: string): string | undefined =>
   secret.stringData?.[key] ?? decodeBase64(secret.data?.[key]);
 
+/** Argo CD stores boolean secret fields as the strings "true"/"false". */
+export const getSecretBooleanField = (secret: LabeledObject, key: string): boolean =>
+  getSecretField(secret, key) === "true";
+
 const safeParseJson = (value?: string): Record<string, unknown> | undefined => {
   if (!value) {
     return undefined;
@@ -214,6 +228,9 @@ export const parseRepoConnection = (secret: LabeledObject): ParsedRepoConnection
       typeof tlsClientConfig === "object" &&
       ("caData" in tlsClientConfig || "certData" in tlsClientConfig || "keyData" in tlsClientConfig),
   );
+  const enableOci = getSecretBooleanField(secret, "enableOCI");
+  const insecureOciForceHttp = getSecretBooleanField(secret, "insecureOCIForceHttp");
+  const insecureSkipServerVerification = getSecretBooleanField(secret, "insecure");
 
   return {
     repositoryType: repoType,
@@ -221,6 +238,10 @@ export const parseRepoConnection = (secret: LabeledObject): ParsedRepoConnection
     host: parsedUrl?.host ?? "N/A",
     authMethod: getRepoAuthMethod(secret),
     hasTlsClientConfig,
+    enableOci,
+    insecureOciForceHttp,
+    insecureSkipServerVerification,
+    hasConflictingHelm4TlsFlags: insecureOciForceHttp && insecureSkipServerVerification,
   };
 };
 

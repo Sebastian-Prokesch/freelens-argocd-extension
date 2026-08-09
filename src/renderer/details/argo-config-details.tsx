@@ -82,6 +82,21 @@ const renderSecretDetails = (secret: LabeledObject) => {
         <DrawerItem name="TLS Client Config">
           <BadgeBoolean value={connection.hasTlsClientConfig} />
         </DrawerItem>
+        <DrawerItem name="OCI Enabled">
+          <BadgeBoolean value={connection.enableOci} />
+        </DrawerItem>
+        <DrawerItem name="OCI Force HTTP">
+          <BadgeBoolean value={connection.insecureOciForceHttp} />
+        </DrawerItem>
+        <DrawerItem name="Skip Server Verification">
+          <BadgeBoolean value={connection.insecureSkipServerVerification} />
+        </DrawerItem>
+        {connection.hasConflictingHelm4TlsFlags && (
+          <DrawerItem name="Helm 4 Flag Conflict">
+            Both <code>insecure</code> and <code>insecureOCIForceHttp</code> are set. With Argo CD 3.5 (Helm 4),
+            skip-TLS-verification takes precedence and plain HTTP OCI registry operations will fail.
+          </DrawerItem>
+        )}
         <DrawerItem name="Project">{getSecretField(secret, "project") ?? "N/A"}</DrawerItem>
       </>
     );

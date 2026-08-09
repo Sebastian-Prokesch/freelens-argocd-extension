@@ -1,11 +1,14 @@
 import {
+  buildApplicationResourceKey,
   buildOperationTimeline,
   filterOutOfSyncResources,
+  getApplicationResourceRowElementId,
   getDriftHotspotRank,
   groupDiffResourcesByNamespaceAndKind,
   isOutOfSyncStatus,
   isUnhealthyHealthStatus,
   rankDriftHotspots,
+  resolveApplicationResourceNamespace,
   sortDriftHotspots,
   summarizeApplicationHealth,
 } from "../application-diagnostics";
@@ -233,6 +236,20 @@ describe("application diagnostics", () => {
           { name: "web", kind: "Deployment", status: "Synced", health: { status: "Healthy" } },
         ]),
       ).toEqual([]);
+    });
+  });
+
+  describe("buildApplicationResourceKey", () => {
+    it("builds a stable key from namespace, kind, and name", () => {
+      const key = buildApplicationResourceKey({ name: "web", kind: "Deployment", namespace: "apps" }, "apps");
+
+      expect(key).toBe(buildApplicationResourceKey({ name: "web", kind: "Deployment", namespace: "apps" }, "apps"));
+      expect(getApplicationResourceRowElementId(key)).toMatch(/^resource-diff-row-/);
+    });
+
+    it("falls back to default namespace and cluster scope", () => {
+      expect(resolveApplicationResourceNamespace({ namespace: undefined }, "platform")).toBe("platform");
+      expect(resolveApplicationResourceNamespace({ namespace: undefined })).toBe("(cluster)");
     });
   });
 });

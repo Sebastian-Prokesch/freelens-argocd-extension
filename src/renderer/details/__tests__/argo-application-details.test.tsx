@@ -2,6 +2,10 @@ import { Renderer } from "@freelensapp/extensions";
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { buildApplicationRollbackMergePatch } from "../../endpoints/argo-application-endpoints";
+import {
+  buildApplicationResourceKey,
+  getApplicationResourceRowElementId,
+} from "../../k8s/argocd/application-diagnostics";
 import { ArgoApplicationDetails } from "../argo-application-details";
 
 const patchMock = jest.fn();
@@ -49,11 +53,15 @@ function createRollbackApp(overrides: Record<string, unknown> = {}) {
 }
 
 describe("ArgoApplicationDetails", () => {
+  const scrollIntoViewMock = jest.fn();
+
   beforeEach(() => {
     patchMock.mockReset();
     (Renderer.Component.ConfirmDialog.confirm as jest.Mock).mockReset();
     (Renderer.Component.Notifications.ok as jest.Mock).mockReset();
     (Renderer.Component.Notifications.error as jest.Mock).mockReset();
+    scrollIntoViewMock.mockReset();
+    Element.prototype.scrollIntoView = scrollIntoViewMock;
   });
   it("renders single-source configuration (Helm) and destination defaults", () => {
     renderDetails({
@@ -307,6 +315,96 @@ describe("ArgoApplicationDetails", () => {
 
     expect(screen.getByText("Resource Diff")).toBeInTheDocument();
     expect(screen.getByText("All resources in sync")).toBeInTheDocument();
+  });
+
+  it("navigates from drift hotspots View diff to the highlighted resource row", () => {
+    renderDetails({
+      spec: {
+        source: { repoURL: "https://github.com/org/repo.git" },
+        destination: { namespace: "apps" },
+      },
+      status: {
+        sync: { status: "OutOfSync" },
+        resources: [
+          { name: "web", kind: "Deployment", namespace: "apps", status: "OutOfSync", health: { status: "Degraded" } },
+          { name: "db", kind: "Service", namespace: "apps", status: "Synced", health: { status: "Healthy" } },
+        ],
+      },
+    });
+
+    const resourceKey = buildApplicationResourceKey({ name: "web", kind: "Deployment", namespace: "apps" }, "apps");
+    const viewDiffButtons = screen.getAllByRole("button", { name: "View diff" });
+
+    fireEvent.click(viewDiffButtons[0]!);
+
+    const highlightedRow = document.getElementById(getApplicationResourceRowElementId(resourceKey));
+    expect(highlightedRow).toBeInTheDocument();
+    expect(highlightedRow?.className).toContain("highlightedRow");
+    expect(scrollIntoViewMock).toHaveBeenCalled();
+  });
+
+  it("navigates from resources sync status View diff to the highlighted resource row", () => {
+    renderDetails({
+      spec: {
+        source: { repoURL: "https://github.com/org/repo.git" },
+        destination: { namespace: "apps" },
+      },
+      status: {
+        resources: [
+          { name: "web", kind: "Deployment", namespace: "apps", status: "OutOfSync", health: { status: "Healthy" } },
+        ],
+      },
+    });
+
+    const resourceKey = buildApplicationResourceKey({ name: "web", kind: "Deployment", namespace: "apps" }, "apps");
+
+    const viewDiffButtons = screen.getAllByRole("button", { name: "View diff" });
+    fireEvent.click(viewDiffButtons[viewDiffButtons.length - 1]!);
+
+    const highlightedRow = document.getElementById(getApplicationResourceRowElementId(resourceKey));
+    expect(highlightedRow).toBeInTheDocument();
+    expect(highlightedRow?.className).toContain("highlightedRow");
+    expect(scrollIntoViewMock).toHaveBeenCalled();
+  });
+
+  it("does not show View diff for Synced resources in resources sync status table", () => {
+    renderDetails({
+      spec: {
+        source: { repoURL: "https://github.com/org/repo.git" },
+        destination: { namespace: "apps" },
+      },
+      status: {
+        resources: [
+          { name: "web", kind: "Deployment", namespace: "apps", status: "OutOfSync", health: { status: "Healthy" } },
+          { name: "db", kind: "Service", namespace: "apps", status: "Synced", health: { status: "Healthy" } },
+        ],
+      },
+    });
+
+    expect(screen.getAllByRole("button", { name: "View diff" })).toHaveLength(2);
+  });
+
+  it("shows View diff only for OutOfSync drift hotspots in a mixed resource set", () => {
+    renderDetails({
+      spec: {
+        source: { repoURL: "https://github.com/org/repo.git" },
+        destination: { namespace: "apps" },
+      },
+      status: {
+        resources: [
+          { name: "web", kind: "Deployment", namespace: "apps", status: "OutOfSync", health: { status: "Healthy" } },
+          { name: "db", kind: "Service", namespace: "apps", status: "Synced", health: { status: "Degraded" } },
+        ],
+      },
+    });
+
+    const viewDiffButtons = screen.getAllByRole("button", { name: "View diff" });
+    expect(viewDiffButtons).toHaveLength(2);
+
+    fireEvent.click(viewDiffButtons[0]!);
+
+    const resourceKey = buildApplicationResourceKey({ name: "web", kind: "Deployment", namespace: "apps" }, "apps");
+    expect(document.getElementById(getApplicationResourceRowElementId(resourceKey))).toBeInTheDocument();
   });
 
   it("expands drift hotspots when more than five resources need attention", () => {

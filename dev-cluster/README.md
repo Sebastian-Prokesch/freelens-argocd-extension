@@ -21,7 +21,7 @@ This will:
 
 1. Create Kind cluster `freelens-argo` (1 control-plane + 1 worker) if missing
 2. Install pinned Helm charts:
-   - Argo CD `10.2.1` (app `v3.4.5`)
+   - Argo CD `10.3.0` (app `v3.5.0`)
    - Argo Rollouts `2.41.1` (app `v1.9.1`)
    - Argo Workflows `1.0.23` (app `v4.0.8`)
 3. Apply demos under `demos/`
@@ -71,11 +71,12 @@ kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.pas
 | `ApplicationSet/demo-list-apps` | List generator → `list-app-a` / `list-app-b` | ApplicationSets page/details |
 | `AppProject/freelens-demo` | Destinations + sync window | AppProjects page/details |
 | Secrets `demo-example-apps-repo`, `demo-example-cluster` | Config listing | Config page |
+| Secret `demo-plain-http-oci-repo` | Helm 4 OCI flags + conflict warning (Argo CD 3.5) | Config page, repo secret details |
 
 Re-create guestbook drift after a sync:
 
 ```bash
-kubectl -n guestbook scale deploy/guestbook --replicas=3
+kubectl -n guestbook scale deploy/guestbook-ui --replicas=3
 kubectl -n argocd annotate application guestbook argocd.argoproj.io/refresh=hard --overwrite
 ```
 

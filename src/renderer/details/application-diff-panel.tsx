@@ -1,7 +1,10 @@
 import { Renderer } from "@freelensapp/extensions";
+import { useEffect } from "react";
 import { StatusBadge } from "../components/shared";
 import {
   type ApplicationResourceDiagnostic,
+  buildApplicationResourceKey,
+  getApplicationResourceRowElementId,
   groupDiffResourcesByNamespaceAndKind,
 } from "../k8s/argocd/application-diagnostics";
 import styles from "./application-diff-panel.module.scss";
@@ -13,10 +16,24 @@ const {
 interface ApplicationDiffPanelProps {
   resources: unknown[];
   defaultNamespace?: string;
+  highlightedResourceKey?: string;
 }
 
-export function ApplicationDiffPanel({ resources, defaultNamespace }: ApplicationDiffPanelProps) {
+export function ApplicationDiffPanel({
+  resources,
+  defaultNamespace,
+  highlightedResourceKey,
+}: ApplicationDiffPanelProps) {
   const groups = groupDiffResourcesByNamespaceAndKind(resources, { defaultNamespace });
+
+  useEffect(() => {
+    if (!highlightedResourceKey) {
+      return;
+    }
+
+    const element = document.getElementById(getApplicationResourceRowElementId(highlightedResourceKey));
+    element?.scrollIntoView?.({ behavior: "smooth", block: "nearest" });
+  }, [highlightedResourceKey, groups]);
 
   if (groups.length === 0) {
     return <span>All resources in sync</span>;
@@ -40,17 +57,32 @@ export function ApplicationDiffPanel({ resources, defaultNamespace }: Applicatio
                   <TableCell>Sync Status</TableCell>
                   <TableCell>Health</TableCell>
                 </TableHead>
-                {kindGroup.resources.map((resource: ApplicationResourceDiagnostic, index) => (
-                  <TableRow key={`${resource.name}-${index}`}>
-                    <TableCell>{resource.name}</TableCell>
-                    <TableCell>
-                      <StatusBadge status={resource.syncStatus} fallbackLabel="Unknown" />
-                    </TableCell>
-                    <TableCell>
-                      <StatusBadge status={resource.healthStatus} fallbackLabel="N/A" />
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {kindGroup.resources.map((resource: ApplicationResourceDiagnostic, index) => {
+                  const resourceKey = buildApplicationResourceKey(resource, defaultNamespace);
+                  const isHighlighted = highlightedResourceKey === resourceKey;
+                  const rowElementId = getApplicationResourceRowElementId(resourceKey);
+                  const rowHighlightClass = isHighlighted ? styles.highlightedRow : undefined;
+
+                  return (
+                    <TableRow key={`${resource.name}-${index}`}>
+                      <TableCell>
+                        <span id={rowElementId} className={rowHighlightClass}>
+                          {resource.name}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <span className={rowHighlightClass}>
+                          <StatusBadge status={resource.syncStatus} fallbackLabel="Unknown" />
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <span className={rowHighlightClass}>
+                          <StatusBadge status={resource.healthStatus} fallbackLabel="N/A" />
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </Table>
             </div>
           ))}

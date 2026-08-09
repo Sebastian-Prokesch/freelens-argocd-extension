@@ -6,7 +6,7 @@ CLUSTER_NAME="${CLUSTER_NAME:-freelens-argo}"
 KIND_CONFIG="${KIND_CONFIG:-${ROOT_DIR}/kind-config.yaml}"
 
 # Pinned chart versions for reproducibility
-ARGOCD_CHART_VERSION="${ARGOCD_CHART_VERSION:-10.2.1}"
+ARGOCD_CHART_VERSION="${ARGOCD_CHART_VERSION:-10.3.0}"
 ROLLOUTS_CHART_VERSION="${ROLLOUTS_CHART_VERSION:-2.41.1}"
 WORKFLOWS_CHART_VERSION="${WORKFLOWS_CHART_VERSION:-1.0.23}"
 
@@ -148,10 +148,10 @@ if [[ "${SKIP_DEMOS}" != "true" ]]; then
   if [[ "${SKIP_DRIFT}" != "true" ]]; then
     echo "==> Creating intentional drift on guestbook (OutOfSync)"
     for _ in $(seq 1 60); do
-      if kubectl -n guestbook get deploy guestbook >/dev/null 2>&1; then
+      if kubectl -n guestbook get deploy guestbook-ui >/dev/null 2>&1; then
         sync="$(kubectl -n argocd get application guestbook -o jsonpath='{.status.sync.status}' 2>/dev/null || true)"
         if [[ "${sync}" == "Synced" || "${sync}" == "OutOfSync" ]]; then
-          kubectl -n guestbook scale deploy/guestbook --replicas=3
+          kubectl -n guestbook scale deploy/guestbook-ui --replicas=3
           kubectl -n argocd annotate application guestbook \
             argocd.argoproj.io/refresh=hard --overwrite
           echo "    scaled guestbook to 3 replicas; hard-refreshed Application"
