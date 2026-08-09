@@ -10,7 +10,6 @@ jest.mock("../../k8s/rollouts", () => ({
     patch: patchMock,
   }),
   canRetryRollout: jest.requireActual("../../k8s/rollouts/state").canRetryRollout,
-  getRetryMergePatch: jest.requireActual("../../k8s/rollouts/actions").getRetryMergePatch,
 }));
 
 const extension = { name: "argocd-test-extension" } as any;

@@ -36,16 +36,6 @@ export class ArgoRolloutStore extends Renderer.K8sApi.KubeObjectStore<ArgoRollou
 
 let _argoRolloutStore: ArgoRolloutStore | undefined;
 
-export {
-  buildPromotePatches,
-  getPromoteMergePatch,
-  PROMOTE_ERRORS,
-  type PromoteMergePatch,
-  type PromoteOptions,
-  requestRolloutPromotion,
-  validatePromoteOptions,
-} from "../../endpoints/argo-rollout-endpoints";
-export { getAbortMergePatch, getRetryMergePatch } from "./actions";
 export { ANALYSIS_PHASE_INCONCLUSIVE, getCurrentCanaryStep, isInconclusiveCanaryAnalysis } from "./canary-step";
 export {
   canShowPromoteAction,
