@@ -6,13 +6,14 @@
 *.out
 *.tgz
 *.tmp
+*.tsbuildinfo
 *~
 ?.*
 
 !custom.d.ts
 !env.d.ts
 !*.css.d.ts
-!*.scss.d.ts
+!*.d.scss.ts
 
 /dist/
 

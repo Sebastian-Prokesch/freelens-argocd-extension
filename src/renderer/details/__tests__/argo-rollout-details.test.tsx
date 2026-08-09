@@ -149,19 +149,17 @@ describe("ArgoRolloutDetails", () => {
   it("shows abort button for progressing rollout and triggers patch", async () => {
     (Renderer.Component.ConfirmDialog.confirm as jest.Mock).mockResolvedValueOnce(true);
     const user = userEvent.setup();
+    const object = {
+      getName: () => "demo-rollout",
+      getNs: () => "default",
+      status: {
+        phase: "Progressing",
+      },
+    } as any;
 
     render(
       <MemoryRouter>
-        <ArgoRolloutDetails
-          extension={extension}
-          object={
-            {
-              status: {
-                phase: "Progressing",
-              },
-            } as any
-          }
-        />
+        <ArgoRolloutDetails extension={extension} object={object} />
       </MemoryRouter>,
     );
 
@@ -170,33 +168,37 @@ describe("ArgoRolloutDetails", () => {
 
     await user.click(abortButton);
 
-    expect(getPromoteMocks().patchMock).toHaveBeenCalledWith(
-      expect.anything(),
+    expect(getPromoteMocks().requestPatchMock).toHaveBeenCalledWith(
+      "/apis/argoproj.io/v1alpha1/namespaces/default/rollouts/demo-rollout/status",
       {
-        status: { abort: true },
+        data: {
+          status: { abort: true },
+        },
       },
-      "merge",
+      expect.objectContaining({
+        headers: { "content-type": "application/merge-patch+json" },
+      }),
     );
+    expect(getPromoteMocks().patchMock).not.toHaveBeenCalled();
     expect(Renderer.Component.ConfirmDialog.confirm).toHaveBeenCalledWith({
       labelOk: "Abort Rollout",
-      message: "Abort rollout rollout? This interrupts the ongoing rollout operation.",
+      message: "Abort rollout demo-rollout? This interrupts the ongoing rollout operation.",
     });
   });
 
   it("shows retry button for degraded rollout and triggers patch", () => {
+    const object = {
+      getName: () => "demo-rollout",
+      getNs: () => "default",
+      status: {
+        phase: "Degraded",
+        message: "analysis failed",
+      },
+    } as any;
+
     render(
       <MemoryRouter>
-        <ArgoRolloutDetails
-          extension={extension}
-          object={
-            {
-              status: {
-                phase: "Degraded",
-                message: "analysis failed",
-              },
-            } as any
-          }
-        />
+        <ArgoRolloutDetails extension={extension} object={object} />
       </MemoryRouter>,
     );
 
@@ -205,18 +207,23 @@ describe("ArgoRolloutDetails", () => {
 
     fireEvent.click(retryButton);
 
-    expect(getPromoteMocks().patchMock).toHaveBeenCalledWith(
-      expect.anything(),
+    expect(getPromoteMocks().requestPatchMock).toHaveBeenCalledWith(
+      "/apis/argoproj.io/v1alpha1/namespaces/default/rollouts/demo-rollout/status",
       {
-        status: { abort: false },
+        data: {
+          status: { abort: false },
+        },
       },
-      "merge",
+      expect.objectContaining({
+        headers: { "content-type": "application/merge-patch+json" },
+      }),
     );
+    expect(getPromoteMocks().patchMock).not.toHaveBeenCalled();
   });
 
   it("shows abort error notification when abort request fails", async () => {
-    const { patchMock } = getPromoteMocks();
-    patchMock.mockRejectedValueOnce(new Error("abort denied"));
+    const { requestPatchMock } = getPromoteMocks();
+    requestPatchMock.mockRejectedValueOnce(new Error("abort denied"));
     (Renderer.Component.ConfirmDialog.confirm as jest.Mock).mockResolvedValueOnce(true);
     const user = userEvent.setup();
 
@@ -226,6 +233,8 @@ describe("ArgoRolloutDetails", () => {
           extension={extension}
           object={
             {
+              getName: () => "demo-rollout",
+              getNs: () => "default",
               status: {
                 phase: "Progressing",
               },

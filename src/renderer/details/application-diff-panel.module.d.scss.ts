@@ -4,5 +4,6 @@ declare const classNames: {
   readonly namespaceHeading: "namespaceHeading";
   readonly kindGroup: "kindGroup";
   readonly kindHeading: "kindHeading";
+  readonly highlightedRow: "highlightedRow";
 };
 export = classNames;

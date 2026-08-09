@@ -1,4 +1,5 @@
 import { getCurrentCanaryStep, isInconclusiveCanaryAnalysis } from "../k8s/rollouts/canary-step";
+import { isKubeNotFoundError, patchStatusSubresource } from "./kube-patch-transport";
 
 import type { ArgoRollout, ArgoRolloutStore } from "../k8s/rollouts";
 
@@ -31,41 +32,14 @@ async function patchRolloutStatusWithFallback(
   rollout: ArgoRollout,
   statusPatch: Record<string, unknown>,
 ): Promise<void> {
-  const api = (store.api ?? {}) as unknown as {
-    formatUrlForNotListing?: (desc: { namespace?: string; name: string }) => string;
-    request?: {
-      patch: (url: string, params: { data: unknown }, init?: { headers?: Record<string, string> }) => Promise<unknown>;
-    };
-  };
-
-  const rolloutName = typeof rollout.getName === "function" ? rollout.getName() : undefined;
-
-  if (api.formatUrlForNotListing && api.request?.patch && rolloutName) {
-    const rolloutNamespace =
-      typeof rollout.getNs === "function"
-        ? (rollout.getNs() ?? "")
-        : ((rollout as { metadata?: { namespace?: string } }).metadata?.namespace ?? "");
-    const baseUrl = api.formatUrlForNotListing({
-      namespace: rolloutNamespace,
-      name: rolloutName,
-    });
-
-    try {
-      await api.request.patch(
-        `${baseUrl}/status`,
-        { data: statusPatch },
-        {
-          headers: {
-            "content-type": "application/merge-patch+json",
-          },
-        },
-      );
-
+  try {
+    const patched = await patchStatusSubresource(store, rollout, statusPatch);
+    if (patched) {
       return;
-    } catch (error) {
-      if (!isKubeNotFoundError(error)) {
-        throw error;
-      }
+    }
+  } catch (error) {
+    if (!isKubeNotFoundError(error)) {
+      throw error;
     }
   }
 
@@ -226,34 +200,6 @@ export function buildPromotePatches(
   return { specPatch, statusPatch, unifiedPatch };
 }
 
-/** Legacy helper: unified merge-patch document for default or full promotion (mirrors upstream fallback). */
-export function getPromoteMergePatch(rollout: ArgoRollout, full = false): Record<string, unknown> {
-  const { unifiedPatch } = buildPromotePatches(rollout, { full });
-  return unifiedPatch ?? {};
-}
-
-function isKubeNotFoundError(error: unknown): boolean {
-  if (!error || typeof error !== "object") {
-    return false;
-  }
-  const o = error as Record<string, unknown>;
-  if (o.code === 404) {
-    return true;
-  }
-  const response = o.response as { status?: number } | undefined;
-  if (response?.status === 404) {
-    return true;
-  }
-  if (typeof o.reason === "string" && o.reason === "NotFound") {
-    return true;
-  }
-  const cause = o.cause as Record<string, unknown> | undefined;
-  if (cause?.code === 404) {
-    return true;
-  }
-  return false;
-}
-
 /**
  * Mirrors argo-rollouts `PromoteRollout` (+ Freelens JsonApi patch shape `{ data: ... }` on `/status`).
  */
@@ -268,37 +214,16 @@ export async function requestRolloutPromotion(
 
   let { specPatch, statusPatch, unifiedPatch } = buildPromotePatches(rollout, opts);
 
-  const api = rolloutStore.api as unknown as {
-    formatUrlForNotListing: (desc: { namespace?: string; name: string }) => string;
-    request?: {
-      patch: (url: string, params: { data: unknown }, init?: { headers?: Record<string, string> }) => Promise<unknown>;
-    };
-  };
-
-  const baseUrl = api.formatUrlForNotListing({
-    namespace: rollout.getNs() ?? "",
-    name: rollout.getName(),
-  });
-
   if (statusPatch) {
-    if (api.request?.patch) {
-      try {
-        await api.request.patch(
-          `${baseUrl}/status`,
-          { data: statusPatch },
-          {
-            headers: {
-              "content-type": "application/merge-patch+json",
-            },
-          },
-        );
-      } catch (error) {
-        if (!isKubeNotFoundError(error)) {
-          throw error;
-        }
+    try {
+      const patched = await patchStatusSubresource(rolloutStore, rollout, statusPatch);
+      if (!patched) {
         specPatch = unifiedPatch;
       }
-    } else {
+    } catch (error) {
+      if (!isKubeNotFoundError(error)) {
+        throw error;
+      }
       specPatch = unifiedPatch;
     }
   }

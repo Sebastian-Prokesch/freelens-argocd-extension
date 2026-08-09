@@ -5,7 +5,9 @@
     "composite": true,
     "esModuleInterop": true,
     "jsx": "react-jsx",
+    "ignoreDeprecations": "6.0",
     "types": ["vite/client", "electron-vite/node", "jest"],
-    "noUncheckedIndexedAccess": true
+    "noUncheckedIndexedAccess": true,
+    "allowArbitraryExtensions": true
   }
 }

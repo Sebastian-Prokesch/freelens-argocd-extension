@@ -159,6 +159,10 @@ describe("argo-config helpers", () => {
       host: "charts.example.com",
       authMethod: "https",
       hasTlsClientConfig: false,
+      enableOci: false,
+      insecureOciForceHttp: false,
+      insecureSkipServerVerification: false,
+      hasConflictingHelm4TlsFlags: false,
     });
     expect(parseClusterConnection(clusterSecret)).toEqual({
       protocol: "https",
@@ -166,6 +170,41 @@ describe("argo-config helpers", () => {
       hasTlsClientConfig: true,
       insecureTls: true,
       namespaceScope: "namespaced",
+    });
+  });
+
+  it("parses Helm 4 OCI flags on repository secrets", () => {
+    const plainHttpOciRepo = makeObject({
+      stringData: {
+        type: "helm",
+        url: "http://registry.internal:5000",
+        enableOCI: "true",
+        insecureOCIForceHttp: "true",
+      },
+    });
+
+    expect(parseRepoConnection(plainHttpOciRepo)).toMatchObject({
+      enableOci: true,
+      insecureOciForceHttp: true,
+      insecureSkipServerVerification: false,
+      hasConflictingHelm4TlsFlags: false,
+    });
+  });
+
+  it("flags the Helm 4 conflict when insecure and insecureOCIForceHttp are both set", () => {
+    const conflictingRepo = makeObject({
+      data: {
+        type: Buffer.from("helm", "utf8").toString("base64"),
+        url: Buffer.from("http://registry.internal:5000", "utf8").toString("base64"),
+        insecure: Buffer.from("true", "utf8").toString("base64"),
+        insecureOCIForceHttp: Buffer.from("true", "utf8").toString("base64"),
+      },
+    });
+
+    expect(parseRepoConnection(conflictingRepo)).toMatchObject({
+      insecureOciForceHttp: true,
+      insecureSkipServerVerification: true,
+      hasConflictingHelm4TlsFlags: true,
     });
   });
 

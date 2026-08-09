@@ -73,7 +73,11 @@ export const Renderer = {
     Gutter: passthrough("Gutter"),
     Table: passthrough("Table"),
     TableHead: passthrough("TableHead"),
-    TableRow: passthrough("TableRow"),
+    TableRow: ({ children, id, className }: AnyRecord) => (
+      <div data-testid="TableRow" id={id} className={className}>
+        {children}
+      </div>
+    ),
     TableCell: passthrough("TableCell"),
     TableOrderBy: undefined as any,
 

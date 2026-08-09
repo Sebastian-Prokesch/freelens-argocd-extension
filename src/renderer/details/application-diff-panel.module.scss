@@ -26,3 +26,10 @@
   font-size: 0.9em;
   color: var(--textColorSecondary);
 }
+
+.highlightedRow {
+  display: inline-block;
+  width: 100%;
+  outline: 2px solid var(--colorInfo);
+  outline-offset: -2px;
+}

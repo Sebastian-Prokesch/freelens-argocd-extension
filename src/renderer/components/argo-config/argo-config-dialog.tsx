@@ -4,6 +4,7 @@ import React from "react";
 import {
   createArgoSecretConfig,
   createConfigMapConfig,
+  type SecretEditIntent,
   updateArgoSecretConfig,
   updateConfigMapConfig,
 } from "../../endpoints/argo-config-endpoints";
@@ -14,6 +15,7 @@ import {
   getRepoAuthMethod,
   getSecretField,
   type LabeledObject,
+  secretHasStringOrDataKey,
 } from "../../k8s/argocd";
 import { runGuardedArgoMutation } from "../../mutations";
 import styles from "./argo-config-dialog.module.scss";
@@ -21,7 +23,7 @@ import stylesInline from "./argo-config-dialog.module.scss?inline";
 import { type ArgoConfigKind, argoConfigDialogStore } from "./argo-config-dialog-store";
 
 const {
-  Component: { Button, Dialog, Input },
+  Component: { Button, Checkbox, ConfirmDialog, Dialog, Input },
   K8sApi: { configMapStore, secretsStore },
 } = Renderer;
 
@@ -43,6 +45,8 @@ interface RepoFormState extends BaseFormState {
   githubAppId: string;
   githubAppInstallationId: string;
   githubAppPrivateKey: string;
+  /** Keyed by Secret key name; checked = remove the stored key on save. */
+  clearCredentials: Record<string, boolean>;
 }
 
 interface ClusterFormState extends BaseFormState {
@@ -54,9 +58,74 @@ interface ClusterFormState extends BaseFormState {
   configJson: string;
 }
 
+interface ConfigMapEntry {
+  id: number;
+  key: string;
+  value: string;
+}
+
+type ConfigMapView = "keyValue" | "json";
+
 interface ConfigMapFormState extends BaseFormState {
+  view: ConfigMapView;
+  entries: ConfigMapEntry[];
   dataJson: string;
 }
+
+type RepoCredentialFormKey =
+  | "username"
+  | "password"
+  | "sshPrivateKey"
+  | "githubAppId"
+  | "githubAppInstallationId"
+  | "githubAppPrivateKey";
+
+interface RepoCredentialField {
+  secretKey: string;
+  formKey: RepoCredentialFormKey;
+  placeholder: string;
+  multiLine?: boolean;
+  password?: boolean;
+}
+
+const AUTH_METHOD_FIELDS: Record<AuthMethod, RepoCredentialField[]> = {
+  none: [],
+  https: [
+    { secretKey: "username", formKey: "username", placeholder: "Username" },
+    { secretKey: "password", formKey: "password", placeholder: "Password", password: true },
+  ],
+  ssh: [{ secretKey: "sshPrivateKey", formKey: "sshPrivateKey", placeholder: "SSH Private Key", multiLine: true }],
+  githubApp: [
+    { secretKey: "githubAppID", formKey: "githubAppId", placeholder: "GitHub App ID" },
+    {
+      secretKey: "githubAppInstallationID",
+      formKey: "githubAppInstallationId",
+      placeholder: "GitHub App Installation ID",
+    },
+    {
+      secretKey: "githubAppPrivateKey",
+      formKey: "githubAppPrivateKey",
+      placeholder: "GitHub App Private Key",
+      multiLine: true,
+    },
+  ],
+};
+
+const AUTH_METHOD_LABELS: Record<AuthMethod, string> = {
+  none: "None",
+  https: "HTTPS",
+  ssh: "SSH",
+  githubApp: "GitHub App",
+};
+
+/** ConfigMap keys that commonly hold long multiline documents. */
+const TALL_CONFIGMAP_KEYS = new Set([
+  "dex.config",
+  "oidc.config",
+  "policy.csv",
+  "resource.customizations",
+  "ssh_known_hosts",
+]);
 
 const defaultNamespace = "argocd";
 const defaultClusterConfigJson =
@@ -92,6 +161,14 @@ const defaultClusterConfigJson =
   '  "disableCompression": false\n' +
   "}";
 
+let nextConfigMapEntryId = 1;
+
+const makeConfigMapEntry = (key = "", value = ""): ConfigMapEntry => ({
+  id: nextConfigMapEntryId++,
+  key,
+  value,
+});
+
 const emptyRepoForm = (): RepoFormState => ({
   name: "",
   namespace: defaultNamespace,
@@ -105,6 +182,7 @@ const emptyRepoForm = (): RepoFormState => ({
   githubAppId: "",
   githubAppInstallationId: "",
   githubAppPrivateKey: "",
+  clearCredentials: {},
 });
 
 const emptyClusterForm = (): ClusterFormState => ({
@@ -121,6 +199,8 @@ const emptyClusterForm = (): ClusterFormState => ({
 const emptyConfigMapForm = (): ConfigMapFormState => ({
   name: "",
   namespace: defaultNamespace,
+  view: "keyValue",
+  entries: [makeConfigMapEntry()],
   dataJson: '{\n  "key": "value"\n}',
 });
 
@@ -140,6 +220,7 @@ const loadRepoFormFromSecret = (secret: LabeledObject | undefined): RepoFormStat
     githubAppId: "",
     githubAppInstallationId: "",
     githubAppPrivateKey: "",
+    clearCredentials: {},
   };
 };
 
@@ -160,10 +241,13 @@ const loadClusterFormFromSecret = (secret: LabeledObject | undefined): ClusterFo
 
 const loadConfigMapForm = (configMap: LabeledObject | undefined): ConfigMapFormState => {
   const data = configMap?.data ?? {};
+  const entries = Object.entries(data).map(([key, value]) => makeConfigMapEntry(key, value));
 
   return {
     name: configMap?.metadata?.name ?? "",
     namespace: configMap?.metadata?.namespace ?? defaultNamespace,
+    view: "keyValue",
+    entries: entries.length > 0 ? entries : [makeConfigMapEntry()],
     dataJson: JSON.stringify(data, null, 2),
   };
 };
@@ -177,19 +261,9 @@ const buildSecretStringData = (form: RepoFormState | ClusterFormState, secretTyp
     if (repoForm.type) stringData.type = repoForm.type;
     if (repoForm.project) stringData.project = repoForm.project;
 
-    if (repoForm.authMethod === "https") {
-      if (repoForm.username) stringData.username = repoForm.username;
-      if (repoForm.password) stringData.password = repoForm.password;
-    }
-
-    if (repoForm.authMethod === "ssh") {
-      if (repoForm.sshPrivateKey) stringData.sshPrivateKey = repoForm.sshPrivateKey;
-    }
-
-    if (repoForm.authMethod === "githubApp") {
-      if (repoForm.githubAppId) stringData.githubAppID = repoForm.githubAppId;
-      if (repoForm.githubAppInstallationId) stringData.githubAppInstallationID = repoForm.githubAppInstallationId;
-      if (repoForm.githubAppPrivateKey) stringData.githubAppPrivateKey = repoForm.githubAppPrivateKey;
+    for (const field of AUTH_METHOD_FIELDS[repoForm.authMethod]) {
+      const value = repoForm[field.formKey];
+      if (value) stringData[field.secretKey] = value;
     }
   }
 
@@ -205,6 +279,73 @@ const buildSecretStringData = (form: RepoFormState | ClusterFormState, secretTyp
 
   return stringData;
 };
+
+const buildRepoSecretEditIntent = (form: RepoFormState, originalAuthMethod: AuthMethod): SecretEditIntent => {
+  const set: Record<string, string> = {};
+  const remove: string[] = [];
+
+  const metadataFields: Array<[string, string]> = [
+    ["url", form.url.trim()],
+    ["type", form.type.trim()],
+    ["project", form.project.trim()],
+  ];
+
+  for (const [key, value] of metadataFields) {
+    if (value) {
+      set[key] = value;
+    } else {
+      remove.push(key);
+    }
+  }
+
+  for (const field of AUTH_METHOD_FIELDS[form.authMethod]) {
+    if (form.clearCredentials[field.secretKey]) {
+      remove.push(field.secretKey);
+      continue;
+    }
+
+    const value = form[field.formKey];
+    if (value) {
+      set[field.secretKey] = value;
+    }
+  }
+
+  if (form.authMethod !== originalAuthMethod) {
+    for (const field of AUTH_METHOD_FIELDS[originalAuthMethod]) {
+      if (!remove.includes(field.secretKey) && !(field.secretKey in set)) {
+        remove.push(field.secretKey);
+      }
+    }
+  }
+
+  return { set, remove };
+};
+
+const buildClusterSecretEditIntent = (form: ClusterFormState): SecretEditIntent => {
+  const set: Record<string, string> = {};
+  const remove: string[] = [];
+
+  const metadataFields: Array<[string, string]> = [
+    ["name", form.clusterName.trim()],
+    ["server", form.server.trim()],
+    ["namespaces", form.namespaces.trim()],
+    ["project", form.project.trim()],
+  ];
+
+  for (const [key, value] of metadataFields) {
+    if (value) {
+      set[key] = value;
+    } else {
+      remove.push(key);
+    }
+  }
+
+  set.clusterResources = form.clusterResources ? "true" : "false";
+  set.config = form.configJson || "{}";
+
+  return { set, remove };
+};
+
 const ensureRequiredField = (value: string, label: string): string => {
   const trimmed = value.trim();
 
@@ -246,10 +387,34 @@ const parseConfigMapData = (value: string): Record<string, string> => {
   return data;
 };
 
+const configMapEntriesToData = (entries: ConfigMapEntry[]): Record<string, string> => {
+  const data: Record<string, string> = {};
+
+  for (const entry of entries) {
+    const key = entry.key.trim();
+
+    if (!key) {
+      if (entry.value) {
+        throw new Error("ConfigMap data keys must not be empty.");
+      }
+      continue;
+    }
+
+    if (key in data) {
+      throw new Error(`ConfigMap data key "${key}" is duplicated.`);
+    }
+
+    data[key] = entry.value;
+  }
+
+  return data;
+};
+
 export const ArgoConfigDialog = observer(() => {
   const { isOpen, mode, target } = argoConfigDialogStore;
   const isEdit = mode === "edit";
   const [repoForm, setRepoForm] = React.useState<RepoFormState>(emptyRepoForm());
+  const [originalAuthMethod, setOriginalAuthMethod] = React.useState<AuthMethod>("none");
   const [clusterForm, setClusterForm] = React.useState<ClusterFormState>(emptyClusterForm());
   const [configMapForm, setConfigMapForm] = React.useState<ConfigMapFormState>(emptyConfigMapForm());
   const [error, setError] = React.useState<string | undefined>();
@@ -260,7 +425,9 @@ export const ArgoConfigDialog = observer(() => {
     }
 
     if (target.kind === "repository" || target.kind === "repo-creds") {
-      setRepoForm(loadRepoFormFromSecret(target.object));
+      const loaded = loadRepoFormFromSecret(target.object);
+      setRepoForm(loaded);
+      setOriginalAuthMethod(loaded.authMethod);
     }
 
     if (target.kind === "cluster") {
@@ -268,7 +435,7 @@ export const ArgoConfigDialog = observer(() => {
     }
 
     if (target.kind === "configmap") {
-      setConfigMapForm(loadConfigMapForm(target.object));
+      setConfigMapForm(target.object ? loadConfigMapForm(target.object) : emptyConfigMapForm());
     }
 
     setError(undefined);
@@ -280,8 +447,42 @@ export const ArgoConfigDialog = observer(() => {
 
   const closeDialog = () => argoConfigDialogStore.close();
 
+  const confirmAuthMethodChange = async (): Promise<boolean> => {
+    if (!isEdit || !target.object) {
+      return true;
+    }
+
+    if (target.kind !== "repository" && target.kind !== "repo-creds") {
+      return true;
+    }
+
+    if (repoForm.authMethod === originalAuthMethod) {
+      return true;
+    }
+
+    const droppedKeys = AUTH_METHOD_FIELDS[originalAuthMethod]
+      .map((field) => field.secretKey)
+      .filter((key) => secretHasStringOrDataKey(target.object as LabeledObject, key));
+
+    if (droppedKeys.length === 0) {
+      return true;
+    }
+
+    return await ConfirmDialog.confirm({
+      labelOk: "Change Auth Method",
+      message:
+        `Changing the auth method from ${AUTH_METHOD_LABELS[originalAuthMethod]} to ` +
+        `${AUTH_METHOD_LABELS[repoForm.authMethod]} will permanently remove the stored ` +
+        `${droppedKeys.join(", ")} from this secret. Continue?`,
+    });
+  };
+
   const handleSave = async () => {
     setError(undefined);
+
+    if (!(await confirmAuthMethodChange())) {
+      return;
+    }
 
     await runGuardedArgoMutation({
       risk: "low",
@@ -303,16 +504,15 @@ export const ArgoConfigDialog = observer(() => {
           ensureRequiredField(repoForm.namespace, "Namespace");
         }
 
-        if (target.kind === "configmap") {
-          parseConfigMapData(configMapForm.dataJson);
-        }
-
         if (target.kind === "cluster") {
           parseJsonObject(clusterForm.configJson, "Cluster config");
         }
 
         if (target.kind === "configmap") {
-          const data = parseConfigMapData(configMapForm.dataJson);
+          const data =
+            configMapForm.view === "json"
+              ? parseConfigMapData(configMapForm.dataJson)
+              : configMapEntriesToData(configMapForm.entries);
           const name = configMapForm.name.trim();
           const namespace = configMapForm.namespace.trim();
           const labels = {
@@ -337,11 +537,11 @@ export const ArgoConfigDialog = observer(() => {
         }
 
         if (target.kind === "repository" || target.kind === "repo-creds" || target.kind === "cluster") {
-          const stringData = buildSecretStringData(target.kind === "cluster" ? clusterForm : repoForm, target.kind);
           const name = target.kind === "cluster" ? clusterForm.name.trim() : repoForm.name.trim();
           const namespace = target.kind === "cluster" ? clusterForm.namespace.trim() : repoForm.namespace.trim();
 
           if (mode === "create") {
+            const stringData = buildSecretStringData(target.kind === "cluster" ? clusterForm : repoForm, target.kind);
             await createArgoSecretConfig(secretsStore as any, {
               name,
               namespace,
@@ -349,11 +549,13 @@ export const ArgoConfigDialog = observer(() => {
               stringData,
             });
           } else if (target.object) {
+            const intent =
+              target.kind === "cluster"
+                ? buildClusterSecretEditIntent(clusterForm)
+                : buildRepoSecretEditIntent(repoForm, originalAuthMethod);
             await updateArgoSecretConfig(secretsStore as any, target.object, {
-              name,
-              namespace,
               secretType: target.kind,
-              stringData,
+              intent,
             });
           }
         }
@@ -378,6 +580,39 @@ export const ArgoConfigDialog = observer(() => {
     }
     return mode === "create" ? "Create ArgoCD Config" : "Edit ArgoCD Config";
   })();
+
+  const renderCredentialField = (field: RepoCredentialField) => {
+    const cleared = Boolean(repoForm.clearCredentials[field.secretKey]);
+    const hasStoredValue = Boolean(
+      isEdit && target.object && secretHasStringOrDataKey(target.object as LabeledObject, field.secretKey),
+    );
+    const placeholder = isEdit && hasStoredValue ? `${field.placeholder} (blank keeps current)` : field.placeholder;
+
+    return (
+      <React.Fragment key={field.secretKey}>
+        <Input
+          value={repoForm[field.formKey]}
+          onChange={(value) => setRepoForm({ ...repoForm, [field.formKey]: value })}
+          placeholder={placeholder}
+          disabled={cleared}
+          multiLine={field.multiLine}
+          type={field.password ? "password" : undefined}
+        />
+        {hasStoredValue && (
+          <Checkbox
+            label={`Clear stored ${field.placeholder}`}
+            value={cleared}
+            onChange={(checked: boolean) =>
+              setRepoForm({
+                ...repoForm,
+                clearCredentials: { ...repoForm.clearCredentials, [field.secretKey]: checked },
+              })
+            }
+          />
+        )}
+      </React.Fragment>
+    );
+  };
 
   const renderRepoFields = (kind: ArgoConfigKind) => (
     <>
@@ -421,49 +656,7 @@ export const ArgoConfigDialog = observer(() => {
           <option value="githubApp">GitHub App</option>
         </select>
       </div>
-      {repoForm.authMethod === "https" && (
-        <>
-          <Input
-            value={repoForm.username}
-            onChange={(value) => setRepoForm({ ...repoForm, username: value })}
-            placeholder="Username"
-          />
-          <Input
-            value={repoForm.password}
-            onChange={(value) => setRepoForm({ ...repoForm, password: value })}
-            placeholder="Password"
-            type="password"
-          />
-        </>
-      )}
-      {repoForm.authMethod === "ssh" && (
-        <Input
-          value={repoForm.sshPrivateKey}
-          onChange={(value) => setRepoForm({ ...repoForm, sshPrivateKey: value })}
-          placeholder="SSH Private Key"
-          multiLine
-        />
-      )}
-      {repoForm.authMethod === "githubApp" && (
-        <>
-          <Input
-            value={repoForm.githubAppId}
-            onChange={(value) => setRepoForm({ ...repoForm, githubAppId: value })}
-            placeholder="GitHub App ID"
-          />
-          <Input
-            value={repoForm.githubAppInstallationId}
-            onChange={(value) => setRepoForm({ ...repoForm, githubAppInstallationId: value })}
-            placeholder="GitHub App Installation ID"
-          />
-          <Input
-            value={repoForm.githubAppPrivateKey}
-            onChange={(value) => setRepoForm({ ...repoForm, githubAppPrivateKey: value })}
-            placeholder="GitHub App Private Key"
-            multiLine
-          />
-        </>
-      )}
+      {AUTH_METHOD_FIELDS[repoForm.authMethod].map(renderCredentialField)}
     </>
   );
 
@@ -525,6 +718,53 @@ export const ArgoConfigDialog = observer(() => {
     </>
   );
 
+  const updateConfigMapEntry = (id: number, updates: Partial<Pick<ConfigMapEntry, "key" | "value">>) => {
+    setConfigMapForm({
+      ...configMapForm,
+      entries: configMapForm.entries.map((entry) => (entry.id === id ? { ...entry, ...updates } : entry)),
+    });
+  };
+
+  const removeConfigMapEntry = (id: number) => {
+    const entries = configMapForm.entries.filter((entry) => entry.id !== id);
+    setConfigMapForm({
+      ...configMapForm,
+      entries: entries.length > 0 ? entries : [makeConfigMapEntry()],
+    });
+  };
+
+  const addConfigMapEntry = () => {
+    setConfigMapForm({
+      ...configMapForm,
+      entries: [...configMapForm.entries, makeConfigMapEntry()],
+    });
+  };
+
+  const switchConfigMapView = () => {
+    setError(undefined);
+
+    try {
+      if (configMapForm.view === "keyValue") {
+        const data = configMapEntriesToData(configMapForm.entries);
+        setConfigMapForm({
+          ...configMapForm,
+          view: "json",
+          dataJson: JSON.stringify(data, null, 2),
+        });
+      } else {
+        const data = parseConfigMapData(configMapForm.dataJson);
+        const entries = Object.entries(data).map(([key, value]) => makeConfigMapEntry(key, value));
+        setConfigMapForm({
+          ...configMapForm,
+          view: "keyValue",
+          entries: entries.length > 0 ? entries : [makeConfigMapEntry()],
+        });
+      }
+    } catch (switchError) {
+      setError(switchError instanceof Error ? switchError.message : "ConfigMap data is invalid.");
+    }
+  };
+
   const renderConfigMapFields = () => (
     <>
       <Input
@@ -539,12 +779,41 @@ export const ArgoConfigDialog = observer(() => {
         placeholder="Namespace"
         disabled={isEdit}
       />
-      <Input
-        value={configMapForm.dataJson}
-        onChange={(value) => setConfigMapForm({ ...configMapForm, dataJson: value })}
-        placeholder="Data JSON"
-        multiLine
-      />
+      {configMapForm.view === "keyValue" ? (
+        <>
+          {configMapForm.entries.map((entry) => (
+            <div className={styles.kvRow} key={entry.id}>
+              <div className={styles.kvKey}>
+                <Input
+                  value={entry.key}
+                  onChange={(value) => updateConfigMapEntry(entry.id, { key: value })}
+                  placeholder="Key"
+                />
+              </div>
+              <textarea
+                className={`${styles.textArea} ${styles.kvValue}`}
+                value={entry.value}
+                onChange={(event) => updateConfigMapEntry(entry.id, { value: event.target.value })}
+                rows={TALL_CONFIGMAP_KEYS.has(entry.key.trim()) ? 10 : 3}
+                placeholder="Value"
+                aria-label={`Value for ${entry.key.trim() || "new entry"}`}
+              />
+              <Button onClick={() => removeConfigMapEntry(entry.id)}>Remove</Button>
+            </div>
+          ))}
+          <Button onClick={addConfigMapEntry}>Add Entry</Button>
+        </>
+      ) : (
+        <Input
+          value={configMapForm.dataJson}
+          onChange={(value) => setConfigMapForm({ ...configMapForm, dataJson: value })}
+          placeholder="Data JSON"
+          multiLine
+        />
+      )}
+      <Button onClick={switchConfigMapView}>
+        {configMapForm.view === "keyValue" ? "Edit as JSON" : "Edit as key/value"}
+      </Button>
     </>
   );
 

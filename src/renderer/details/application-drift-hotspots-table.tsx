@@ -3,6 +3,7 @@ import { useState } from "react";
 import { StatusBadge } from "../components/shared";
 import {
   type ApplicationResourceDiagnostic,
+  isOutOfSyncStatus,
   rankDriftHotspots,
   sortDriftHotspots,
 } from "../k8s/argocd/application-diagnostics";
@@ -15,13 +16,15 @@ const DEFAULT_HOTSPOT_LIMIT = 5;
 
 interface ApplicationDriftHotspotsTableProps {
   resources: unknown[];
+  onViewDiff?: (resource: ApplicationResourceDiagnostic) => void;
 }
 
-export function ApplicationDriftHotspotsTable({ resources }: ApplicationDriftHotspotsTableProps) {
+export function ApplicationDriftHotspotsTable({ resources, onViewDiff }: ApplicationDriftHotspotsTableProps) {
   const [expanded, setExpanded] = useState(false);
   const ranked = rankDriftHotspots(resources, { limit: DEFAULT_HOTSPOT_LIMIT });
   const allHotspots = sortDriftHotspots(resources);
   const visibleHotspots = expanded ? allHotspots : ranked.hotspots;
+  const showActions = Boolean(onViewDiff);
 
   if (ranked.totalDriftCount === 0) {
     return <span>No drift detected</span>;
@@ -35,6 +38,7 @@ export function ApplicationDriftHotspotsTable({ resources }: ApplicationDriftHot
           <TableCell>Kind</TableCell>
           <TableCell>Sync Status</TableCell>
           <TableCell>Health</TableCell>
+          {showActions ? <TableCell>Actions</TableCell> : null}
         </TableHead>
         {visibleHotspots.map((resource: ApplicationResourceDiagnostic, index) => (
           <TableRow key={`${resource.kind}-${resource.name}-${index}`}>
@@ -46,6 +50,13 @@ export function ApplicationDriftHotspotsTable({ resources }: ApplicationDriftHot
             <TableCell>
               <StatusBadge status={resource.healthStatus} fallbackLabel="N/A" />
             </TableCell>
+            {showActions ? (
+              <TableCell>
+                {isOutOfSyncStatus(resource.syncStatus) ? (
+                  <Button onClick={() => onViewDiff?.(resource)}>View diff</Button>
+                ) : null}
+              </TableCell>
+            ) : null}
           </TableRow>
         ))}
       </Table>

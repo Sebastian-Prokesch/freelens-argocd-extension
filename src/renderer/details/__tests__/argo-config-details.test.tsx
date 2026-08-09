@@ -44,6 +44,54 @@ describe("ArgoConfigDetails", () => {
     expect(screen.getByText("HTTPS")).toBeInTheDocument();
   });
 
+  it("renders Helm 4 OCI flags and the conflict warning on repository secrets", () => {
+    const secret = makeObject({
+      metadata: {
+        name: "oci-repo",
+        namespace: "argocd",
+        labels: {
+          "argocd.argoproj.io/secret-type": "repository",
+        },
+      },
+      stringData: {
+        url: "http://registry.internal:5000",
+        type: "helm",
+        enableOCI: "true",
+        insecureOCIForceHttp: "true",
+        insecure: "true",
+      },
+    });
+
+    render(<ArgoConfigDetails object={secret as any} extension={extension} />);
+
+    expect(screen.getByText("OCI Enabled")).toBeInTheDocument();
+    expect(screen.getByText("OCI Force HTTP")).toBeInTheDocument();
+    expect(screen.getByText("Skip Server Verification")).toBeInTheDocument();
+    expect(screen.getByText("Helm 4 Flag Conflict")).toBeInTheDocument();
+  });
+
+  it("omits the Helm 4 conflict warning when flags do not conflict", () => {
+    const secret = makeObject({
+      metadata: {
+        name: "oci-repo",
+        namespace: "argocd",
+        labels: {
+          "argocd.argoproj.io/secret-type": "repository",
+        },
+      },
+      stringData: {
+        url: "http://registry.internal:5000",
+        type: "helm",
+        enableOCI: "true",
+        insecureOCIForceHttp: "true",
+      },
+    });
+
+    render(<ArgoConfigDetails object={secret as any} extension={extension} />);
+
+    expect(screen.queryByText("Helm 4 Flag Conflict")).not.toBeInTheDocument();
+  });
+
   it("redacts userinfo from repository URL in details", () => {
     const secret = makeObject({
       metadata: {
