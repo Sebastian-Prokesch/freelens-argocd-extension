@@ -8,6 +8,8 @@ with pre-release identifiers for beta builds.
 
 ## [Unreleased]
 
+## [0.1.14]
+
 ### Added
 
 - Config dialog: ConfigMap data is now edited as key/value rows with multiline editors (taller for heavy keys like `dex.config` and `policy.csv`), with an "Edit as JSON" fallback view for raw editing.
