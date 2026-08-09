@@ -41,3 +41,18 @@
   border-radius: 4px;
   resize: vertical;
 }
+
+.kvRow {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.kvKey {
+  flex: 0 0 200px;
+}
+
+.kvValue {
+  flex: 1;
+  min-height: 60px;
+}

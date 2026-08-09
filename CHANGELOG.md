@@ -10,6 +10,8 @@ with pre-release identifiers for beta builds.
 
 ### Added
 
+- Config dialog: ConfigMap data is now edited as key/value rows with multiline editors (taller for heavy keys like `dex.config` and `policy.csv`), with an "Edit as JSON" fallback view for raw editing.
+- Config dialog: repository credential fields show "Clear stored ..." checkboxes in edit mode, and changing the auth method asks for confirmation before removing previously stored credentials.
 - Config page: repository secret details now show the Helm 4 OCI flags `enableOCI`, `insecureOCIForceHttp` (new in Argo CD 3.5), and `insecure`, with a warning when `insecure` and `insecureOCIForceHttp` conflict (known Helm 4 limitation).
 - README section documenting Argo CD 3.4/3.5 compatibility and 3.5 upgrade notes.
 - Local Kind dev cluster under `dev-cluster/` with Argo CD, Rollouts, Workflows, and demo resources mapped to extension UI surfaces.
@@ -20,6 +22,8 @@ with pre-release identifiers for beta builds.
 
 ### Fixed
 
+- Editing a repository, repo-creds, or cluster secret no longer wipes stored credentials and unrelated secret keys: blank credential fields keep their current values, and only explicitly changed or cleared keys are patched.
+- Removing a key from an Argo ConfigMap in the edit dialog now actually deletes it from the ConfigMap.
 - Dev-cluster drift recipe targeted `deploy/guestbook` instead of `guestbook-ui`, so the intended OutOfSync demo state was never created.
 - CI and release workflows no longer hardcode the pnpm version.
 
