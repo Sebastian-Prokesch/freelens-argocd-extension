@@ -1,0 +1,78 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1001;
+  width: min(720px, 92vw);
+  display: flex;
+  flex-direction: column;
+  background: var(--contentColor);
+  color: var(--textColorPrimary);
+  box-shadow: -8px 0 24px rgba(0, 0, 0, 0.35);
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  gap: calc(var(--unit) * 1.5);
+  padding: calc(var(--unit) * 2);
+  border-bottom: 1px solid var(--borderColor);
+  flex-shrink: 0;
+}
+
+.titleBlock {
+  min-width: 0;
+  flex: 1;
+}
+
+.kind {
+  margin: 0;
+  color: var(--textColorSecondary);
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.title {
+  margin: calc(var(--unit) * 0.5) 0 0;
+  font-size: var(--fontSizeHeading, 16px);
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--unit) * 0.25);
+  align-items: center;
+}
+
+.closeButton {
+  border: none;
+  background: transparent;
+  color: var(--textColorSecondary);
+  cursor: pointer;
+  padding: calc(var(--unit) * 0.5);
+  line-height: 1;
+  font-size: 22px;
+
+  &:hover {
+    color: var(--textColorPrimary);
+  }
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 0 calc(var(--unit) * 2) calc(var(--unit) * 2);
+}

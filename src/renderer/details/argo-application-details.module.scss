@@ -31,4 +31,11 @@
       line-height: 1.4;
     }
   }
+
+  .syncPolicyControls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: calc(var(--unit) * 1);
+    align-items: center;
+  }
 }

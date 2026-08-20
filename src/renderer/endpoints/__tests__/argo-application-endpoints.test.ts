@@ -1,19 +1,37 @@
 import {
   ARGO_APPLICATION_REFRESH_ANNOTATION,
+  buildApplicationDisableAutomatedJsonPatch,
+  buildApplicationEnableAutomatedMergePatch,
   buildApplicationRefreshMergePatch,
   buildApplicationRollbackMergePatch,
+  buildApplicationSpecWithAutomatedSync,
   buildApplicationSyncMergePatch,
   buildApplicationTerminateJsonPatch,
+  getApplicationAutomatedSyncPolicy,
   hardRefreshApplication,
   hasRollbackSourceMetadata,
   refreshApplication,
   requestApplicationRefresh,
   rollbackApplication,
+  setApplicationAutomatedSync,
   syncApplication,
   terminateApplicationOperation,
 } from "../argo-application-endpoints";
+import { getArgoCdApiClient, isArgoCdApiMode } from "../../argocd-api";
+
+jest.mock("../../argocd-api", () => ({
+  isArgoCdApiMode: jest.fn(() => false),
+  getArgoCdApiClient: jest.fn(),
+}));
+
+const isArgoCdApiModeMock = isArgoCdApiMode as jest.MockedFunction<typeof isArgoCdApiMode>;
+const getArgoCdApiClientMock = getArgoCdApiClient as jest.MockedFunction<typeof getArgoCdApiClient>;
 
 describe("argo-application-endpoints", () => {
+  beforeEach(() => {
+    isArgoCdApiModeMock.mockReturnValue(false);
+    getArgoCdApiClientMock.mockReset();
+  });
   it("buildApplicationSyncMergePatch returns default sync operation payload", () => {
     expect(buildApplicationSyncMergePatch()).toEqual({
       operation: {
@@ -320,5 +338,106 @@ describe("argo-application-endpoints", () => {
         source: { repoURL: "https://github.com/org/repo.git" },
       }),
     ).rejects.toThrow("boom");
+  });
+
+  it("routes application mutations through Argo CD API when API mode is enabled", async () => {
+    const syncApplicationApi = jest.fn().mockResolvedValue(undefined);
+    const refreshApplicationApi = jest.fn().mockResolvedValue(undefined);
+    const terminateApplicationOperationApi = jest.fn().mockResolvedValue(undefined);
+    const rollbackApplicationApi = jest.fn().mockResolvedValue(undefined);
+    const updateApplicationSpecApi = jest.fn().mockResolvedValue({ metadata: { name: "demo-app" } });
+    const patch = jest.fn();
+
+    isArgoCdApiModeMock.mockReturnValue(true);
+    getArgoCdApiClientMock.mockReturnValue({
+      syncApplication: syncApplicationApi,
+      refreshApplication: refreshApplicationApi,
+      terminateApplicationOperation: terminateApplicationOperationApi,
+      rollbackApplication: rollbackApplicationApi,
+      updateApplicationSpec: updateApplicationSpecApi,
+    } as any);
+
+    const store = { patch } as any;
+    const application = {
+      getName: () => "demo-app",
+      getNs: () => "argocd",
+      spec: { syncPolicy: { syncOptions: ["Validate=false"] } },
+    } as any;
+    const entry = {
+      id: 2,
+      revision: "abc123",
+      source: { repoURL: "https://github.com/org/repo.git" },
+    };
+
+    await syncApplication(store, application, { prune: true });
+    await refreshApplication(store, application);
+    await hardRefreshApplication(store, application);
+    await terminateApplicationOperation(store, application);
+    await rollbackApplication(store, application, entry);
+    await setApplicationAutomatedSync(store, application, { prune: true, selfHeal: true });
+
+    expect(syncApplicationApi).toHaveBeenCalledWith(application, { prune: true });
+    expect(refreshApplicationApi).toHaveBeenCalledWith(application, "normal");
+    expect(refreshApplicationApi).toHaveBeenCalledWith(application, "hard");
+    expect(terminateApplicationOperationApi).toHaveBeenCalledWith(application);
+    expect(rollbackApplicationApi).toHaveBeenCalledWith(application, entry);
+    expect(updateApplicationSpecApi).toHaveBeenCalledWith(
+      application,
+      buildApplicationSpecWithAutomatedSync(application, { prune: true, selfHeal: true }),
+    );
+    expect(patch).not.toHaveBeenCalled();
+  });
+
+  it("builds and applies automated sync policy patches in cluster mode", async () => {
+    const application = {
+      getName: () => "demo-app",
+      spec: {
+        project: "default",
+        syncPolicy: {
+          syncOptions: ["CreateNamespace=true"],
+          automated: { prune: true },
+        },
+      },
+    } as any;
+
+    expect(getApplicationAutomatedSyncPolicy(application)).toEqual({
+      prune: true,
+      selfHeal: false,
+      allowEmpty: false,
+    });
+    expect(buildApplicationEnableAutomatedMergePatch({ prune: true, selfHeal: true })).toEqual({
+      spec: {
+        syncPolicy: {
+          automated: {
+            prune: true,
+            selfHeal: true,
+            allowEmpty: false,
+          },
+        },
+      },
+    });
+    expect(buildApplicationDisableAutomatedJsonPatch()).toEqual([
+      { op: "remove", path: "/spec/syncPolicy/automated" },
+    ]);
+    expect(buildApplicationSpecWithAutomatedSync(application, null)).toEqual({
+      project: "default",
+      syncPolicy: {
+        syncOptions: ["CreateNamespace=true"],
+      },
+    });
+
+    const patch = jest.fn().mockResolvedValue(undefined);
+    const store = { patch } as any;
+
+    await setApplicationAutomatedSync(store, application, null);
+    expect(patch).toHaveBeenCalledWith(application, buildApplicationDisableAutomatedJsonPatch(), "json");
+
+    patch.mockClear();
+    await setApplicationAutomatedSync(store, application, { prune: false, selfHeal: true, allowEmpty: true });
+    expect(patch).toHaveBeenCalledWith(
+      application,
+      buildApplicationEnableAutomatedMergePatch({ prune: false, selfHeal: true, allowEmpty: true }),
+      "merge",
+    );
   });
 });

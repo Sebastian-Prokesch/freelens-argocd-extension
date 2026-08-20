@@ -1,0 +1,107 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--unit) * 1.5);
+  max-width: 40rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--unit) * 0.5);
+}
+
+.label {
+  color: var(--textColorPrimary);
+  font-weight: 600;
+}
+
+.modeGroup {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--unit) * 0.75);
+}
+
+.modeOption {
+  display: flex;
+  align-items: flex-start;
+  gap: calc(var(--unit) * 0.75);
+  color: var(--textColorPrimary);
+}
+
+.connectionList {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--unit) * 0.75);
+}
+
+.connectionRow {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--unit) * 1);
+  padding: calc(var(--unit) * 1);
+  border: 1px solid var(--borderColor);
+  border-radius: 6px;
+  background: var(--layoutBackground, transparent);
+}
+
+.connectionRowActive {
+  border-color: var(--colorInfo, var(--borderColor));
+}
+
+.connectionSelect {
+  display: flex;
+  align-items: flex-start;
+  gap: calc(var(--unit) * 0.75);
+  flex: 1;
+  min-width: 0;
+}
+
+.connectionNameButton {
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.connectionName {
+  color: var(--textColorPrimary);
+  font-weight: 600;
+}
+
+.connectionUrl {
+  color: var(--textColorSecondary);
+  font-size: var(--font-size-small);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.helper {
+  color: var(--textColorSecondary);
+  font-size: var(--font-size-small);
+}
+
+.statusOk {
+  color: var(--colorSuccess, #2ecc71);
+  font-size: var(--font-size-small);
+}
+
+.statusError {
+  color: var(--colorError);
+  font-size: var(--font-size-small);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--unit) * 1);
+}

@@ -33,6 +33,7 @@ Manage rollouts directly from the list — promote, abort, or edit paused canary
 
 - Argo sidebar hub with grouped sections for ArgoCD, Argo Workflows, and Argo Rollouts.
 - ArgoCD overview and list pages for `Application`, `ApplicationSet`, and `AppProject`, plus a Config page for Argo ConfigMaps and Secrets.
+- Optional **Argo CD API** connection in Preferences (server URL + token) so Applications / Projects / Overview and sync actions work against a remote Argo CD without relying on CRDs in the current cluster.
 - Argo Rollouts pages for `Rollout`, `AnalysisRun`, `Experiment`, `AnalysisTemplate`, and `ClusterAnalysisTemplate`.
 - Argo Workflows pages for `Workflow`, `CronWorkflow`, `WorkflowTemplate`, and `ClusterWorkflowTemplate`.
 - Resource detail drawers with diagnostics such as sync/health status, operation timeline, and resource diff.
@@ -41,7 +42,7 @@ Manage rollouts directly from the list — promote, abort, or edit paused canary
   - Rollouts: promote, promote full, promote skip current, promote skip all, abort, retry.
   - Argo config helpers for `Secret` and `ConfigMap`.
 
-All resources are served from the `argoproj.io/v1alpha1` API group.
+All resources are served from the `argoproj.io/v1alpha1` API group when using the current cluster. In Argo CD API mode, Application / ApplicationSet / AppProject data comes from the Argo CD HTTP API instead.
 
 ## Status
 
@@ -71,7 +72,34 @@ See the package on [npm](https://www.npmjs.com/package/@sebastian-prokesch/freel
 ## Security and permissions
 
 - Mutating actions (sync, promote, config edits) run with your current cluster identity and are limited by Kubernetes RBAC — prefer read-only permissions where mutation is not required.
+- When using **Argo CD API** mode, mutations use the configured bearer token instead of Kubernetes RBAC. Prefer least-privilege account tokens. The token is stored locally in Freelens extension settings.
 - Secret updates are submitted through Kubernetes `stringData`; grant edit access only to trusted operators.
+
+## Argo CD API connection
+
+By default the extension reads Argo CD CRDs from the active Kubernetes cluster. To talk to one or more remote Argo CD servers instead:
+
+1. Open Freelens **Preferences** (`Ctrl+,` / `Cmd+,`).
+2. Open **Argo CD Connection**.
+3. Choose **Argo CD API (server URL + token)**.
+4. Use **Add connection** to save each Argo CD server (name, URL, token, optional Custom CA).
+5. Click a connection in the list to select it — that connection is the active one for ArgoCD pages.
+6. Optionally set **HTTPS proxy** per connection if Argo CD is only reachable through a corporate proxy.
+7. Prefer **Custom CA certificate (PEM)** for corporate TLS: paste the issuing/root CA PEM so verification stays on. Skip TLS only as a last resort.
+8. Click **Test connection**, then open an ArgoCD page in any cluster frame.
+
+With multiple connections, the ArgoCD page banner also has a dropdown to switch the active server without opening Preferences.
+
+### Trusting a corporate CA
+
+Freelens/Node often does not use the macOS Keychain trust store.
+
+1. Open **Keychain Access** → search for `Foo Bar Issuing`.
+2. Export the certificate as `.pem` / `.cer` (PEM text).
+3. Paste the full `-----BEGIN CERTIFICATE-----` … block into **Custom CA certificate** in Preferences.
+4. Leave **Skip TLS** unchecked and run **Test connection**.
+
+In API mode, Applications, ApplicationSets, AppProjects, and Overview come from the Argo CD API. Sync, refresh, terminate, and rollback use the API as well. Config, Rollouts, and Workflows remain cluster-backed.
 
 ## Build from source
 

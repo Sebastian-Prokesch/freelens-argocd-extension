@@ -16,6 +16,7 @@ import {
   ArgoRollout,
 } from "../k8s/rollouts";
 import {
+  ArgoApiApplicationDetailsPage,
   ArgoApplicationSetsPage,
   ArgoApplicationsPage,
   ArgoAppProjectsPage,
@@ -68,6 +69,14 @@ export function buildClusterPages(extension: Renderer.LensExtension) {
       routePath: ArgoRoutes.argocd.applications,
       components: {
         Page: () => <ArgoApplicationsPage extension={extension} />,
+      },
+    },
+    {
+      id: ArgoPageIds.argocdApplicationApiDetails,
+      routePath: ArgoRoutes.argocd.applicationDetails,
+      exact: true,
+      components: {
+        Page: () => <ArgoApiApplicationDetailsPage extension={extension} />,
       },
     },
     {

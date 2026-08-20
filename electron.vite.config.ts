@@ -40,6 +40,8 @@ export default defineConfig({
       externalizeDepsPlugin({
         // do not bundle modules provided by the host app
         include: ["@freelensapp/extensions", "mobx"],
+        // bundle proxy agent into the extension (not provided by Freelens runtime)
+        exclude: ["hpagent"],
       }),
       pluginExternal({
         // the modules are provided by the host app as a global variable
@@ -103,8 +105,8 @@ export default defineConfig({
           "react-dom",
           "react-router-dom",
         ],
-        // bundle all other modules
-        exclude: [],
+        // bundle all other modules (incl. hpagent for Argo CD API proxy)
+        exclude: ["hpagent"],
       }),
       pluginExternal({
         // the modules are provided by the host app as a global variable

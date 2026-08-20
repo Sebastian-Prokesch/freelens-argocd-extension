@@ -1,6 +1,13 @@
 import { Common, Renderer } from "@freelensapp/extensions";
 import { observer } from "mobx-react";
 import { Link } from "react-router-dom";
+import { getArgoCdApiClient, getArgoCdDataSource, useArgoCdApiQuery } from "../argocd-api";
+import { argoApiAppProjectDrawerStore } from "../components/argo-api-details";
+import { ArgoApiListToolbar, useArgoApiListFilters } from "../components/argo-api-list";
+import {
+  ArgoCdApiMisconfiguredNotice,
+  ArgoConnectionSourceBanner,
+} from "../components/argo-connection-source";
 import { withErrorPage } from "../components/error-page";
 import {
   ArgoAppProject,
@@ -9,11 +16,13 @@ import {
   getAppProjectSyncWindowCount,
   getArgoAppProjectStore,
 } from "../k8s/argocd";
+import apiListStyles from "./argo-api-list.module.scss";
+import apiListStylesInline from "./argo-api-list.module.scss?inline";
 import styles from "./argo-appprojects-page.module.scss";
 import stylesInline from "./argo-appprojects-page.module.scss?inline";
 
 const {
-  Component: { KubeObjectAge, KubeObjectListLayout, WithTooltip },
+  Component: { KubeObjectAge, KubeObjectListLayout, Table, TableCell, TableHead, TableRow, WithTooltip },
   Navigation: { getDetailsUrl },
 } = Renderer;
 
@@ -43,7 +52,7 @@ export interface ArgoAppProjectsPageProps {
   extension: Renderer.LensExtension;
 }
 
-export const ArgoAppProjectsTabContent = observer(() => {
+const ArgoAppProjectsClusterTabContent = observer(() => {
   const appProjectStore = getArgoAppProjectStore();
   const getAppProjectDetailsUrl = (object: ArgoAppProject) =>
     getDetailsUrl(
@@ -78,6 +87,107 @@ export const ArgoAppProjectsTabContent = observer(() => {
       />
     </>
   );
+});
+
+const ArgoAppProjectsApiTabContent = observer(() => {
+  const { data, isLoading, error } = useArgoCdApiQuery(true, "projects", () => getArgoCdApiClient().listProjects());
+  const projects = data ?? [];
+  const { search, setSearch, namespace, setNamespace, namespaces, filteredItems, filteredCount, totalCount } =
+    useArgoApiListFilters(projects);
+
+  const openDetails = (object: ArgoAppProject) => {
+    argoApiAppProjectDrawerStore.open(object);
+  };
+
+  return (
+    <>
+      <style>{stylesInline}</style>
+      <style>{apiListStylesInline}</style>
+      <div className={apiListStyles.root}>
+        <ArgoConnectionSourceBanner />
+        {isLoading ? <div className={apiListStyles.loading}>Loading AppProjects from Argo CD API...</div> : null}
+        {error ? <div className={apiListStyles.error}>{error}</div> : null}
+        {!isLoading && !error && projects.length === 0 ? <div className={apiListStyles.empty}>No AppProjects</div> : null}
+        {!isLoading && !error && projects.length > 0 ? (
+          <div className={apiListStyles.page}>
+            <ArgoApiListToolbar
+              title="Argo AppProjects"
+              search={search}
+              onSearchChange={setSearch}
+              namespace={namespace}
+              onNamespaceChange={setNamespace}
+              namespaces={namespaces}
+              filteredCount={filteredCount}
+              totalCount={totalCount}
+              searchPlaceholder="Search AppProjects..."
+            />
+            {filteredItems.length === 0 ? (
+              <div className={apiListStyles.empty}>No AppProjects match the current filters</div>
+            ) : (
+              <div className={apiListStyles.tableWrap}>
+                <Table tableId="argocdApiAppProjects" scrollable={false} sortSyncWithUrl={false}>
+                  <TableHead flat sticky>
+                    <TableCell>Name</TableCell>
+                    <TableCell>Namespace</TableCell>
+                    <TableCell>Description</TableCell>
+                    <TableCell>Destinations</TableCell>
+                    <TableCell>Sync Windows</TableCell>
+                    <TableCell>Age</TableCell>
+                  </TableHead>
+                  {filteredItems.map((object) => (
+                    <TableRow
+                      key={`${object.getNs()}/${object.getName()}`}
+                      className={apiListStyles.clickableRow}
+                      onClick={() => openDetails(object)}
+                    >
+                      <TableCell>
+                        <button
+                          type="button"
+                          className={apiListStyles.rowLink}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            openDetails(object);
+                          }}
+                        >
+                          <WithTooltip>{object.getName()}</WithTooltip>
+                        </button>
+                      </TableCell>
+                      <TableCell>
+                        <WithTooltip>{object.getNs() || "N/A"}</WithTooltip>
+                      </TableCell>
+                      <TableCell>
+                        <WithTooltip>{object.spec?.description ?? "N/A"}</WithTooltip>
+                      </TableCell>
+                      <TableCell>
+                        <WithTooltip>{String(getAppProjectDestinationCount(object))}</WithTooltip>
+                      </TableCell>
+                      <TableCell>
+                        <WithTooltip>{String(getAppProjectSyncWindowCount(object))}</WithTooltip>
+                      </TableCell>
+                      <TableCell>
+                        <KubeObjectAge object={object} />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </Table>
+              </div>
+            )}
+          </div>
+        ) : null}
+      </div>
+    </>
+  );
+});
+
+export const ArgoAppProjectsTabContent = observer(() => {
+  const source = getArgoCdDataSource();
+  if (source === "api-misconfigured") {
+    return <ArgoCdApiMisconfiguredNotice />;
+  }
+  if (source === "api") {
+    return <ArgoAppProjectsApiTabContent />;
+  }
+  return <ArgoAppProjectsClusterTabContent />;
 });
 
 export const ArgoAppProjectsPage = observer((props: ArgoAppProjectsPageProps) =>

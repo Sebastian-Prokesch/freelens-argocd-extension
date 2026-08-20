@@ -8,6 +8,7 @@ export const ArgoRoutes = {
     root: "/argo/argocd",
     overview: "/argo/argocd/overview",
     applications: "/argo/argocd/applications",
+    applicationDetails: "/argo/argocd/applications/:namespace/:name",
     applicationsets: "/argo/argocd/applicationsets",
     appprojects: "/argo/argocd/appprojects",
     config: "/argo/argocd/config",

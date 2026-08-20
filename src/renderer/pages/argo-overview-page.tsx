@@ -1,6 +1,11 @@
 import { Renderer } from "@freelensapp/extensions";
 import { observer } from "mobx-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { getArgoCdApiClient, getArgoCdDataSource, useArgoCdApiQuery } from "../argocd-api";
+import {
+  ArgoCdApiMisconfiguredNotice,
+  ArgoConnectionSourceBanner,
+} from "../components/argo-connection-source";
 import { ArgoApplicationStatusChart, ArgoApplicationSyncStatusChart } from "../components/argo-overview";
 import { type ArgoApplication, getArgoApplicationStore, getArgoAppProjectStore } from "../k8s/argocd";
 import styles from "./argo-overview-page.module.scss";
@@ -53,7 +58,120 @@ function filterItems(items: Renderer.K8sApi.KubeEvent[]): Renderer.K8sApi.KubeEv
   return events;
 }
 
-export const ArgoOverviewTabContent = observer(() => {
+function getApplicationNamespace(app: ArgoApplication): string {
+  return app.getNs?.() || app.metadata?.namespace || "";
+}
+
+interface OverviewBodyProps {
+  applications: ArgoApplication[];
+  totalProjects: number;
+  isLoading: boolean;
+  loadError: string | null;
+  showClusterNamespaceFilter?: boolean;
+  apiNamespaces?: string[];
+  selectedApiNamespace?: string;
+  onApiNamespaceChange?: (namespace: string) => void;
+  showEvents?: boolean;
+  eventsNote?: string | null;
+}
+
+const OverviewBody = ({
+  applications,
+  totalProjects,
+  isLoading,
+  loadError,
+  showClusterNamespaceFilter = true,
+  apiNamespaces,
+  selectedApiNamespace = "",
+  onApiNamespaceChange,
+  showEvents = true,
+  eventsNote = null,
+}: OverviewBodyProps) => {
+  const healthCounts = getHealthStatusCounts(applications);
+  const overviewStatusCards = getOverviewStatusCards(applications, totalProjects);
+  const isNoApplications = !isLoading && !loadError && applications.length === 0;
+  const scopedStyles = styles as Record<string, string>;
+  const showApiNamespaceFilter = Boolean(apiNamespaces && onApiNamespaceChange);
+
+  return (
+    <div className={styles.root}>
+      <div className={styles.header}>
+        <h5 className={styles.title}>ArgoCD Overview</h5>
+        {showClusterNamespaceFilter ? (
+          <div className={styles.namespaceFilter}>
+            <NamespaceSelectFilter id="overview-namespace-select-filter-input" />
+          </div>
+        ) : null}
+        {showApiNamespaceFilter ? (
+          <label className={styles.namespaceFilter}>
+            <select
+              className={scopedStyles.apiNamespaceSelect}
+              value={selectedApiNamespace}
+              onChange={(event) => onApiNamespaceChange?.(event.target.value)}
+              aria-label="Filter overview by namespace"
+              data-testid="ApiNamespaceSelect"
+            >
+              <option value="">All namespaces</option>
+              {apiNamespaces?.map((ns) => (
+                <option key={ns} value={ns}>
+                  {ns}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : null}
+      </div>
+
+      <div className={styles.scrollBody}>
+        {isLoading ? <div className={styles.loadingMessage}>Loading ArgoCD overview resources...</div> : null}
+        {loadError ? <div className={styles.errorMessage}>{loadError}</div> : null}
+        <div className={styles.statuses}>
+          <div className={styles.overviewStatusCards}>
+            {overviewStatusCards.map((card) => (
+              <div key={card.id} className={styles.overviewStatusCard}>
+                <div className={styles.overviewStatusLabel}>{card.label}</div>
+                <div className={styles.overviewStatusValue} data-testid={`overview-status-${card.id}`}>
+                  {isLoading ? "..." : card.value}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className={scopedStyles.healthSummary}>
+            <h6 className={scopedStyles.summaryTitle}>Health Summary</h6>
+            {Object.keys(healthCounts).length > 0 ? (
+              <div className={scopedStyles.summaryText}>
+                {Object.entries(healthCounts)
+                  .map(([status, count]) => `${status}: ${count}`)
+                  .join(" | ")}
+              </div>
+            ) : (
+              <div className={scopedStyles.summaryText}>No applications</div>
+            )}
+          </div>
+          {isNoApplications ? <div className={scopedStyles.emptyState}>No applications</div> : null}
+          <div className={styles.chartsRow}>
+            <div className={styles.chart}>
+              <ArgoApplicationStatusChart applications={applications} isLoading={isLoading} />
+            </div>
+
+            <div className={styles.chart}>
+              <ArgoApplicationSyncStatusChart applications={applications} isLoading={isLoading} />
+            </div>
+          </div>
+        </div>
+
+        {showEvents ? (
+          <>
+            {eventsNote ? <div className={scopedStyles.eventsNote}>{eventsNote}</div> : null}
+            <Events compact hideFilters filterItems={[filterItems]} compactLimit={1000} />
+          </>
+        ) : null}
+      </div>
+    </div>
+  );
+};
+
+const ArgoOverviewClusterTabContent = observer(() => {
   const watches = useRef<(() => void)[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -106,64 +224,71 @@ export const ArgoOverviewTabContent = observer(() => {
 
   const applications = (applicationStore.contextItems as ArgoApplication[]) ?? [];
   const projects = (appProjectStore.contextItems as unknown[]) ?? [];
-  const healthCounts = getHealthStatusCounts(applications);
-  const overviewStatusCards = getOverviewStatusCards(applications, projects.length);
   const isLoading = !isLoaded && !loadError;
-  const isNoApplications = isLoaded && !loadError && applications.length === 0;
-  const scopedStyles = styles as Record<string, string>;
+
+  return (
+    <OverviewBody
+      applications={applications}
+      totalProjects={projects.length}
+      isLoading={isLoading}
+      loadError={loadError}
+    />
+  );
+});
+
+const ArgoOverviewApiTabContent = observer(() => {
+  const [selectedApiNamespace, setSelectedApiNamespace] = useState("");
+  const applicationsQuery = useArgoCdApiQuery(true, "overview-applications", () =>
+    getArgoCdApiClient().listApplications(),
+  );
+  const projectsQuery = useArgoCdApiQuery(true, "overview-projects", () => getArgoCdApiClient().listProjects());
+  const isLoading = applicationsQuery.isLoading || projectsQuery.isLoading;
+  const loadError = applicationsQuery.error ?? projectsQuery.error;
+  const applications = applicationsQuery.data ?? [];
+  const projects = projectsQuery.data ?? [];
+
+  const apiNamespaces = useMemo(() => {
+    const unique = new Set<string>();
+    for (const app of applications) {
+      const ns = getApplicationNamespace(app);
+      if (ns) unique.add(ns);
+    }
+    return Array.from(unique).sort((a, b) => a.localeCompare(b));
+  }, [applications]);
+
+  const filteredApplications = useMemo(() => {
+    if (!selectedApiNamespace) return applications;
+    return applications.filter((app) => getApplicationNamespace(app) === selectedApiNamespace);
+  }, [applications, selectedApiNamespace]);
+
+  return (
+    <>
+      <ArgoConnectionSourceBanner />
+      <OverviewBody
+        applications={filteredApplications}
+        totalProjects={projects.length}
+        isLoading={isLoading}
+        loadError={loadError}
+        showClusterNamespaceFilter={false}
+        apiNamespaces={apiNamespaces}
+        selectedApiNamespace={selectedApiNamespace}
+        onApiNamespaceChange={setSelectedApiNamespace}
+        showEvents
+        eventsNote="Events below come from the current Kubernetes cluster (argoproj.io), not from the remote Argo CD API."
+      />
+    </>
+  );
+});
+
+export const ArgoOverviewTabContent = observer(() => {
+  const source = getArgoCdDataSource();
 
   return (
     <>
       <style>{stylesInline}</style>
-      <div className={styles.root}>
-        <div className={styles.header}>
-          <h5 className={styles.title}>ArgoCD Overview</h5>
-          <div className={styles.namespaceFilter}>
-            <NamespaceSelectFilter id="overview-namespace-select-filter-input" />
-          </div>
-        </div>
-
-        <div className={styles.scrollBody}>
-          {isLoading ? <div className={styles.loadingMessage}>Loading ArgoCD overview resources...</div> : null}
-          {loadError ? <div className={styles.errorMessage}>{loadError}</div> : null}
-          <div className={styles.statuses}>
-            <div className={styles.overviewStatusCards}>
-              {overviewStatusCards.map((card) => (
-                <div key={card.id} className={styles.overviewStatusCard}>
-                  <div className={styles.overviewStatusLabel}>{card.label}</div>
-                  <div className={styles.overviewStatusValue} data-testid={`overview-status-${card.id}`}>
-                    {isLoading ? "..." : card.value}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className={scopedStyles.healthSummary}>
-              <h6 className={scopedStyles.summaryTitle}>Health Summary</h6>
-              {Object.keys(healthCounts).length > 0 ? (
-                <div className={scopedStyles.summaryText}>
-                  {Object.entries(healthCounts)
-                    .map(([status, count]) => `${status}: ${count}`)
-                    .join(" | ")}
-                </div>
-              ) : (
-                <div className={scopedStyles.summaryText}>No applications</div>
-              )}
-            </div>
-            {isNoApplications ? <div className={scopedStyles.emptyState}>No applications</div> : null}
-            <div className={styles.chartsRow}>
-              <div className={styles.chart}>
-                <ArgoApplicationStatusChart applications={applications} isLoading={isLoading} />
-              </div>
-
-              <div className={styles.chart}>
-                <ArgoApplicationSyncStatusChart applications={applications} isLoading={isLoading} />
-              </div>
-            </div>
-          </div>
-
-          <Events compact hideFilters filterItems={[filterItems]} compactLimit={1000} />
-        </div>
-      </div>
+      {source === "api-misconfigured" ? <ArgoCdApiMisconfiguredNotice /> : null}
+      {source === "api" ? <ArgoOverviewApiTabContent /> : null}
+      {source === "cluster" ? <ArgoOverviewClusterTabContent /> : null}
     </>
   );
 });

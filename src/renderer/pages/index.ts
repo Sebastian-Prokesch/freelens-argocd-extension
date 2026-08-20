@@ -1,3 +1,4 @@
+export * from "./argo-application-api-details-page";
 export * from "./argo-applications-page";
 export * from "./argo-applicationsets-page";
 export * from "./argo-appprojects-page";
