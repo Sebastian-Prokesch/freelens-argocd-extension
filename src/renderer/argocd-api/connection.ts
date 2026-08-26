@@ -13,13 +13,7 @@ export function getActiveArgoCdServerConnection(): ArgoCdServerConnection | null
 
 export function getArgoCdApiConnection(): ArgoCdApiConnection {
   const active = getActiveArgoCdServerConnection();
-  return {
-    apiServerUrl: active?.apiServerUrl ?? "",
-    apiToken: active?.apiToken ?? "",
-    insecureSkipTlsVerify: active?.insecureSkipTlsVerify === true,
-    customCaPem: active?.customCaPem ?? "",
-    httpsProxy: active?.httpsProxy ?? "",
-  };
+  return { connectionId: active?.id ?? "" };
 }
 
 export function getArgoCdDataSource(): ArgoCdDataSource {

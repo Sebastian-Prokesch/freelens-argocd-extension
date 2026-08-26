@@ -8,12 +8,20 @@ class ArgoCdIpcRenderer extends Renderer.Ipc {
   }
 }
 
+type IpcSingleton = {
+  createInstance: (extension: Renderer.LensExtension) => ArgoCdIpcRenderer;
+};
+
 export function registerArgoCdApiIpc(extension: Renderer.LensExtension): void {
   try {
-    const ipc = new ArgoCdIpcRenderer(extension);
+    // Freelens Ipc is a Singleton — must use createInstance(), not `new`.
+    const ipc = (ArgoCdIpcRenderer as unknown as IpcSingleton).createInstance(extension);
     setArgoCdApiIpcInvoker((channel, request) => ipc.invoke(channel, request));
-  } catch {
-    // Fall back to Node HTTPS in the renderer if IPC registration is unavailable.
+  } catch (error) {
+    // Don't fall back to direct renderer HTTPS. Without IPC the main process can't
+    // resolve secrets safely, so API calls must fail with a visible error.
     setArgoCdApiIpcInvoker(undefined);
+    const detail = error instanceof Error ? error.message : String(error);
+    console.error(`[argo] failed to register Argo CD API IPC: ${detail}`);
   }
 }

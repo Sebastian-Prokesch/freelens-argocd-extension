@@ -1,7 +1,8 @@
 import { Common, Renderer } from "@freelensapp/extensions";
 import { observer } from "mobx-react";
 import { Link } from "react-router-dom";
-import { getArgoCdApiClient, getArgoCdDataSource, useArgoCdApiQuery } from "../argocd-api";
+import { useEffect } from "react";
+import { getArgoCdApiClient, getArgoCdDataSource, getArgoPreferences, useArgoCdApiQuery } from "../argocd-api";
 import { argoApiApplicationDrawerStore } from "../components/argo-api-details";
 import {
   ArgoApiCheckboxFilter,
@@ -113,7 +114,14 @@ const ArgoApplicationsClusterTabContent = observer(() => {
 });
 
 const ArgoApplicationsApiTabContent = observer(() => {
-  const { data, isLoading, error } = useArgoCdApiQuery(true, "applications", () =>
+  const preferences = getArgoPreferences();
+  const connectionId = preferences.activeApiConnectionId;
+
+  useEffect(() => {
+    argoApiApplicationDrawerStore.close();
+  }, [connectionId]);
+
+  const { data, isLoading, error } = useArgoCdApiQuery(true, `applications-${connectionId}`, () =>
     getArgoCdApiClient().listApplications(),
   );
   const applications = data ?? [];

@@ -1,7 +1,8 @@
 import { Common, Renderer } from "@freelensapp/extensions";
 import { observer } from "mobx-react";
 import { Link } from "react-router-dom";
-import { getArgoCdApiClient, getArgoCdDataSource, useArgoCdApiQuery } from "../argocd-api";
+import { useEffect } from "react";
+import { getArgoCdApiClient, getArgoCdDataSource, getArgoPreferences, useArgoCdApiQuery } from "../argocd-api";
 import { argoApiAppProjectDrawerStore } from "../components/argo-api-details";
 import { ArgoApiListToolbar, useArgoApiListFilters } from "../components/argo-api-list";
 import {
@@ -90,7 +91,16 @@ const ArgoAppProjectsClusterTabContent = observer(() => {
 });
 
 const ArgoAppProjectsApiTabContent = observer(() => {
-  const { data, isLoading, error } = useArgoCdApiQuery(true, "projects", () => getArgoCdApiClient().listProjects());
+  const preferences = getArgoPreferences();
+  const connectionId = preferences.activeApiConnectionId;
+
+  useEffect(() => {
+    argoApiAppProjectDrawerStore.close();
+  }, [connectionId]);
+
+  const { data, isLoading, error } = useArgoCdApiQuery(true, `projects-${connectionId}`, () =>
+    getArgoCdApiClient().listProjects(),
+  );
   const projects = data ?? [];
   const { search, setSearch, namespace, setNamespace, namespaces, filteredItems, filteredCount, totalCount } =
     useArgoApiListFilters(projects);

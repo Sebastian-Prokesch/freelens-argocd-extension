@@ -27,12 +27,24 @@ export interface ArgoCdHttpResponse {
 
 export type ArgoCdConnectionMode = "cluster" | "api";
 
+/**
+ * Renderer -> main IPC request.
+ *
+ * Security: main must not trust renderer-supplied credentials. The renderer must
+ * only reference a saved connection by `connectionId`; secrets (token/TLS/proxy)
+ * are resolved in the main process.
+ */
+export interface ArgoCdIpcRequest {
+  connectionId: string;
+  method: ArgoCdHttpMethod;
+  path: string;
+  query?: Record<string, string | undefined>;
+  body?: unknown;
+  timeoutMs?: number;
+}
+
 export interface ArgoCdApiConnection {
-  apiServerUrl: string;
-  apiToken: string;
-  insecureSkipTlsVerify: boolean;
-  customCaPem: string;
-  httpsProxy: string;
+  connectionId: string;
 }
 
 export type ArgoCdDataSource = "cluster" | "api" | "api-misconfigured";

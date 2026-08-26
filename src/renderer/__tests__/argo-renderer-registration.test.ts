@@ -46,9 +46,11 @@ describe("ArgoRenderer registrations", () => {
     const components = renderer.clusterFrameComponents;
 
     expect(Array.isArray(components)).toBe(true);
-    expect(components).toHaveLength(2);
+    expect(components).toHaveLength(4);
     expect(components[0]?.id).toBe("argocd-config-dialog");
     expect(components[1]?.id).toBe("argocd-application-sync-dialog");
+    expect(components[2]?.id).toBe("argocd-api-application-drawer");
+    expect(components[3]?.id).toBe("argocd-api-appproject-drawer");
     expect(components[0]?.Component).toBeDefined();
     expect(typeof components[0]?.shouldRender?.get).toBe("function");
   });

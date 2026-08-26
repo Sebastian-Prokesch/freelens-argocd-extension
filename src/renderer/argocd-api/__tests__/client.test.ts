@@ -1,7 +1,7 @@
 import { ArgoCdApiClient } from "../client";
 import { setArgoCdApiIpcInvoker } from "../transport";
 
-import type { ArgoCdHttpRequest, ArgoCdHttpResponse } from "../../../common/argocd-api";
+import type { ArgoCdHttpResponse, ArgoCdIpcRequest } from "../../../common/argocd-api";
 
 describe("ArgoCdApiClient", () => {
   afterEach(() => {
@@ -9,7 +9,7 @@ describe("ArgoCdApiClient", () => {
   });
 
   it("lists applications and maps them to kube-like objects", async () => {
-    const requests: ArgoCdHttpRequest[] = [];
+    const requests: ArgoCdIpcRequest[] = [];
     setArgoCdApiIpcInvoker(async (_channel, request) => {
       requests.push(request);
       const response: ArgoCdHttpResponse = {
@@ -27,13 +27,7 @@ describe("ArgoCdApiClient", () => {
       return response;
     });
 
-    const client = new ArgoCdApiClient(() => ({
-      apiServerUrl: "https://argocd.example.com",
-      apiToken: "token",
-      insecureSkipTlsVerify: true,
-      customCaPem: "",
-      httpsProxy: "",
-    }));
+    const client = new ArgoCdApiClient(() => ({ connectionId: "c1" }));
 
     const applications = await client.listApplications();
 
@@ -41,9 +35,7 @@ describe("ArgoCdApiClient", () => {
       expect.objectContaining({
         method: "GET",
         path: "/api/v1/applications",
-        serverUrl: "https://argocd.example.com",
-        token: "token",
-        insecureSkipTlsVerify: true,
+        connectionId: "c1",
       }),
     ]);
     expect(applications).toHaveLength(1);
@@ -52,19 +44,13 @@ describe("ArgoCdApiClient", () => {
   });
 
   it("posts sync and refresh requests with appNamespace", async () => {
-    const requests: ArgoCdHttpRequest[] = [];
+    const requests: ArgoCdIpcRequest[] = [];
     setArgoCdApiIpcInvoker(async (_channel, request) => {
       requests.push(request);
       return { status: 200, bodyText: "{}" };
     });
 
-    const client = new ArgoCdApiClient(() => ({
-      apiServerUrl: "https://argocd.example.com",
-      apiToken: "token",
-      insecureSkipTlsVerify: false,
-      customCaPem: "",
-      httpsProxy: "",
-    }));
+    const client = new ArgoCdApiClient(() => ({ connectionId: "c1" }));
     const application = {
       getName: () => "demo",
       getNs: () => "argocd",
@@ -94,7 +80,7 @@ describe("ArgoCdApiClient", () => {
   });
 
   it("tests connection against /api/version", async () => {
-    const requests: ArgoCdHttpRequest[] = [];
+    const requests: ArgoCdIpcRequest[] = [];
     setArgoCdApiIpcInvoker(async (_channel, request) => {
       requests.push(request);
       if (request.path === "/api/version") {
@@ -106,22 +92,10 @@ describe("ArgoCdApiClient", () => {
       return { status: 404, bodyText: "Not Found" };
     });
 
-    const client = new ArgoCdApiClient(() => ({
-      apiServerUrl: "https://argocd.example.com",
-      apiToken: "token",
-      insecureSkipTlsVerify: true,
-      customCaPem: "",
-      httpsProxy: "",
-    }));
+    const client = new ArgoCdApiClient(() => ({ connectionId: "c1" }));
 
     await expect(
-      client.testConnection({
-        apiServerUrl: "https://argocd.example.com",
-        apiToken: "token",
-        insecureSkipTlsVerify: true,
-        customCaPem: "",
-      httpsProxy: "",
-      }),
+      client.testConnection("c1"),
     ).resolves.toEqual({ version: "v2.9.5", username: "admin" });
 
     expect(requests[0]?.path).toBe("/api/version");

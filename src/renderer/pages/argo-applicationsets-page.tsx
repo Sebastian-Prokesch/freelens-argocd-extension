@@ -1,7 +1,7 @@
 import { Common, Renderer } from "@freelensapp/extensions";
 import { observer } from "mobx-react";
 import { Link } from "react-router-dom";
-import { getArgoCdApiClient, getArgoCdDataSource, useArgoCdApiQuery } from "../argocd-api";
+import { getArgoCdApiClient, getArgoCdDataSource, getArgoPreferences, useArgoCdApiQuery } from "../argocd-api";
 import { ArgoApiListToolbar, useArgoApiListFilters } from "../components/argo-api-list";
 import {
   ArgoCdApiMisconfiguredNotice,
@@ -119,7 +119,10 @@ const ArgoApplicationSetsClusterTabContent = observer(() => {
 });
 
 const ArgoApplicationSetsApiTabContent = observer(() => {
-  const { data, isLoading, error } = useArgoCdApiQuery(true, "applicationsets", () =>
+  const preferences = getArgoPreferences();
+  const connectionId = preferences.activeApiConnectionId;
+
+  const { data, isLoading, error } = useArgoCdApiQuery(true, `applicationsets-${connectionId}`, () =>
     getArgoCdApiClient().listApplicationSets(),
   );
   const applicationSets = data ?? [];

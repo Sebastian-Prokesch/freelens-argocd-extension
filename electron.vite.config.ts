@@ -39,7 +39,7 @@ export default defineConfig({
       }),
       externalizeDepsPlugin({
         // do not bundle modules provided by the host app
-        include: ["@freelensapp/extensions", "mobx"],
+        include: ["@freelensapp/extensions", "electron", "mobx"],
         // bundle proxy agent into the extension (not provided by Freelens runtime)
         exclude: ["hpagent"],
       }),
@@ -47,6 +47,7 @@ export default defineConfig({
         // the modules are provided by the host app as a global variable
         externals: {
           "@freelensapp/extensions": "global.LensExtensions",
+          electron: "commonjs electron",
           mobx: "global.Mobx",
         },
       }),

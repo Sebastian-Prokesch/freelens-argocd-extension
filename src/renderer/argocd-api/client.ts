@@ -1,4 +1,4 @@
-import type { ArgoCdApiConnection, ArgoCdHttpRequest } from "../../common/argocd-api";
+import type { ArgoCdApiConnection, ArgoCdIpcRequest } from "../../common/argocd-api";
 import type { ApplicationSyncOptions } from "../endpoints/application-sync-options";
 import { DEFAULT_APPLICATION_SYNC_OPTIONS } from "../endpoints/application-sync-options";
 import type { ApplicationHistoryEntry } from "../endpoints/argo-application-endpoints";
@@ -48,30 +48,19 @@ export class ArgoCdApiClient {
   constructor(private readonly getConnection: () => ArgoCdApiConnection = getArgoCdApiConnection) {}
 
   private async request(
-    partial: Omit<
-      ArgoCdHttpRequest,
-      "serverUrl" | "token" | "insecureSkipTlsVerify" | "customCaPem" | "httpsProxy"
-    >,
+    partial: Omit<ArgoCdIpcRequest, "connectionId">,
   ): Promise<unknown> {
     const connection = this.getConnection();
     return sendArgoCdHttpJson({
       ...partial,
-      serverUrl: connection.apiServerUrl,
-      token: connection.apiToken,
-      insecureSkipTlsVerify: connection.insecureSkipTlsVerify,
-      customCaPem: connection.customCaPem,
-      httpsProxy: connection.httpsProxy,
+      connectionId: connection.connectionId,
     });
   }
 
-  async testConnection(connection: ArgoCdApiConnection): Promise<{ username?: string; version?: string }> {
+  async testConnection(connectionId: string): Promise<{ username?: string; version?: string }> {
     // Argo CD exposes version at /api/version (not /api/v1/version).
     const versionPayload = (await sendArgoCdHttpJson({
-      serverUrl: connection.apiServerUrl,
-      token: connection.apiToken,
-      insecureSkipTlsVerify: connection.insecureSkipTlsVerify,
-      customCaPem: connection.customCaPem,
-      httpsProxy: connection.httpsProxy,
+      connectionId,
       method: "GET",
       path: "/api/version",
     })) as { Version?: string };
@@ -79,11 +68,7 @@ export class ArgoCdApiClient {
     let username: string | undefined;
     try {
       const userInfo = (await sendArgoCdHttpJson({
-        serverUrl: connection.apiServerUrl,
-        token: connection.apiToken,
-        insecureSkipTlsVerify: connection.insecureSkipTlsVerify,
-        customCaPem: connection.customCaPem,
-        httpsProxy: connection.httpsProxy,
+        connectionId,
         method: "GET",
         path: "/api/v1/session/userinfo",
       })) as { username?: string };

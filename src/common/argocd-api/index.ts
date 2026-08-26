@@ -8,5 +8,6 @@ export type {
   ArgoCdHttpMethod,
   ArgoCdHttpRequest,
   ArgoCdHttpResponse,
+  ArgoCdIpcRequest,
 } from "./types";
 export { buildArgoCdRequestUrl, normalizeArgoCdServerUrl, normalizeHttpsProxyUrl } from "./url";

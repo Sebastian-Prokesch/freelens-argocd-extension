@@ -1,7 +1,7 @@
 import { Renderer } from "@freelensapp/extensions";
 import { observer } from "mobx-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { getArgoCdApiClient, getArgoCdDataSource, useArgoCdApiQuery } from "../argocd-api";
+import { getArgoCdApiClient, getArgoCdDataSource, getArgoPreferences, useArgoCdApiQuery } from "../argocd-api";
 import {
   ArgoCdApiMisconfiguredNotice,
   ArgoConnectionSourceBanner,
@@ -238,10 +238,15 @@ const ArgoOverviewClusterTabContent = observer(() => {
 
 const ArgoOverviewApiTabContent = observer(() => {
   const [selectedApiNamespace, setSelectedApiNamespace] = useState("");
-  const applicationsQuery = useArgoCdApiQuery(true, "overview-applications", () =>
+  const preferences = getArgoPreferences();
+  const connectionId = preferences.activeApiConnectionId;
+
+  const applicationsQuery = useArgoCdApiQuery(true, `overview-applications-${connectionId}`, () =>
     getArgoCdApiClient().listApplications(),
   );
-  const projectsQuery = useArgoCdApiQuery(true, "overview-projects", () => getArgoCdApiClient().listProjects());
+  const projectsQuery = useArgoCdApiQuery(true, `overview-projects-${connectionId}`, () =>
+    getArgoCdApiClient().listProjects(),
+  );
   const isLoading = applicationsQuery.isLoading || projectsQuery.isLoading;
   const loadError = applicationsQuery.error ?? projectsQuery.error;
   const applications = applicationsQuery.data ?? [];

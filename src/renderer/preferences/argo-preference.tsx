@@ -36,13 +36,7 @@ export const ArgoPreferenceInput = observer(() => {
     setTestOk(false);
 
     try {
-      const result = await getArgoCdApiClient().testConnection({
-        apiServerUrl: selected.apiServerUrl,
-        apiToken: selected.apiToken,
-        insecureSkipTlsVerify: selected.insecureSkipTlsVerify,
-        customCaPem: selected.customCaPem,
-        httpsProxy: selected.httpsProxy,
-      });
+      const result = await getArgoCdApiClient().testConnection(selected.id);
       const parts = [
         result.username ? `Authenticated as ${result.username}` : "Authentication succeeded",
         result.version ? `Argo CD ${result.version}` : undefined,
