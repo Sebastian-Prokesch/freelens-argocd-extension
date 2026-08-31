@@ -1,8 +1,8 @@
 import {
   ARGOCD_API_HTTP_CHANNEL,
-  createArgoCdApiError,
   type ArgoCdHttpResponse,
   type ArgoCdIpcRequest,
+  createArgoCdApiError,
 } from "../../common/argocd-api";
 
 type ArgoCdApiInvoker = (channel: string, request: ArgoCdIpcRequest) => Promise<ArgoCdHttpResponse>;

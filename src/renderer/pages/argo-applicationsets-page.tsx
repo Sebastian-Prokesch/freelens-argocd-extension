@@ -3,10 +3,7 @@ import { observer } from "mobx-react";
 import { Link } from "react-router-dom";
 import { getArgoCdApiClient, getArgoCdDataSource, getArgoPreferences, useArgoCdApiQuery } from "../argocd-api";
 import { ArgoApiListToolbar, useArgoApiListFilters } from "../components/argo-api-list";
-import {
-  ArgoCdApiMisconfiguredNotice,
-  ArgoConnectionSourceBanner,
-} from "../components/argo-connection-source";
+import { ArgoCdApiMisconfiguredNotice, ArgoConnectionSourceBanner } from "../components/argo-connection-source";
 import { withErrorPage } from "../components/error-page";
 import {
   ArgoApplicationSet,

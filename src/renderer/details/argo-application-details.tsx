@@ -27,18 +27,7 @@ import styles from "./argo-application-details.module.scss";
 import stylesInline from "./argo-application-details.module.scss?inline";
 
 const {
-  Component: {
-    Button,
-    Checkbox,
-    DrawerTitle,
-    DrawerItem,
-    Gutter,
-    Table,
-    TableHead,
-    TableRow,
-    TableCell,
-    WithTooltip,
-  },
+  Component: { Button, Checkbox, DrawerTitle, DrawerItem, Gutter, Table, TableHead, TableRow, TableCell, WithTooltip },
 } = Renderer;
 
 const terminalOperationPhases = new Set(["Succeeded", "Failed", "Error"]);

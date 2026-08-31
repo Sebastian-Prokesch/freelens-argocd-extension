@@ -94,9 +94,7 @@ describe("ArgoCdApiClient", () => {
 
     const client = new ArgoCdApiClient(() => ({ connectionId: "c1" }));
 
-    await expect(
-      client.testConnection("c1"),
-    ).resolves.toEqual({ version: "v2.9.5", username: "admin" });
+    await expect(client.testConnection("c1")).resolves.toEqual({ version: "v2.9.5", username: "admin" });
 
     expect(requests[0]?.path).toBe("/api/version");
   });

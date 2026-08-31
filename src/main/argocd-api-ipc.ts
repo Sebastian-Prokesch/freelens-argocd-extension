@@ -1,11 +1,11 @@
 import { createHash } from "node:crypto";
 import { ipcMain } from "electron";
-
 import { ARGOCD_API_HTTP_CHANNEL, performArgoCdHttpRequest } from "../common/argocd-api";
 import { ArgoPreferencesStore } from "../common/store";
 
-import type { ArgoCdHttpMethod, ArgoCdHttpResponse, ArgoCdIpcRequest } from "../common/argocd-api";
 import type { Main } from "@freelensapp/extensions";
+
+import type { ArgoCdHttpMethod, ArgoCdHttpResponse, ArgoCdIpcRequest } from "../common/argocd-api";
 
 function isAllowedArgoCdApiPath(path: string): boolean {
   // Allow only Argo CD API endpoints. This prevents renderer from turning the main process

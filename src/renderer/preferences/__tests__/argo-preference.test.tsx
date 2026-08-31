@@ -50,7 +50,7 @@ describe("ArgoPreferenceInput", () => {
           apiToken: "token",
           insecureSkipTlsVerify: false,
           customCaPem: "",
-      httpsProxy: "",
+          httpsProxy: "",
         },
       ],
     });

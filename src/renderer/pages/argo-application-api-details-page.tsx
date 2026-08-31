@@ -6,7 +6,6 @@ import { getArgoCdApiClient } from "../argocd-api";
 import { ArgoConnectionSourceBanner } from "../components/argo-connection-source";
 import { withErrorPage } from "../components/error-page";
 import { ArgoApplicationDetails } from "../details/argo-application-details";
-import type { ArgoApplication } from "../k8s/argocd";
 import {
   ArgoHardRefreshMenuItem,
   ArgoRefreshMenuItem,
@@ -17,6 +16,8 @@ import {
 import { ArgoRoutes } from "../routes/argo-routes";
 import styles from "./argo-application-api-details-page.module.scss";
 import stylesInline from "./argo-application-api-details-page.module.scss?inline";
+
+import type { ArgoApplication } from "../k8s/argocd";
 
 export interface ArgoApiApplicationDetailsPageProps {
   extension: Renderer.LensExtension;

@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import type { ArgoApplication } from "../../k8s/argocd/applications";
 import {
   getApplicationHealthStatus,
   getApplicationProject,
@@ -8,6 +7,8 @@ import {
   uniqueSortedValues,
 } from "./application-filter-utils";
 import { useArgoApiListFilters } from "./use-argo-api-list-filters";
+
+import type { ArgoApplication } from "../../k8s/argocd/applications";
 
 export function useArgoApiApplicationFilters(applications: ArgoApplication[]) {
   const base = useArgoApiListFilters(applications);

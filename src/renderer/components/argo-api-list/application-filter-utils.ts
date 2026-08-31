@@ -15,14 +15,10 @@ export function getApplicationProject(app: { spec?: { project?: string } }): str
   return app.spec?.project?.trim() || "N/A";
 }
 
-export function getApplicationSyncStatus(app: {
-  status?: { sync?: { status?: string } };
-}): string {
+export function getApplicationSyncStatus(app: { status?: { sync?: { status?: string } } }): string {
   return app.status?.sync?.status?.trim() || "Unknown";
 }
 
-export function getApplicationHealthStatus(app: {
-  status?: { health?: { status?: string } };
-}): string {
+export function getApplicationHealthStatus(app: { status?: { health?: { status?: string } } }): string {
   return app.status?.health?.status?.trim() || "Unknown";
 }

@@ -1,5 +1,4 @@
 import { Renderer } from "@freelensapp/extensions";
-
 import { setArgoCdApiIpcInvoker } from "./transport";
 
 class ArgoCdIpcRenderer extends Renderer.Ipc {

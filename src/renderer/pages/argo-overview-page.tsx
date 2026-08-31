@@ -2,10 +2,7 @@ import { Renderer } from "@freelensapp/extensions";
 import { observer } from "mobx-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { getArgoCdApiClient, getArgoCdDataSource, getArgoPreferences, useArgoCdApiQuery } from "../argocd-api";
-import {
-  ArgoCdApiMisconfiguredNotice,
-  ArgoConnectionSourceBanner,
-} from "../components/argo-connection-source";
+import { ArgoCdApiMisconfiguredNotice, ArgoConnectionSourceBanner } from "../components/argo-connection-source";
 import { ArgoApplicationStatusChart, ArgoApplicationSyncStatusChart } from "../components/argo-overview";
 import { type ArgoApplication, getArgoApplicationStore, getArgoAppProjectStore } from "../k8s/argocd";
 import styles from "./argo-overview-page.module.scss";

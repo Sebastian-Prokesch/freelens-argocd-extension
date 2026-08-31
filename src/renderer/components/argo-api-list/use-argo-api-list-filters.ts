@@ -19,11 +19,7 @@ function matchesSearch(object: ArgoApiListFilterable, query: string): boolean {
   const normalized = query.trim().toLowerCase();
   if (!normalized) return true;
 
-  const fields = [
-    getObjectName(object),
-    getObjectNamespace(object),
-    ...(object.getSearchFields?.() ?? []),
-  ]
+  const fields = [getObjectName(object), getObjectNamespace(object), ...(object.getSearchFields?.() ?? [])]
     .filter(Boolean)
     .map((value) => String(value).toLowerCase());
 

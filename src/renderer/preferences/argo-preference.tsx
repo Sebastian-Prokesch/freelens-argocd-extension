@@ -122,12 +122,8 @@ export const ArgoPreferenceInput = observer(() => {
                               setTestMessage(null);
                             }}
                           >
-                            <span className={styles.connectionName}>
-                              {connection.name.trim() || "Untitled"}
-                            </span>
-                            <span className={styles.connectionUrl}>
-                              {connection.apiServerUrl.trim() || "No URL"}
-                            </span>
+                            <span className={styles.connectionName}>{connection.name.trim() || "Untitled"}</span>
+                            <span className={styles.connectionUrl}>{connection.apiServerUrl.trim() || "No URL"}</span>
                           </button>
                         </label>
                         <Button

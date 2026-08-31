@@ -1,16 +1,17 @@
-import type { ArgoCdApiConnection, ArgoCdIpcRequest } from "../../common/argocd-api";
-import type { ApplicationSyncOptions } from "../endpoints/application-sync-options";
 import { DEFAULT_APPLICATION_SYNC_OPTIONS } from "../endpoints/application-sync-options";
-import type { ApplicationHistoryEntry } from "../endpoints/argo-application-endpoints";
-import type { ArgoApplication } from "../k8s/argocd/applications";
 import { ArgoApplication as ArgoApplicationCtor } from "../k8s/argocd/applications";
-import type { ArgoApplicationSet } from "../k8s/argocd/applicationset";
 import { ArgoApplicationSet as ArgoApplicationSetCtor } from "../k8s/argocd/applicationset";
-import type { ArgoAppProject } from "../k8s/argocd/appproject";
 import { ArgoAppProject as ArgoAppProjectCtor } from "../k8s/argocd/appproject";
 import { getArgoCdApiConnection } from "./connection";
 import { createKubeLikeObject, normalizeArgoCdApiItem } from "./hydrate";
 import { sendArgoCdHttpJson } from "./transport";
+
+import type { ArgoCdApiConnection, ArgoCdIpcRequest } from "../../common/argocd-api";
+import type { ApplicationSyncOptions } from "../endpoints/application-sync-options";
+import type { ApplicationHistoryEntry } from "../endpoints/argo-application-endpoints";
+import type { ArgoApplication } from "../k8s/argocd/applications";
+import type { ArgoApplicationSet } from "../k8s/argocd/applicationset";
+import type { ArgoAppProject } from "../k8s/argocd/appproject";
 
 export interface ArgoCdApplicationRef {
   name: string;
@@ -47,9 +48,7 @@ function listItems(payload: unknown): Record<string, unknown>[] {
 export class ArgoCdApiClient {
   constructor(private readonly getConnection: () => ArgoCdApiConnection = getArgoCdApiConnection) {}
 
-  private async request(
-    partial: Omit<ArgoCdIpcRequest, "connectionId">,
-  ): Promise<unknown> {
+  private async request(partial: Omit<ArgoCdIpcRequest, "connectionId">): Promise<unknown> {
     const connection = this.getConnection();
     return sendArgoCdHttpJson({
       ...partial,
@@ -178,10 +177,7 @@ export class ArgoCdApiClient {
     });
   }
 
-  async updateApplicationSpec(
-    application: ArgoApplication,
-    spec: Record<string, unknown>,
-  ): Promise<ArgoApplication> {
+  async updateApplicationSpec(application: ArgoApplication, spec: Record<string, unknown>): Promise<ArgoApplication> {
     const ref = getArgoCdApplicationRef(application);
     const payload = (await this.request({
       method: "PUT",

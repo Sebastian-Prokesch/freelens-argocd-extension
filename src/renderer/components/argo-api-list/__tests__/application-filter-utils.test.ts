@@ -25,10 +25,7 @@ describe("application-filter-utils", () => {
   it("builds unique sorted facet options", () => {
     expect(uniqueSortedValues(apps.map((app) => getApplicationProject(app)))).toEqual(["proj-a", "proj-b"]);
     expect(uniqueSortedValues(apps.map((app) => getApplicationSyncStatus(app)))).toEqual(["OutOfSync", "Synced"]);
-    expect(uniqueSortedValues(apps.map((app) => getApplicationHealthStatus(app)))).toEqual([
-      "Degraded",
-      "Healthy",
-    ]);
+    expect(uniqueSortedValues(apps.map((app) => getApplicationHealthStatus(app)))).toEqual(["Degraded", "Healthy"]);
   });
 
   it("treats empty selection as match-all", () => {

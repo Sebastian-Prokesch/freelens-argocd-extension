@@ -1,7 +1,8 @@
 import { Renderer } from "@freelensapp/extensions";
 import { observer } from "mobx-react";
-import type { ReactNode } from "react";
 import styles from "../../pages/argo-api-list.module.scss";
+
+import type { ReactNode } from "react";
 
 const {
   Component: { Input },

@@ -1,14 +1,11 @@
 import { Common, Renderer } from "@freelensapp/extensions";
 import { observer } from "mobx-react";
-import { Link } from "react-router-dom";
 import { useEffect } from "react";
+import { Link } from "react-router-dom";
 import { getArgoCdApiClient, getArgoCdDataSource, getArgoPreferences, useArgoCdApiQuery } from "../argocd-api";
 import { argoApiAppProjectDrawerStore } from "../components/argo-api-details";
 import { ArgoApiListToolbar, useArgoApiListFilters } from "../components/argo-api-list";
-import {
-  ArgoCdApiMisconfiguredNotice,
-  ArgoConnectionSourceBanner,
-} from "../components/argo-connection-source";
+import { ArgoCdApiMisconfiguredNotice, ArgoConnectionSourceBanner } from "../components/argo-connection-source";
 import { withErrorPage } from "../components/error-page";
 import {
   ArgoAppProject,
@@ -117,7 +114,9 @@ const ArgoAppProjectsApiTabContent = observer(() => {
         <ArgoConnectionSourceBanner />
         {isLoading ? <div className={apiListStyles.loading}>Loading AppProjects from Argo CD API...</div> : null}
         {error ? <div className={apiListStyles.error}>{error}</div> : null}
-        {!isLoading && !error && projects.length === 0 ? <div className={apiListStyles.empty}>No AppProjects</div> : null}
+        {!isLoading && !error && projects.length === 0 ? (
+          <div className={apiListStyles.empty}>No AppProjects</div>
+        ) : null}
         {!isLoading && !error && projects.length > 0 ? (
           <div className={apiListStyles.page}>
             <ArgoApiListToolbar

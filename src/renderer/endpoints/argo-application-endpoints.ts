@@ -206,9 +206,7 @@ export interface ApplicationAutomatedSyncPolicy {
   allowEmpty?: boolean;
 }
 
-export function getApplicationAutomatedSyncPolicy(
-  application: ArgoApplication,
-): ApplicationAutomatedSyncPolicy | null {
+export function getApplicationAutomatedSyncPolicy(application: ArgoApplication): ApplicationAutomatedSyncPolicy | null {
   const automated = application.spec?.syncPolicy?.automated;
   if (!automated) {
     return null;

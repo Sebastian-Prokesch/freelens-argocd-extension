@@ -1,6 +1,6 @@
 import { observer } from "mobx-react";
-import { tryGetArgoExtension } from "../../extension-ref";
 import { ArgoApplicationDetails } from "../../details/argo-application-details";
+import { tryGetArgoExtension } from "../../extension-ref";
 import {
   ArgoHardRefreshMenuItem,
   ArgoRefreshMenuItem,
@@ -8,9 +8,9 @@ import {
   ArgoSyncWithOptionsMenuItem,
   ArgoTerminateMenuItem,
 } from "../../menus";
+import { argoApiApplicationDrawerStore } from "./argo-api-application-drawer-store";
 import styles from "./argo-api-details-drawer.module.scss";
 import stylesInline from "./argo-api-details-drawer.module.scss?inline";
-import { argoApiApplicationDrawerStore } from "./argo-api-application-drawer-store";
 
 export const ArgoApiApplicationDrawer = observer(() => {
   const { isOpen, application } = argoApiApplicationDrawerStore;
@@ -25,11 +25,7 @@ export const ArgoApiApplicationDrawer = observer(() => {
   return (
     <>
       <style>{stylesInline}</style>
-      <div
-        className={styles.overlay}
-        role="presentation"
-        onClick={() => argoApiApplicationDrawerStore.close()}
-      />
+      <div className={styles.overlay} role="presentation" onClick={() => argoApiApplicationDrawerStore.close()} />
       <aside className={styles.panel} role="dialog" aria-label={`Application ${name}`}>
         <div className={styles.header}>
           <div className={styles.titleBlock}>

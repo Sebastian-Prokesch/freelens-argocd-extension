@@ -1,3 +1,4 @@
+import { getArgoCdApiClient, isArgoCdApiMode } from "../../argocd-api";
 import {
   ARGO_APPLICATION_REFRESH_ANNOTATION,
   buildApplicationDisableAutomatedJsonPatch,
@@ -17,7 +18,6 @@ import {
   syncApplication,
   terminateApplicationOperation,
 } from "../argo-application-endpoints";
-import { getArgoCdApiClient, isArgoCdApiMode } from "../../argocd-api";
 
 jest.mock("../../argocd-api", () => ({
   isArgoCdApiMode: jest.fn(() => false),
@@ -416,9 +416,7 @@ describe("argo-application-endpoints", () => {
         },
       },
     });
-    expect(buildApplicationDisableAutomatedJsonPatch()).toEqual([
-      { op: "remove", path: "/spec/syncPolicy/automated" },
-    ]);
+    expect(buildApplicationDisableAutomatedJsonPatch()).toEqual([{ op: "remove", path: "/spec/syncPolicy/automated" }]);
     expect(buildApplicationSpecWithAutomatedSync(application, null)).toEqual({
       project: "default",
       syncPolicy: {
