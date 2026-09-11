@@ -1,0 +1,48 @@
+.banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(var(--unit) * 1.5);
+  padding: calc(var(--unit) * 1.5) calc(var(--unit) * 2);
+  background: var(--contentColor);
+  border-bottom: 1px solid var(--borderColor);
+  color: var(--textColorSecondary);
+  font-size: var(--font-size-small);
+}
+
+.bannerStrong {
+  color: var(--textColorPrimary);
+  font-weight: 600;
+}
+
+.bannerSwitcher {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--unit) * 0.75);
+}
+
+.bannerSwitcherLabel {
+  color: var(--textColorSecondary);
+}
+
+.bannerSelect {
+  min-height: 28px;
+  max-width: min(280px, 60vw);
+  padding: 0 calc(var(--unit) * 0.75);
+  border: 1px solid var(--borderColor);
+  border-radius: 4px;
+  background: var(--inputBackground, var(--mainBackground));
+  color: var(--textColorPrimary);
+}
+
+.error {
+  padding: calc(var(--unit) * 2);
+  background: var(--contentColor);
+  color: var(--colorError);
+}
+
+.hint {
+  padding: calc(var(--unit) * 2);
+  background: var(--contentColor);
+  color: var(--textColorSecondary);
+}

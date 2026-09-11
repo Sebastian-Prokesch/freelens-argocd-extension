@@ -5,6 +5,7 @@ export const ArgoPageIds = {
   landing: "argo-root",
   argocdRoot: "argo-argocd-root",
   argocdOverview: "argocd-overview",
+  argocdApplicationApiDetails: "argocd-application-api-details",
   argocdConfig: "argocd-config",
   workflowsRoot: "argo-workflows-root",
   workflowsCron: "argo-workflows-cron-workflows",

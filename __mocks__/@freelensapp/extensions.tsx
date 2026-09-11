@@ -92,14 +92,15 @@ export const Renderer = {
 
     // dialog & inputs
     Dialog: ({ children }: AnyRecord) => <div data-testid="Dialog">{children}</div>,
-    Input: ({ value, onChange, multiLine: _multiLine, ...props }: AnyRecord) => (
-      <input
-        data-testid="Input"
-        value={value ?? ""}
-        onChange={(event) => onChange?.(event.target.value, event)}
-        {...props}
-      />
-    ),
+    Input: ({ value, onChange, multiLine, rows: _rows, ...props }: AnyRecord) => {
+      const shared = {
+        "data-testid": "Input",
+        value: value ?? "",
+        onChange: (event: any) => onChange?.(event.target.value, event),
+        ...props,
+      };
+      return multiLine ? <textarea {...shared} /> : <input {...shared} />;
+    },
     Button: ({ onClick, children, disabled }: AnyRecord) => (
       <button type="button" data-testid="Button" onClick={onClick} disabled={disabled}>
         {children}
@@ -173,6 +174,23 @@ export const Renderer = {
   Navigation: {
     getDetailsUrl: (url: string) => url,
   },
+
+  Ipc: class {
+    constructor(_extension: any) {}
+    invoke = jest.fn(async () => ({ status: 200, bodyText: "{}" }));
+    listen = jest.fn(() => noop);
+    handle = jest.fn();
+  },
+} as const;
+
+export const Main = {
+  LensExtension: class {},
+  Ipc: class {
+    constructor(_extension: any) {}
+    invoke = jest.fn(async () => ({ status: 200, bodyText: "{}" }));
+    listen = jest.fn(() => noop);
+    handle = jest.fn();
+  },
 } as const;
 
 export const Common = {
@@ -181,5 +199,19 @@ export const Common = {
   },
   Util: {
     stopPropagation: noop,
+  },
+  Store: {
+    ExtensionStore: class {
+      constructor(_opts?: any) {}
+
+      static getInstanceOrCreate(this: any) {
+        if (!this.__instance) {
+          this.__instance = new this();
+        }
+        return this.__instance;
+      }
+
+      loadExtension() {}
+    },
   },
 } as const;

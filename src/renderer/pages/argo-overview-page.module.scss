@@ -138,3 +138,24 @@
 .chart {
   min-width: 0;
 }
+
+.apiNamespaceSelect {
+  min-height: 32px;
+  min-width: 180px;
+  max-width: 100%;
+  padding: 0 calc(var(--unit) * 1);
+  border: 1px solid var(--borderColor);
+  border-radius: 4px;
+  background: var(--inputBackground, var(--mainBackground));
+  color: var(--textColorPrimary);
+}
+
+.eventsNote {
+  margin: 0 calc(var(--unit) * 2);
+  padding: calc(var(--unit) * 1.5);
+  border: 1px solid var(--borderColor);
+  border-radius: 4px;
+  color: var(--textColorSecondary);
+  background: var(--layoutBackground);
+  font-size: 13px;
+}

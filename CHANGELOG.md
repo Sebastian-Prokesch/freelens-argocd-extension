@@ -8,6 +8,34 @@ with pre-release identifiers for beta builds.
 
 ## [Unreleased]
 
+### Fixed
+
+- API mode Applications / AppProjects / ApplicationSets lists: search, namespace filter, and vertical scrolling.
+- API mode: clicking an Application or AppProject opens a details side panel (Sync/Refresh/etc.) instead of navigating away to Workloads.
+- API mode Overview: client-side namespace filter and Events from the current cluster (with a note that they are cluster-backed).
+
+### Added
+
+- API mode Applications list: Project / Sync Status / Health Status checkbox filters and clickable column sorting (including Age).
+- Application details Sync Policy: toggle Automated sync (and Prune / Self Heal / Allow Empty) like the Argo CD web UI.
+- Preferences → **Argo CD Connection**: save multiple Argo CD API connections and choose the active one (legacy single URL/token settings migrate automatically). Banner dropdown switches the active connection when more than one is saved.
+- Preferences connection list: selecting a saved connection makes it active immediately; connections persist across Freelens restarts.
+- Optional per-connection **HTTPS proxy** for Argo CD API requests (same approach as Freelens `httpsProxy` / `hpagent`).
+- Preferences → **Argo CD Connection**: choose Current Kubernetes cluster (default) or Argo CD API with server URL + bearer token, optional TLS skip, and Test connection.
+- When API mode is enabled, Applications, ApplicationSets, AppProjects, and Overview load from the Argo CD HTTP API; Application sync / refresh / hard refresh / terminate / rollback use the same API.
+- Application details page for API-mode apps (`/argo/argocd/applications/:namespace/:name`) with the existing detail view and mutation actions.
+- Preferences field **Custom CA certificate (PEM)** so Argo CD API TLS can be verified with a corporate CA instead of skipping verification.
+
+### Changed
+
+- Config page stays cluster-backed in API mode and shows a notice (repositories / ConfigMaps are not managed via the Argo CD API yet).
+
+### Fixed
+
+- Connection test called `/api/v1/version` (404 on Argo CD); it now uses `/api/version`.
+- TLS failures against corporate CAs surface a clearer hint to enable Skip TLS verification; the HTTP client also tries Node system CA certificates when available.
+- API-mode Application / AppProject / ApplicationSet objects synthesize `metadata.selfLink` (and uid) so Freelens KubeObject construction no longer fails with "metadata.selfLink being a string".
+
 ## [0.1.14]
 
 ### Added

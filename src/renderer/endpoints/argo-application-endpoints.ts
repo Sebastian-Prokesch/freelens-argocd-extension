@@ -1,3 +1,4 @@
+import { getArgoCdApiClient, isArgoCdApiMode } from "../argocd-api";
 import {
   type ApplicationSyncOptions,
   type ApplicationSyncStrategy,
@@ -57,7 +58,7 @@ export function buildApplicationSyncMergePatch(
 
 export interface JsonPatchOperation {
   op: "remove";
-  path: "/operation";
+  path: string;
 }
 
 export function buildApplicationTerminateJsonPatch(): JsonPatchOperation[] {
@@ -79,6 +80,11 @@ export async function syncApplication(
   application: ArgoApplication,
   options?: ApplicationSyncOptions,
 ): Promise<void> {
+  if (isArgoCdApiMode()) {
+    await getArgoCdApiClient().syncApplication(application, options);
+    return;
+  }
+
   await store.patch(application, buildApplicationSyncMergePatch(options), "merge");
 }
 
@@ -87,6 +93,11 @@ export async function requestApplicationRefresh(
   application: ArgoApplication,
   mode: ApplicationRefreshMode,
 ): Promise<void> {
+  if (isArgoCdApiMode()) {
+    await getArgoCdApiClient().refreshApplication(application, mode);
+    return;
+  }
+
   await store.patch(application, buildApplicationRefreshMergePatch(mode), "merge");
 }
 
@@ -102,6 +113,11 @@ export async function terminateApplicationOperation(
   store: ArgoApplicationStore,
   application: ArgoApplication,
 ): Promise<void> {
+  if (isArgoCdApiMode()) {
+    await getArgoCdApiClient().terminateApplicationOperation(application);
+    return;
+  }
+
   await store.patch(application, buildApplicationTerminateJsonPatch(), "json");
 }
 
@@ -175,6 +191,99 @@ export async function rollbackApplication(
   application: ArgoApplication,
   entry: ApplicationHistoryEntry,
 ): Promise<void> {
+  if (isArgoCdApiMode()) {
+    await getArgoCdApiClient().rollbackApplication(application, entry);
+    return;
+  }
+
   const syncOptions = application.spec?.syncPolicy?.syncOptions;
   await store.patch(application, buildApplicationRollbackMergePatch(entry, syncOptions), "merge");
+}
+
+export interface ApplicationAutomatedSyncPolicy {
+  prune?: boolean;
+  selfHeal?: boolean;
+  allowEmpty?: boolean;
+}
+
+export function getApplicationAutomatedSyncPolicy(application: ArgoApplication): ApplicationAutomatedSyncPolicy | null {
+  const automated = application.spec?.syncPolicy?.automated;
+  if (!automated) {
+    return null;
+  }
+
+  return {
+    prune: Boolean(automated.prune),
+    selfHeal: Boolean(automated.selfHeal),
+    allowEmpty: Boolean(automated.allowEmpty),
+  };
+}
+
+export function buildApplicationSpecWithAutomatedSync(
+  application: ArgoApplication,
+  automated: ApplicationAutomatedSyncPolicy | null,
+): Record<string, unknown> {
+  const spec = JSON.parse(JSON.stringify(application.spec ?? {})) as Record<string, unknown>;
+  const syncPolicy = {
+    ...((spec.syncPolicy as Record<string, unknown> | undefined) ?? {}),
+  };
+
+  if (automated === null) {
+    delete syncPolicy.automated;
+  } else {
+    syncPolicy.automated = {
+      prune: Boolean(automated.prune),
+      selfHeal: Boolean(automated.selfHeal),
+      allowEmpty: Boolean(automated.allowEmpty),
+    };
+  }
+
+  if (Object.keys(syncPolicy).length === 0) {
+    delete spec.syncPolicy;
+  } else {
+    spec.syncPolicy = syncPolicy;
+  }
+
+  return spec;
+}
+
+export function buildApplicationEnableAutomatedMergePatch(
+  automated: ApplicationAutomatedSyncPolicy = {},
+): Record<string, unknown> {
+  return {
+    spec: {
+      syncPolicy: {
+        automated: {
+          prune: Boolean(automated.prune),
+          selfHeal: Boolean(automated.selfHeal),
+          allowEmpty: Boolean(automated.allowEmpty),
+        },
+      },
+    },
+  };
+}
+
+export function buildApplicationDisableAutomatedJsonPatch(): JsonPatchOperation[] {
+  return [{ op: "remove", path: "/spec/syncPolicy/automated" }];
+}
+
+export async function setApplicationAutomatedSync(
+  store: ArgoApplicationStore,
+  application: ArgoApplication,
+  automated: ApplicationAutomatedSyncPolicy | null,
+): Promise<ArgoApplication | void> {
+  if (isArgoCdApiMode()) {
+    const spec = buildApplicationSpecWithAutomatedSync(application, automated);
+    return getArgoCdApiClient().updateApplicationSpec(application, spec);
+  }
+
+  if (automated === null) {
+    if (!application.spec?.syncPolicy?.automated) {
+      return;
+    }
+    await store.patch(application, buildApplicationDisableAutomatedJsonPatch(), "json");
+    return;
+  }
+
+  await store.patch(application, buildApplicationEnableAutomatedMergePatch(automated), "merge");
 }

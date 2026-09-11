@@ -46,9 +46,11 @@ describe("ArgoRenderer registrations", () => {
     const components = renderer.clusterFrameComponents;
 
     expect(Array.isArray(components)).toBe(true);
-    expect(components).toHaveLength(2);
+    expect(components).toHaveLength(4);
     expect(components[0]?.id).toBe("argocd-config-dialog");
     expect(components[1]?.id).toBe("argocd-application-sync-dialog");
+    expect(components[2]?.id).toBe("argocd-api-application-drawer");
+    expect(components[3]?.id).toBe("argocd-api-appproject-drawer");
     expect(components[0]?.Component).toBeDefined();
     expect(typeof components[0]?.shouldRender?.get).toBe("function");
   });
@@ -62,6 +64,7 @@ describe("ArgoRenderer registrations", () => {
 
     expect(pageIds).toContain("appprojects");
     expect(pageIds).toContain("applicationsets");
+    expect(pageIds).toContain("argocd-application-api-details");
     expect(pageIds).toContain("rollouts");
     expect(pageIds).toContain("argo-rollouts-overview");
     expect(pageIds).toContain("analysisruns");
@@ -74,6 +77,7 @@ describe("ArgoRenderer registrations", () => {
     expect(pageIds).toContain("argo-workflows-cluster-templates");
     expect(pageRoutes).toContain("/argo/argocd/appprojects");
     expect(pageRoutes).toContain("/argo/argocd/applicationsets");
+    expect(pageRoutes).toContain("/argo/argocd/applications/:namespace/:name");
     expect(pageRoutes).toContain("/argo/workflows");
     expect(pageRoutes).toContain("/argo/workflows/cron-workflows");
     expect(pageRoutes).toContain("/argo/workflows/workflow-templates");
@@ -96,6 +100,15 @@ describe("ArgoRenderer registrations", () => {
     expect(menuIds).toContain("argo-rollouts-experiments-menu");
     expect(menuIds).toContain("argo-rollouts-analysis-templates-menu");
     expect(menuIds).toContain("argo-rollouts-cluster-analysis-templates-menu");
+  });
+
+  it("registers Argo CD connection preferences", () => {
+    const renderer = createRenderer();
+
+    expect(renderer.appPreferences).toHaveLength(1);
+    expect(renderer.appPreferences[0]?.title).toBe("Argo CD Connection");
+    expect(renderer.appPreferences[0]?.components?.Input).toBeDefined();
+    expect(renderer.appPreferences[0]?.components?.Hint).toBeDefined();
   });
 
   it("registers Application and AppProject detail items", () => {

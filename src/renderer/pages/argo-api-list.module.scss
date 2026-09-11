@@ -1,0 +1,207 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  background: var(--contentColor);
+}
+
+.root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.toolbar {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--unit) * 1.5);
+  padding: calc(var(--unit) * 2);
+  border-bottom: 1px solid var(--borderColor);
+}
+
+.toolbarTitleRow {
+  display: flex;
+  align-items: baseline;
+  gap: calc(var(--unit) * 1.5);
+  flex-wrap: wrap;
+}
+
+.toolbarTitle {
+  margin: 0;
+  color: var(--textColorPrimary);
+  font-size: var(--fontSizeHeading, 15px);
+  font-weight: 600;
+}
+
+.toolbarCount {
+  color: var(--textColorSecondary);
+  font-size: 13px;
+}
+
+.toolbarFilters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--unit) * 1.5);
+  align-items: flex-end;
+}
+
+.searchField {
+  flex: 1 1 240px;
+  min-width: 180px;
+  max-width: 420px;
+}
+
+.namespaceField {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--unit) * 0.5);
+  min-width: 180px;
+}
+
+.namespaceLabel {
+  color: var(--textColorSecondary);
+  font-size: 12px;
+}
+
+.namespaceSelect {
+  min-height: 32px;
+  padding: 0 calc(var(--unit) * 1);
+  border: 1px solid var(--borderColor);
+  border-radius: 4px;
+  background: var(--inputBackground, var(--mainBackground));
+  color: var(--textColorPrimary);
+}
+
+.checkboxFilter {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--unit) * 0.5);
+  min-width: 160px;
+}
+
+.checkboxFilterButton {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(var(--unit) * 1);
+  min-height: 32px;
+  min-width: 160px;
+  max-width: 240px;
+  padding: 0 calc(var(--unit) * 1);
+  border: 1px solid var(--borderColor);
+  border-radius: 4px;
+  background: var(--inputBackground, var(--mainBackground));
+  color: var(--textColorPrimary);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+}
+
+.checkboxFilterSummary {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.checkboxFilterCaret {
+  color: var(--textColorSecondary);
+  flex-shrink: 0;
+}
+
+.checkboxFilterMenu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--unit) * 1);
+  min-width: 220px;
+  max-width: min(320px, 80vw);
+  max-height: 280px;
+  padding: calc(var(--unit) * 1.25);
+  border: 1px solid var(--borderColor);
+  border-radius: 6px;
+  background: var(--contentColor);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.checkboxFilterMenuActions {
+  display: flex;
+  gap: calc(var(--unit) * 1);
+}
+
+.checkboxFilterAction {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--colorInfo, var(--textColorPrimary));
+  cursor: pointer;
+  padding: 0;
+  font: inherit;
+  font-size: 12px;
+
+  &:disabled {
+    color: var(--textColorSecondary);
+    cursor: default;
+  }
+}
+
+.checkboxFilterOptions {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--unit) * 0.75);
+  overflow: auto;
+  min-height: 0;
+}
+
+.checkboxFilterEmpty {
+  color: var(--textColorSecondary);
+  font-size: 13px;
+}
+
+.loading,
+.error,
+.empty {
+  padding: calc(var(--unit) * 2);
+  background: var(--contentColor);
+  color: var(--textColorSecondary);
+}
+
+.error {
+  color: var(--colorError);
+}
+
+.tableWrap {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 0 calc(var(--unit) * 2) calc(var(--unit) * 2);
+}
+
+.rowLink {
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: 0;
+  color: var(--colorInfo, var(--textColorPrimary));
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.clickableRow {
+  cursor: pointer;
+
+  &:hover {
+    background: var(--contentColorSecondary, rgba(255, 255, 255, 0.04));
+  }
+}

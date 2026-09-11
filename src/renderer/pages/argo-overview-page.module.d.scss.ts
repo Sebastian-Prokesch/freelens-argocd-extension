@@ -17,5 +17,7 @@ declare const classNames: {
   readonly emptyState: "emptyState";
   readonly chartsRow: "chartsRow";
   readonly chart: "chart";
+  readonly apiNamespaceSelect: "apiNamespaceSelect";
+  readonly eventsNote: "eventsNote";
 };
 export = classNames;

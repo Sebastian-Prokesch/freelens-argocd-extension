@@ -1,5 +1,5 @@
 import { Renderer } from "@freelensapp/extensions";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { buildApplicationRollbackMergePatch } from "../../endpoints/argo-application-endpoints";
 import {
@@ -145,8 +145,10 @@ describe("ArgoApplicationDetails", () => {
     expect(screen.getAllByText("Not specified").length).toBeGreaterThan(0);
   });
 
-  it("renders sync policy booleans, sync options, retry backoff formatting", () => {
+  it("renders sync policy controls, sync options, retry backoff formatting", () => {
     renderDetails({
+      getName: () => "demo-app",
+      metadata: { name: "demo-app" },
       spec: {
         source: { repoURL: "https://github.com/org/repo.git" },
         destination: { namespace: "apps" },
@@ -173,14 +175,10 @@ describe("ArgoApplicationDetails", () => {
 
     expect(screen.getByText("Sync Policy")).toBeInTheDocument();
     expect(screen.getByText("Automated Sync")).toBeInTheDocument();
-    expect(screen.getByText("Prune")).toBeInTheDocument();
-    expect(screen.getByText("Self Heal")).toBeInTheDocument();
-    expect(screen.getByText("Allow Empty")).toBeInTheDocument();
-
-    // the BadgeBoolean mock prints 'true'/'false' strings
-    expect(screen.getAllByTestId("BadgeBoolean").map((el) => el.textContent)).toEqual(
-      expect.arrayContaining(["true", "true", "false", "true"]),
-    );
+    expect(screen.getByLabelText("Automated")).toBeChecked();
+    expect(screen.getByLabelText("Prune")).toBeChecked();
+    expect(screen.getByLabelText("Self Heal")).not.toBeChecked();
+    expect(screen.getByLabelText("Allow Empty")).toBeChecked();
 
     expect(screen.getByText("Sync Options")).toBeInTheDocument();
     expect(screen.getByText("CreateNamespace=true, PruneLast=true")).toBeInTheDocument();
@@ -189,6 +187,42 @@ describe("ArgoApplicationDetails", () => {
     expect(screen.getByText("5")).toBeInTheDocument();
     expect(screen.getByText("Retry Backoff")).toBeInTheDocument();
     expect(screen.getByText("Duration: 5s, Factor: 2, Max: 3m")).toBeInTheDocument();
+  });
+
+  it("enables automated sync policy via checkbox", async () => {
+    const user = userEvent.setup();
+    patchMock.mockResolvedValue(undefined);
+
+    renderDetails({
+      getName: () => "demo-app",
+      metadata: { name: "demo-app" },
+      spec: {
+        source: { repoURL: "https://github.com/org/repo.git" },
+        destination: { namespace: "apps" },
+      },
+      status: { resources: [] },
+    });
+
+    expect(screen.getByText("Manual — sync only when requested")).toBeInTheDocument();
+    await user.click(screen.getByLabelText("Automated"));
+
+    await waitFor(() =>
+      expect(patchMock).toHaveBeenCalledWith(
+        expect.anything(),
+        {
+          spec: {
+            syncPolicy: {
+              automated: {
+                prune: false,
+                selfHeal: false,
+                allowEmpty: false,
+              },
+            },
+          },
+        },
+        "merge",
+      ),
+    );
   });
 
   it("renders ignoreDifferences table and resources table with fallbacks", () => {

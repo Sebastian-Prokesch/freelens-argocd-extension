@@ -4,9 +4,12 @@ import { useRef, useState } from "react";
 import { withErrorPage } from "../components/error-page";
 import { ConditionsList, ResourceEventsSection, StatusBadge } from "../components/shared";
 import {
+  type ApplicationAutomatedSyncPolicy,
   type ApplicationHistoryEntry,
+  getApplicationAutomatedSyncPolicy,
   hasRollbackSourceMetadata,
   rollbackApplication,
+  setApplicationAutomatedSync,
 } from "../endpoints/argo-application-endpoints";
 import { ArgoApplication, ArgoApplicationResourceSyncStatus, getArgoApplicationStore } from "../k8s/argocd";
 import {
@@ -24,18 +27,7 @@ import styles from "./argo-application-details.module.scss";
 import stylesInline from "./argo-application-details.module.scss?inline";
 
 const {
-  Component: {
-    BadgeBoolean,
-    Button,
-    DrawerTitle,
-    DrawerItem,
-    Gutter,
-    Table,
-    TableHead,
-    TableRow,
-    TableCell,
-    WithTooltip,
-  },
+  Component: { Button, Checkbox, DrawerTitle, DrawerItem, Gutter, Table, TableHead, TableRow, TableCell, WithTooltip },
 } = Renderer;
 
 const terminalOperationPhases = new Set(["Succeeded", "Failed", "Error"]);
@@ -143,14 +135,16 @@ function getRollbackDisabledReason(application: ArgoApplication, entry: Applicat
 
 export interface ArgoApplicationDetailsProps extends Renderer.Component.KubeObjectDetailsProps<ArgoApplication> {
   extension: Renderer.LensExtension;
+  onApplicationUpdated?: (application: ArgoApplication) => void;
 }
 
 export const ArgoApplicationDetails = observer((props: ArgoApplicationDetailsProps) => {
   const [highlightedResourceKey, setHighlightedResourceKey] = useState<string | undefined>();
+  const [isUpdatingSyncPolicy, setIsUpdatingSyncPolicy] = useState(false);
   const resourceDiffSectionRef = useRef<HTMLDivElement>(null);
 
   return withErrorPage(props, () => {
-    const { object } = props;
+    const { object, onApplicationUpdated } = props;
     const pluginEnv = normalizeArray(object.spec.source?.plugin?.env);
     const pluginParameters = normalizeArray(object.spec.source?.plugin?.parameters);
     const ignoreDifferences = normalizeArray(object.spec.ignoreDifferences);
@@ -161,6 +155,8 @@ export const ArgoApplicationDetails = observer((props: ArgoApplicationDetailsPro
     const applicationStore = getArgoApplicationStore();
     const applicationName = object.getName?.() ?? object.metadata?.name ?? "application";
     const defaultNamespace = object.spec.destination?.namespace;
+    const automatedPolicy = getApplicationAutomatedSyncPolicy(object);
+    const syncPolicy = object.spec?.syncPolicy;
 
     const handleViewDiff = (resource: ApplicationResourceDiagnostic) => {
       const resourceKey = buildApplicationResourceKey(resource, defaultNamespace);
@@ -191,6 +187,41 @@ export const ArgoApplicationDetails = observer((props: ArgoApplicationDetailsPro
         failureFallback: "Failed to rollback application.",
         confirm: getRollbackApplicationConfirmCopy(applicationName, entry),
       });
+    };
+
+    const applyAutomatedSyncPolicy = async (next: ApplicationAutomatedSyncPolicy | null) => {
+      if (isUpdatingSyncPolicy) {
+        return;
+      }
+
+      setIsUpdatingSyncPolicy(true);
+      try {
+        await runGuardedArgoMutation({
+          risk: next === null ? "destructive" : "low",
+          actionLabel: next === null ? "Disable automated sync" : "Update sync policy",
+          resourceName: applicationName,
+          run: async () => {
+            const updated = await setApplicationAutomatedSync(applicationStore, object, next);
+            if (updated) {
+              onApplicationUpdated?.(updated);
+            }
+          },
+          successMessage:
+            next === null
+              ? `Automated sync disabled for ${applicationName}`
+              : `Sync policy updated for ${applicationName}`,
+          failureFallback: "Failed to update sync policy.",
+          confirm:
+            next === null
+              ? {
+                  title: "Disable automated sync",
+                  message: `Disable automated sync for ${applicationName}? Future syncs will need to be started manually.`,
+                }
+              : undefined,
+        });
+      } finally {
+        setIsUpdatingSyncPolicy(false);
+      }
     };
 
     return (
@@ -359,39 +390,84 @@ export const ArgoApplicationDetails = observer((props: ArgoApplicationDetailsPro
           )}
 
           {/* Section 4: Sync Policy */}
-          {object.spec.syncPolicy && (
-            <>
-              <DrawerTitle>Sync Policy</DrawerTitle>
-              <DrawerItem name="Automated Sync">
-                <BadgeBoolean value={!!object.spec.syncPolicy.automated} />
-              </DrawerItem>
-              {object.spec.syncPolicy.automated && (
-                <>
-                  <DrawerItem name="Prune">
-                    <BadgeBoolean value={object.spec.syncPolicy.automated.prune || false} />
-                  </DrawerItem>
-                  <DrawerItem name="Self Heal">
-                    <BadgeBoolean value={object.spec.syncPolicy.automated.selfHeal || false} />
-                  </DrawerItem>
-                  <DrawerItem name="Allow Empty">
-                    <BadgeBoolean value={object.spec.syncPolicy.automated.allowEmpty || false} />
-                  </DrawerItem>
-                </>
-              )}
-              {object.spec.syncPolicy.syncOptions && object.spec.syncPolicy.syncOptions.length > 0 && (
-                <DrawerItem name="Sync Options">{formatSyncOptions(object.spec.syncPolicy.syncOptions)}</DrawerItem>
-              )}
-              {object.spec.syncPolicy.retry && (
-                <>
-                  <DrawerItem name="Retry Limit">{object.spec.syncPolicy.retry.limit || "Not set"}</DrawerItem>
-                  <DrawerItem name="Retry Backoff">
-                    {formatRetryBackoff(object.spec.syncPolicy.retry.backoff)}
-                  </DrawerItem>
-                </>
-              )}
-              <Gutter size="md" />
-            </>
-          )}
+          <>
+            <DrawerTitle>Sync Policy</DrawerTitle>
+            <DrawerItem name="Automated Sync">
+              <div className={styles.syncPolicyControls}>
+                <Checkbox
+                  label="Automated"
+                  value={Boolean(automatedPolicy)}
+                  disabled={isUpdatingSyncPolicy}
+                  onChange={(checked) => {
+                    void applyAutomatedSyncPolicy(
+                      checked
+                        ? {
+                            prune: automatedPolicy?.prune ?? false,
+                            selfHeal: automatedPolicy?.selfHeal ?? false,
+                            allowEmpty: automatedPolicy?.allowEmpty ?? false,
+                          }
+                        : null,
+                    );
+                  }}
+                />
+              </div>
+            </DrawerItem>
+            {automatedPolicy ? (
+              <>
+                <DrawerItem name="Prune">
+                  <Checkbox
+                    label="Prune"
+                    value={Boolean(automatedPolicy.prune)}
+                    disabled={isUpdatingSyncPolicy}
+                    onChange={(checked) => {
+                      void applyAutomatedSyncPolicy({
+                        ...automatedPolicy,
+                        prune: checked,
+                      });
+                    }}
+                  />
+                </DrawerItem>
+                <DrawerItem name="Self Heal">
+                  <Checkbox
+                    label="Self Heal"
+                    value={Boolean(automatedPolicy.selfHeal)}
+                    disabled={isUpdatingSyncPolicy}
+                    onChange={(checked) => {
+                      void applyAutomatedSyncPolicy({
+                        ...automatedPolicy,
+                        selfHeal: checked,
+                      });
+                    }}
+                  />
+                </DrawerItem>
+                <DrawerItem name="Allow Empty">
+                  <Checkbox
+                    label="Allow Empty"
+                    value={Boolean(automatedPolicy.allowEmpty)}
+                    disabled={isUpdatingSyncPolicy}
+                    onChange={(checked) => {
+                      void applyAutomatedSyncPolicy({
+                        ...automatedPolicy,
+                        allowEmpty: checked,
+                      });
+                    }}
+                  />
+                </DrawerItem>
+              </>
+            ) : (
+              <DrawerItem name="Mode">Manual — sync only when requested</DrawerItem>
+            )}
+            {syncPolicy?.syncOptions && syncPolicy.syncOptions.length > 0 ? (
+              <DrawerItem name="Sync Options">{formatSyncOptions(syncPolicy.syncOptions)}</DrawerItem>
+            ) : null}
+            {syncPolicy?.retry ? (
+              <>
+                <DrawerItem name="Retry Limit">{syncPolicy.retry.limit || "Not set"}</DrawerItem>
+                <DrawerItem name="Retry Backoff">{formatRetryBackoff(syncPolicy.retry.backoff)}</DrawerItem>
+              </>
+            ) : null}
+            <Gutter size="md" />
+          </>
 
           {/* Section 5: Advanced Settings */}
           {ignoreDifferences.length > 0 && (

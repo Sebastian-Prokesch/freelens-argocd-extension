@@ -1,6 +1,6 @@
 {
   "name": "@sebastian-prokesch/freelens-argo-extension",
-  "version": "0.1.14",
+  "version": "0.1.20",
   "description": "Freelens Extension for Argo resources",
   "repository": {
     "type": "git",
@@ -101,5 +101,8 @@
     "argo",
     "argocd"
   ],
-  "packageManager": "pnpm@11.15.1"
+  "packageManager": "pnpm@11.15.1",
+  "dependencies": {
+    "hpagent": "1.2.0"
+  }
 }

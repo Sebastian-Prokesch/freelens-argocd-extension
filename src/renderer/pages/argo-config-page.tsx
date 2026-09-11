@@ -2,7 +2,13 @@ import { Renderer } from "@freelensapp/extensions";
 import { reaction } from "mobx";
 import { observer } from "mobx-react";
 import React from "react";
+import { getArgoCdDataSource } from "../argocd-api";
 import { argoConfigDialogStore } from "../components/argo-config";
+import {
+  ArgoCdApiConfigClusterOnlyNotice,
+  ArgoCdApiMisconfiguredNotice,
+  ArgoConnectionSourceBanner,
+} from "../components/argo-connection-source";
 import { withErrorPage } from "../components/error-page";
 import {
   getArgoSecretType,
@@ -238,6 +244,7 @@ export interface ArgoConfigPageProps {
 }
 
 export const ArgoConfigTabContent = observer(() => {
+  const source = getArgoCdDataSource();
   const [activeTab, setActiveTab] = React.useState<ArgoConfigTab>("repositories");
   const [isLoaded, setIsLoaded] = React.useState(false);
   const [loadError, setLoadError] = React.useState<string | null>(null);
@@ -247,6 +254,10 @@ export const ArgoConfigTabContent = observer(() => {
   const loadGeneration = React.useRef(0);
 
   React.useEffect(() => {
+    if (source !== "cluster") {
+      return;
+    }
+
     let isMounted = true;
     const { namespaceStore } = Renderer.K8sApi;
 
@@ -330,7 +341,21 @@ export const ArgoConfigTabContent = observer(() => {
       }
       watches.current = [];
     };
-  }, []);
+  }, [source]);
+
+  if (source === "api-misconfigured") {
+    return <ArgoCdApiMisconfiguredNotice />;
+  }
+
+  if (source === "api") {
+    return (
+      <>
+        <style>{stylesInline}</style>
+        <ArgoConnectionSourceBanner />
+        <ArgoCdApiConfigClusterOnlyNotice />
+      </>
+    );
+  }
 
   const repositorySecrets = secretItems.filter((item) => getArgoSecretType(item as LabeledObject) === "repository");
   const repoCredsSecrets = secretItems.filter((item) => getArgoSecretType(item as LabeledObject) === "repo-creds");

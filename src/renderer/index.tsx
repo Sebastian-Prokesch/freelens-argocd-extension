@@ -6,7 +6,9 @@
 import { Renderer } from "@freelensapp/extensions";
 import { computed } from "mobx";
 import { ArgoPreferencesStore } from "../common/store";
+import { registerArgoCdApiIpc } from "./argocd-api";
 import { ApplicationSyncDialog } from "./components/application-sync";
+import { ArgoApiApplicationDrawer, ArgoApiAppProjectDrawer } from "./components/argo-api-details";
 import { ArgoConfigDialog } from "./components/argo-config";
 import { ArgoAnalysisRunDetails } from "./details/argo-analysis-run-details";
 import { ArgoAnalysisTemplateDetails } from "./details/argo-analysis-template-details";
@@ -21,6 +23,7 @@ import { ArgoExperimentDetails } from "./details/argo-experiment-details";
 import { ArgoRolloutDetails } from "./details/argo-rollout-details";
 import { ArgoWorkflowDetails } from "./details/argo-workflow-details";
 import { ArgoWorkflowTemplateDetails } from "./details/argo-workflow-template-details";
+import { setArgoExtension } from "./extension-ref";
 import { ArgoApplication, ArgoApplicationSet, ArgoAppProject } from "./k8s/argocd";
 import {
   ArgoAnalysisRun,
@@ -44,6 +47,7 @@ import {
   ArgoSyncWithOptionsMenuItem,
   ArgoTerminateMenuItem,
 } from "./menus";
+import { ArgoPreferenceHint, ArgoPreferenceInput } from "./preferences";
 import { buildClusterPageMenus, buildClusterPages } from "./registration/cluster-registration";
 import {
   createKubeObjectDetailRegistration,
@@ -62,12 +66,32 @@ export default class ArgoRenderer extends Renderer.LensExtension {
       Component: ApplicationSyncDialog,
       shouldRender: computed(() => true),
     },
+    {
+      id: "argocd-api-application-drawer",
+      Component: ArgoApiApplicationDrawer,
+      shouldRender: computed(() => true),
+    },
+    {
+      id: "argocd-api-appproject-drawer",
+      Component: ArgoApiAppProjectDrawer,
+      shouldRender: computed(() => true),
+    },
   ];
   async onActivate() {
+    setArgoExtension(this);
     ArgoPreferencesStore.getInstanceOrCreate().loadExtension(this);
+    registerArgoCdApiIpc(this);
   }
 
-  appPreferences = [];
+  appPreferences = [
+    {
+      title: "Argo CD Connection",
+      components: {
+        Input: () => <ArgoPreferenceInput />,
+        Hint: () => <ArgoPreferenceHint />,
+      },
+    },
+  ];
 
   kubeObjectDetailItems = [
     createKubeObjectDetailRegistration({

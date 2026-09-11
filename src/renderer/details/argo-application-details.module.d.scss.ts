@@ -4,5 +4,6 @@ declare const classNames: {
   readonly sourceSection: "sourceSection";
   readonly sourceDetails: "sourceDetails";
   readonly operationTimeline: "operationTimeline";
+  readonly syncPolicyControls: "syncPolicyControls";
 };
 export = classNames;
