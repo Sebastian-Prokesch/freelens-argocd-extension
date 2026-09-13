@@ -4,8 +4,8 @@ Thanks for contributing to the Freelens ArgoCD Extension.
 
 ## Development Prerequisites
 
-- Node.js `>=24.0.0`
-- pnpm `11.x`
+- Node.js `>=24.0.0` (see [`.nvmrc`](.nvmrc); run `nvm use` if you manage Node versions with nvm)
+- pnpm `11.15.1` (pinned via `packageManager` in [`package.json`](package.json); run `corepack install` to get the exact version)
 - Freelens installation for manual validation
 
 ## Local Verification Before Opening a PR
@@ -25,6 +25,8 @@ Optional but recommended when environment is available:
 ```sh
 pnpm test:integration
 ```
+
+Requires one of `FREELENS_EXECUTABLE_PATH` / `FREELENS_PATH` / `FREELENS_BINARY` (a Freelens executable) plus `EXTENSION_PATH` (the built extension). Without them the test is skipped silently rather than failing — this is expected locally.
 
 
 ## Pull Request Expectations

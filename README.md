@@ -33,26 +33,35 @@ Manage rollouts directly from the list — promote, abort, or edit paused canary
 
 - Argo sidebar hub with grouped sections for ArgoCD, Argo Workflows, and Argo Rollouts.
 - ArgoCD overview and list pages for `Application`, `ApplicationSet`, and `AppProject`, plus a Config page for Argo ConfigMaps and Secrets.
-- Optional **Argo CD API** connection in Preferences (server URL + token) so Applications / Projects / Overview and sync actions work against a remote Argo CD without relying on CRDs in the current cluster.
+- Optional **Argo CD API** connection in Preferences — save one or more named Argo CD servers and switch the active one — so Applications / AppProjects / ApplicationSets / Overview and sync actions can work against a remote Argo CD instead of relying on CRDs in the current cluster.
 - Argo Rollouts pages for `Rollout`, `AnalysisRun`, `Experiment`, `AnalysisTemplate`, and `ClusterAnalysisTemplate`.
-- Argo Workflows pages for `Workflow`, `CronWorkflow`, `WorkflowTemplate`, and `ClusterWorkflowTemplate`.
-- Resource detail drawers with diagnostics such as sync/health status, operation timeline, and resource diff.
+- Argo Workflows pages for `Workflow`, `CronWorkflow`, `WorkflowTemplate`, and `ClusterWorkflowTemplate` (read-only; no lifecycle actions yet).
+- Resource detail drawers with diagnostics: sync/health status, Drift Hotspots, operation timeline, resource diff, and Sync History with rollback (when auto-sync is disabled).
+- Application details Sync Policy toggle: Automated sync (and Prune / Self Heal / Allow Empty), like the Argo CD web UI.
 - Context-menu actions:
-  - ArgoCD: refresh, hard refresh, sync, and terminate.
+  - ArgoCD: refresh, hard refresh, sync, sync with options (adv sync), and terminate (while an operation is running).
   - Rollouts: promote, promote full, promote skip current, promote skip all, abort, retry.
   - Argo config helpers for `Secret` and `ConfigMap`.
 
 All resources are served from the `argoproj.io/v1alpha1` API group when using the current cluster. In Argo CD API mode, Application / ApplicationSet / AppProject data comes from the Argo CD HTTP API instead.
 
-## Status
+## Status and known limitations
 
 ArgoCD and Argo Rollouts pages and actions are stable for day-to-day use. Argo Workflows pages are present but still early and may evolve quickly. Feature behavior depends on your cluster RBAC and installed resource schemas — see the [CHANGELOG](CHANGELOG.md) for release history.
+
+Known limitations:
+
+- Argo Workflows pages are read-only — there are no submit, retry, or terminate actions yet.
+- The Config page (ConfigMaps/Secrets) always stays cluster-backed, even in Argo CD API mode — repositories and cluster secrets are not manageable via the Argo CD API yet.
+- Resource diff and the resource-relationship view are CRD-only summaries today; there is no API-backed line-level diff or resource-tree view yet.
+- Testing repository or cluster secrets from the Config UI (the way Argo CD's own UI can) isn't implemented yet — only the extension's own Argo CD API connection has a **Test connection** action.
 
 ## Requirements
 
 - Freelens `^1.9.0`
 - Kubernetes >= 1.32
 - The cluster must have the Argo APIs you want to manage installed (Argo CD for Applications; Rollouts and Workflows only if those controllers are present).
+- Argo CD `3.4` and `3.5` are the versions this extension is validated against (see [dev-cluster](dev-cluster/README.md), pinned to chart `10.3.0` / app `v3.5.0`). Argo CD 3.5's Helm 4 OCI flags (`enableOCI`, `insecureOCIForceHttp`) are supported in the Config page's repository secret details, including a warning when `insecure` and `insecureOCIForceHttp` conflict. Other versions likely work but aren't actively tested.
 
 ## Install
 
@@ -85,7 +94,7 @@ By default the extension reads Argo CD CRDs from the active Kubernetes cluster. 
 4. Use **Add connection** to save each Argo CD server (name, URL, token, optional Custom CA).
 5. Click a connection in the list to select it — that connection is the active one for ArgoCD pages.
 6. Optionally set **HTTPS proxy** per connection if Argo CD is only reachable through a corporate proxy.
-7. Prefer **Custom CA certificate (PEM)** for corporate TLS: paste the issuing/root CA PEM so verification stays on. Skip TLS only as a last resort.
+7. Prefer **Custom CA certificate (PEM)** for corporate TLS: paste the issuing/root CA PEM so verification stays on. The same connection form also has a **Skip TLS certificate verification** checkbox — use it only as a last resort, since it disables certificate validation entirely.
 8. Click **Test connection**, then open an ArgoCD page in any cluster frame.
 
 With multiple connections, the ArgoCD page banner also has a dropdown to switch the active server without opening Preferences.
@@ -103,7 +112,7 @@ In API mode, Applications, ApplicationSets, AppProjects, and Overview come from 
 
 ## Build from source
 
-Requires Node.js >= 24 and pnpm 11.x (Corepack recommended).
+Requires Node.js >= 24 (see [`.nvmrc`](.nvmrc)) and pnpm `11.15.1` (pinned via `packageManager` in [`package.json`](package.json)).
 
 ```sh
 corepack install
@@ -112,9 +121,20 @@ pnpm build
 pnpm pack
 ```
 
+`corepack install` reads the `packageManager` pin and installs the exact pnpm version; run `nvm use` first if you manage Node versions with nvm.
+
 The tarball is generated in the project root. In Freelens, open Extensions and provide the tarball path, or drag and drop the `.tgz` into the Freelens window.
 
 For checks, tests, and PR expectations see [CONTRIBUTING.md](CONTRIBUTING.md). A local Kind-based demo cluster with Argo CD, Rollouts, and Workflows preinstalled is available under [dev-cluster](dev-cluster/README.md).
+
+### Integration tests
+
+`pnpm test:integration` runs a smoke test that installs the extension into a real Freelens build and checks that the ArgoCD Overview page renders. It requires two environment variables:
+
+- One of `FREELENS_EXECUTABLE_PATH`, `FREELENS_PATH`, or `FREELENS_BINARY` — path to a Freelens executable.
+- `EXTENSION_PATH` — path to the built extension (e.g. the `.tgz` from `pnpm pack`, or the `out/` directory).
+
+If either is missing, the test is skipped silently (`it.skip`) rather than failing — this is expected when running locally without a Freelens build available. CI does not currently run integration tests; they're a local/manual verification step only.
 
 ## Contributing
 
