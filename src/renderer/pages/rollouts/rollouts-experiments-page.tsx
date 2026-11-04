@@ -1,7 +1,7 @@
 import { Common, Renderer } from "@freelensapp/extensions";
 import { observer } from "mobx-react";
-import { Link } from "react-router-dom";
 import { withErrorPage } from "../../components/error-page";
+import { Link } from "../../components/link";
 import {
   ArgoExperiment,
   type ArgoExperimentApi,
@@ -11,7 +11,6 @@ import {
   getExperimentTemplateCount,
 } from "../../k8s/rollouts";
 import styles from "./argo-rollouts-page.module.scss";
-import stylesInline from "./argo-rollouts-page.module.scss?inline";
 
 const {
   Component: { KubeObjectAge, KubeObjectListLayout, WithTooltip },
@@ -58,7 +57,6 @@ export const ArgoRolloutsExperimentsTabContent = observer(() => {
 
   return (
     <>
-      <style>{stylesInline}</style>
       <KubeObjectListLayout<ArgoExperiment, ArgoExperimentApi>
         tableId={`${ArgoExperiment.crd.plural}Table`}
         isConfigurable

@@ -1,8 +1,8 @@
+import { normalizeCustomCaPem } from "../../../main/argocd-api-http";
 import {
   buildArgoCdRequestUrl,
   createArgoCdApiError,
   normalizeArgoCdServerUrl,
-  normalizeCustomCaPem,
   normalizeHttpsProxyUrl,
   parseArgoCdErrorBody,
 } from "../index";

@@ -3,7 +3,7 @@
  * Licensed under MIT License. See LICENSE in root directory for more information.
  */
 
-import { Renderer } from "@freelensapp/extensions";
+import { type Common, Renderer } from "@freelensapp/extensions";
 import { computed } from "mobx";
 import { ArgoPreferencesStore } from "../common/store";
 import { registerArgoCdApiIpc } from "./argocd-api";
@@ -93,7 +93,7 @@ export default class ArgoRenderer extends Renderer.LensExtension {
     },
   ];
 
-  kubeObjectDetailItems = [
+  kubeObjectDetailItems: Common.Types.KubeObjectDetailRegistration[] = [
     createKubeObjectDetailRegistration({
       kind: ArgoApplication.kind,
       apiVersions: ArgoApplication.crd.apiVersions,
@@ -186,7 +186,7 @@ export default class ArgoRenderer extends Renderer.LensExtension {
 
   clusterPageMenus = buildClusterPageMenus();
 
-  kubeObjectMenuItems = [
+  kubeObjectMenuItems: Common.Types.KubeObjectMenuRegistration[] = [
     createKubeObjectMenuRegistration({
       kind: ArgoApplication.kind,
       apiVersions: ArgoApplication.crd.apiVersions,

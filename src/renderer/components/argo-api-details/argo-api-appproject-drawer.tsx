@@ -3,7 +3,6 @@ import { ArgoAppProjectDetails } from "../../details/argo-appproject-details";
 import { tryGetArgoExtension } from "../../extension-ref";
 import { argoApiAppProjectDrawerStore } from "./argo-api-appproject-drawer-store";
 import styles from "./argo-api-details-drawer.module.scss";
-import stylesInline from "./argo-api-details-drawer.module.scss?inline";
 
 export const ArgoApiAppProjectDrawer = observer(() => {
   const { isOpen, project } = argoApiAppProjectDrawerStore;
@@ -17,7 +16,6 @@ export const ArgoApiAppProjectDrawer = observer(() => {
 
   return (
     <>
-      <style>{stylesInline}</style>
       <div className={styles.overlay} role="presentation" onClick={() => argoApiAppProjectDrawerStore.close()} />
       <aside className={styles.panel} role="dialog" aria-label={`AppProject ${name}`}>
         <div className={styles.header}>

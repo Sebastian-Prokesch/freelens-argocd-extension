@@ -4,9 +4,11 @@ import userEvent from "@testing-library/user-event";
 import { ApplicationSyncDialog } from "../application-sync-dialog";
 import { applicationSyncDialogStore } from "../application-sync-dialog-store";
 
-const patchMock = jest.fn();
+import type { Mock } from "vitest";
 
-jest.mock("../../../k8s/argocd", () => ({
+const patchMock = vi.fn();
+
+vi.mock("../../../k8s/argocd", () => ({
   getArgoApplicationStore: () => ({
     patch: patchMock,
   }),
@@ -16,9 +18,9 @@ describe("ApplicationSyncDialog", () => {
   beforeEach(() => {
     patchMock.mockReset();
     applicationSyncDialogStore.close();
-    (Renderer.Component.Notifications.ok as jest.Mock).mockReset();
-    (Renderer.Component.Notifications.error as jest.Mock).mockReset();
-    (Renderer.Component.ConfirmDialog.confirm as jest.Mock).mockReset();
+    (Renderer.Component.Notifications.ok as Mock).mockReset();
+    (Renderer.Component.Notifications.error as Mock).mockReset();
+    (Renderer.Component.ConfirmDialog.confirm as Mock).mockReset();
   });
 
   it("pre-fills sync options from policy and submits selected payload", async () => {

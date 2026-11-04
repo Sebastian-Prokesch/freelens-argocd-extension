@@ -1,7 +1,7 @@
 import { Common, Renderer } from "@freelensapp/extensions";
 import { observer } from "mobx-react";
-import { Link } from "react-router-dom";
 import { withErrorPage } from "../../components/error-page";
+import { Link } from "../../components/link";
 import {
   ArgoRollout,
   type ArgoRolloutApi,
@@ -13,7 +13,6 @@ import {
   getRolloutStrategyLabel,
 } from "../../k8s/rollouts";
 import styles from "./argo-rollouts-page.module.scss";
-import stylesInline from "./argo-rollouts-page.module.scss?inline";
 
 const {
   Component: { KubeObjectAge, KubeObjectListLayout, WithTooltip },
@@ -73,7 +72,6 @@ export const ArgoRolloutsTabContent = observer(() => {
 
   return (
     <>
-      <style>{stylesInline}</style>
       <KubeObjectListLayout<ArgoRollout, ArgoRolloutApi>
         tableId={`${ArgoRollout.crd.plural}Table`}
         isConfigurable

@@ -1,4 +1,4 @@
-jest.mock("../../common/store", () => ({
+vi.mock("../../common/store", () => ({
   ArgoPreferencesStore: {
     getInstanceOrCreate: () => ({
       loadExtension: () => {},
@@ -6,11 +6,11 @@ jest.mock("../../common/store", () => ({
   },
 }));
 
-jest.mock("../icons", () => ({
+vi.mock("../icons", () => ({
   ArgoPlainLogoIcon: () => null,
 }));
 
-jest.mock("../preferences", () => ({
+vi.mock("../preferences", () => ({
   ArgoPreferenceInput: () => null,
   ArgoPreferenceHint: () => null,
 }));
@@ -59,7 +59,6 @@ describe("ArgoRenderer registrations", () => {
     const renderer = createRenderer();
 
     const pageIds = renderer.clusterPages.map((page: any) => page.id);
-    const pageRoutes = renderer.clusterPages.map((page: any) => page.routePath);
     const menuIds = renderer.clusterPageMenus.map((menu: any) => menu.id);
 
     expect(pageIds).toContain("appprojects");
@@ -75,20 +74,18 @@ describe("ArgoRenderer registrations", () => {
     expect(pageIds).toContain("argo-workflows-cron-workflows");
     expect(pageIds).toContain("argo-workflows-templates");
     expect(pageIds).toContain("argo-workflows-cluster-templates");
-    expect(pageRoutes).toContain("/argo/argocd/appprojects");
-    expect(pageRoutes).toContain("/argo/argocd/applicationsets");
-    expect(pageRoutes).toContain("/argo/argocd/applications/:namespace/:name");
-    expect(pageRoutes).toContain("/argo/workflows");
-    expect(pageRoutes).toContain("/argo/workflows/cron-workflows");
-    expect(pageRoutes).toContain("/argo/workflows/workflow-templates");
-    expect(pageRoutes).toContain("/argo/workflows/cluster-workflow-templates");
-    expect(pageRoutes).toContain("/argo/rollouts/overview");
-    expect(pageRoutes).toContain("/argo/rollouts/analysis-runs");
-    expect(pageRoutes).toContain("/argo/rollouts/experiments");
-    expect(pageRoutes).toContain("/argo/rollouts/analysis-templates");
-    expect(pageRoutes).toContain("/argo/rollouts/cluster-analysis-templates");
-    expect(pageRoutes).toContain("/argocd/appprojects");
-    expect(pageRoutes).toContain("/argocd/applicationsets");
+    // Freelens 2 pages are keyed by id and params only; `routePath` was a Freelens 1 field.
+    expect(renderer.clusterPages.every((page: any) => page.routePath === undefined)).toBe(true);
+    expect(
+      Object.keys(renderer.clusterPages.find((page: any) => page.id === "argocd-application-api-details").params),
+    ).toEqual(["namespace", "name"]);
+    // Every menu entry that targets a page must point at a registered page id.
+    const menuTargets = renderer.clusterPageMenus
+      .map((menu: any) => menu.target?.pageId)
+      .filter((pageId: string | undefined): pageId is string => Boolean(pageId));
+    for (const pageId of menuTargets) {
+      expect(pageIds).toContain(pageId);
+    }
     expect(menuIds).toContain("appprojects");
     expect(menuIds).toContain("applicationsets");
     expect(menuIds).toContain("argo-workflows-workflows-menu");

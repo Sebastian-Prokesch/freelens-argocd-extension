@@ -8,6 +8,27 @@ with pre-release identifiers for beta builds.
 
 ## [Unreleased]
 
+## [2.0.0-beta.1]
+
+First release for **Freelens 2**. The extension major version now follows the Freelens major version, so `2.x` targets Freelens `^2.0.0`. Freelens 1.x users stay on `0.1.20` (npm dist-tag `v1`); the 1.x line receives no further updates.
+
+### Changed
+
+- **Breaking:** requires Freelens `^2.0.0` (`engines.freelens`). Freelens 2 rejects extensions without that field and cannot load the Freelens 1 build; Freelens 1 cannot load this one.
+- **Breaking:** the extension is now an ES module build (`dist/main.js`, `dist/renderer.js`, `dist/renderer.css`) bundled with Vite 8 against the Freelens 2 host-provided React 19, MobX 7 and mobx-react 10. Extensions installed under Freelens 1 are not migrated by Freelens 2; install this version again from the Extensions page.
+- Argo CD API IPC now uses the public `Main.Ipc` / `Renderer.Ipc` classes instead of a hand-built Electron channel name and an unsafe singleton cast.
+- Cluster pages are registered with Freelens 2's `id` / `params` shape. The v1-only `routePath` URLs and the `/argocd/*` legacy bookmark pages are gone; in-extension links go through `extension.navigate(pageId, params)` and the host `MaybeLink`.
+- Component styles are plain CSS Modules extracted into `renderer.css`, which Freelens 2 links next to the renderer entry (no more inline `<style>` elements).
+- The Node-only Argo CD HTTP client moved from `src/common` to `src/main`; the renderer no longer references Node built-ins (`Buffer` replaced with `atob` / `TextDecoder`).
+- Tooling: Vitest replaces Jest, TypeScript 7, one `tsc` program per process (`src/main`, `src/renderer`, tests, tooling, integration), `esbuild`-based standard decorator lowering and the CSS-module declaration generator from the official Freelens extension template.
+
+### Removed
+
+- `react-router-dom` (not provided by Freelens 2).
+- Freelens 1 support.
+
+## [0.1.20]
+
 ### Fixed
 
 - API mode Applications / AppProjects / ApplicationSets lists: search, namespace filter, and vertical scrolling.

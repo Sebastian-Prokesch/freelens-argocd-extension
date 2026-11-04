@@ -1,11 +1,11 @@
 /**
  * Cluster page and sidebar menu registration for the Argo umbrella (ArgoCD + future products).
  *
- * Adding a new Argo product: define routes in `routes/argo-routes.ts`, add k8s types under
+ * Adding a new Argo product: add page ids in `routes/argo-page-ids.ts`, add k8s types under
  * `k8s/<product>/`, add pages/details/menus, then append entries here and in `index.tsx` if needed.
  */
 
-import { Renderer } from "@freelensapp/extensions";
+import { type Common, Renderer } from "@freelensapp/extensions";
 import { ArgoPlainLogoIcon } from "../icons";
 import { ArgoApplication, ArgoApplicationSet, ArgoAppProject } from "../k8s/argocd";
 import {
@@ -35,182 +35,119 @@ import {
   ArgoWorkflowsWorkflowsPage,
 } from "../pages";
 import { ArgoPageIds } from "../routes/argo-page-ids";
-import { ArgoRoutes, LegacyArgoCdRoutes } from "../routes/argo-routes";
 
 export { ArgoPageIds };
 
-const argoRolloutsOverviewPageId = "argo-rollouts-overview";
-
-export function buildClusterPages(extension: Renderer.LensExtension) {
+export function buildClusterPages(extension: Renderer.LensExtension): Common.Types.PageRegistration[] {
   return [
     {
       id: ArgoPageIds.landing,
-      routePath: ArgoRoutes.landing,
       components: {
         Page: () => <ArgoLandingPage />,
       },
     },
     {
       id: ArgoPageIds.argocdRoot,
-      routePath: ArgoRoutes.argocd.root,
       components: {
         Page: () => <ArgoOverviewPage />,
       },
     },
     {
       id: ArgoPageIds.argocdOverview,
-      routePath: ArgoRoutes.argocd.overview,
       components: {
         Page: () => <ArgoOverviewPage />,
       },
     },
     {
       id: ArgoApplication.crd.plural,
-      routePath: ArgoRoutes.argocd.applications,
       components: {
         Page: () => <ArgoApplicationsPage extension={extension} />,
       },
     },
     {
       id: ArgoPageIds.argocdApplicationApiDetails,
-      routePath: ArgoRoutes.argocd.applicationDetails,
-      exact: true,
+      // Page params replace the `:namespace/:name` path segments of Freelens 1; "_" stands for a cluster-wide app.
+      params: { namespace: "_", name: "" },
       components: {
-        Page: () => <ArgoApiApplicationDetailsPage extension={extension} />,
+        Page: ({ params }) => <ArgoApiApplicationDetailsPage extension={extension} params={params} />,
       },
     },
     {
       id: ArgoApplicationSet.crd.plural,
-      routePath: ArgoRoutes.argocd.applicationsets,
       components: {
         Page: () => <ArgoApplicationSetsPage extension={extension} />,
       },
     },
     {
       id: ArgoAppProject.crd.plural,
-      routePath: ArgoRoutes.argocd.appprojects,
       components: {
         Page: () => <ArgoAppProjectsPage extension={extension} />,
       },
     },
     {
       id: ArgoPageIds.argocdConfig,
-      routePath: ArgoRoutes.argocd.config,
       components: {
         Page: () => <ArgoConfigPage extension={extension} />,
       },
     },
     {
       id: ArgoPageIds.workflowsRoot,
-      routePath: ArgoRoutes.workflows.workflows,
       components: {
         Page: () => <ArgoWorkflowsWorkflowsPage extension={extension} />,
       },
     },
     {
       id: ArgoPageIds.workflowsCron,
-      routePath: ArgoRoutes.workflows.cronWorkflows,
       components: {
         Page: () => <ArgoWorkflowsCronWorkflowsPage extension={extension} />,
       },
     },
     {
       id: ArgoPageIds.workflowsTemplates,
-      routePath: ArgoRoutes.workflows.workflowTemplates,
       components: {
         Page: () => <ArgoWorkflowsTemplatesPage extension={extension} />,
       },
     },
     {
       id: ArgoPageIds.workflowsClusterTemplates,
-      routePath: ArgoRoutes.workflows.clusterWorkflowTemplates,
       components: {
         Page: () => <ArgoWorkflowsClusterTemplatesPage extension={extension} />,
       },
     },
     {
-      id: argoRolloutsOverviewPageId,
-      routePath: ArgoRoutes.rollouts.overview,
+      id: ArgoPageIds.rolloutsOverview,
       components: {
         Page: () => <ArgoRolloutsOverviewPage extension={extension} />,
       },
     },
     {
       id: ArgoRollout.crd.plural,
-      routePath: ArgoRoutes.rollouts.rollouts,
       components: {
         Page: () => <ArgoRolloutsRolloutsPage extension={extension} />,
       },
     },
     {
       id: ArgoAnalysisRun.crd.plural,
-      routePath: ArgoRoutes.rollouts.analysisRuns,
       components: {
         Page: () => <ArgoRolloutsAnalysisRunsPage extension={extension} />,
       },
     },
     {
       id: ArgoExperiment.crd.plural,
-      routePath: ArgoRoutes.rollouts.experiments,
       components: {
         Page: () => <ArgoRolloutsExperimentsPage extension={extension} />,
       },
     },
     {
       id: ArgoAnalysisTemplate.crd.plural,
-      routePath: ArgoRoutes.rollouts.analysisTemplates,
       components: {
         Page: () => <ArgoRolloutsAnalysisTemplatesPage extension={extension} />,
       },
     },
     {
       id: ArgoClusterAnalysisTemplate.crd.plural,
-      routePath: ArgoRoutes.rollouts.clusterAnalysisTemplates,
       components: {
         Page: () => <ArgoRolloutsClusterAnalysisTemplatesPage extension={extension} />,
-      },
-    },
-    // Legacy `/argocd/*` — same UI as above; keeps old bookmarks working.
-    {
-      id: ArgoPageIds.legacyArgocdRoot,
-      routePath: LegacyArgoCdRoutes.root,
-      components: {
-        Page: () => <ArgoOverviewPage />,
-      },
-    },
-    {
-      id: ArgoPageIds.legacyArgocdOverview,
-      routePath: LegacyArgoCdRoutes.overview,
-      components: {
-        Page: () => <ArgoOverviewPage />,
-      },
-    },
-    {
-      id: `${ArgoApplication.crd.plural}-legacy`,
-      routePath: LegacyArgoCdRoutes.applications,
-      components: {
-        Page: () => <ArgoApplicationsPage extension={extension} />,
-      },
-    },
-    {
-      id: `${ArgoApplicationSet.crd.plural}-legacy`,
-      routePath: LegacyArgoCdRoutes.applicationsets,
-      components: {
-        Page: () => <ArgoApplicationSetsPage extension={extension} />,
-      },
-    },
-    {
-      id: `${ArgoAppProject.crd.plural}-legacy`,
-      routePath: LegacyArgoCdRoutes.appprojects,
-      components: {
-        Page: () => <ArgoAppProjectsPage extension={extension} />,
-      },
-    },
-    {
-      id: ArgoPageIds.legacyArgocdConfig,
-      routePath: LegacyArgoCdRoutes.config,
-      components: {
-        Page: () => <ArgoConfigPage extension={extension} />,
       },
     },
   ];
@@ -307,14 +244,14 @@ export function buildClusterPageMenus() {
       id: "argo-rollouts",
       parentId: "argo",
       title: "Argo Rollouts",
-      target: { pageId: argoRolloutsOverviewPageId },
+      target: { pageId: ArgoPageIds.rolloutsOverview },
       components: {},
     },
     {
       id: "argo-rollouts-overview-menu",
       parentId: "argo-rollouts",
       title: "Overview",
-      target: { pageId: argoRolloutsOverviewPageId },
+      target: { pageId: ArgoPageIds.rolloutsOverview },
       components: {},
     },
     {

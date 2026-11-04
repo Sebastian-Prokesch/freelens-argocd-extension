@@ -2,10 +2,10 @@ import http from "node:http";
 import https from "node:https";
 import tls from "node:tls";
 import { HttpProxyAgent, HttpsProxyAgent } from "hpagent";
-import { createArgoCdApiError } from "./errors";
-import { buildArgoCdRequestUrl, normalizeHttpsProxyUrl } from "./url";
+import { createArgoCdApiError } from "../common/argocd-api/errors";
+import { buildArgoCdRequestUrl, normalizeHttpsProxyUrl } from "../common/argocd-api/url";
 
-import type { ArgoCdHttpRequest, ArgoCdHttpResponse } from "./types";
+import type { ArgoCdHttpRequest, ArgoCdHttpResponse } from "../common/argocd-api/types";
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 

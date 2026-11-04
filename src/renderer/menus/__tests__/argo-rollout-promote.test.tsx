@@ -1,6 +1,7 @@
 import { Renderer } from "@freelensapp/extensions";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import * as rolloutsModule from "../../k8s/rollouts";
 import {
   ArgoRolloutPromoteFullMenuItem,
   ArgoRolloutPromoteMenuItem,
@@ -8,31 +9,33 @@ import {
   ArgoRolloutPromoteSkipCurrentMenuItem,
 } from "../argo-rollout-promote";
 
-jest.mock("../../k8s/rollouts", () => {
-  const actual = jest.requireActual("../../k8s/rollouts");
+import type { Mock } from "vitest";
+
+vi.mock("../../k8s/rollouts", async () => {
+  const actual = await vi.importActual<any>("../../k8s/rollouts");
   const mockStore = {
-    patch: jest.fn().mockResolvedValue(undefined),
+    patch: vi.fn().mockResolvedValue(undefined),
     api: {
-      formatUrlForNotListing: jest.fn(() => "/apis/argoproj.io/v1alpha1/namespaces/default/rollouts/demo-rollout"),
-      request: { patch: jest.fn().mockResolvedValue({}) },
+      formatUrlForNotListing: vi.fn(() => "/apis/argoproj.io/v1alpha1/namespaces/default/rollouts/demo-rollout"),
+      request: { patch: vi.fn().mockResolvedValue({}) },
     },
   };
   return {
     ...actual,
-    getArgoRolloutStore: jest.fn(() => mockStore),
+    getArgoRolloutStore: vi.fn(() => mockStore),
     __TEST_PROMOTE_PATCH__: mockStore.api.request.patch,
   };
 });
 
 const extension = { name: "argocd-test-extension" } as any;
-const getPromotePatchMock = () => (jest.requireMock("../../k8s/rollouts") as any).__TEST_PROMOTE_PATCH__ as jest.Mock;
+const getPromotePatchMock = () => (rolloutsModule as any).__TEST_PROMOTE_PATCH__ as Mock;
 
 describe("ArgoRolloutPromoteMenuItem", () => {
   beforeEach(() => {
     getPromotePatchMock().mockReset();
     getPromotePatchMock().mockResolvedValue({});
-    (Renderer.Component.Notifications.ok as jest.Mock).mockReset();
-    (Renderer.Component.Notifications.error as jest.Mock).mockReset();
+    (Renderer.Component.Notifications.ok as Mock).mockReset();
+    (Renderer.Component.Notifications.error as Mock).mockReset();
   });
 
   it("renders when rollout is in promotable paused state", () => {

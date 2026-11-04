@@ -5,8 +5,6 @@ declare const classNames: {
   readonly scrollBody: "scrollBody";
   readonly loading: "loading";
   readonly page: "page";
-  readonly itemListLayout: "itemListLayout";
-  readonly itemListLayoutContent: "itemListLayoutContent";
   readonly tableCellSmall: "tableCellSmall";
   readonly tableCellLarge: "tableCellLarge";
 };

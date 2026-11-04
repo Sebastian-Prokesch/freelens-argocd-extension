@@ -6,7 +6,6 @@ import { ArgoCdApiMisconfiguredNotice, ArgoConnectionSourceBanner } from "../com
 import { ArgoApplicationStatusChart, ArgoApplicationSyncStatusChart } from "../components/argo-overview";
 import { type ArgoApplication, getArgoApplicationStore, getArgoAppProjectStore } from "../k8s/argocd";
 import styles from "./argo-overview-page.module.scss";
-import stylesInline from "./argo-overview-page.module.scss?inline";
 
 const {
   Component: { Events, NamespaceSelectFilter },
@@ -287,7 +286,6 @@ export const ArgoOverviewTabContent = observer(() => {
 
   return (
     <>
-      <style>{stylesInline}</style>
       {source === "api-misconfigured" ? <ArgoCdApiMisconfiguredNotice /> : null}
       {source === "api" ? <ArgoOverviewApiTabContent /> : null}
       {source === "cluster" ? <ArgoOverviewClusterTabContent /> : null}

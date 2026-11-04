@@ -3,7 +3,6 @@ import { observer } from "mobx-react";
 import { useEffect, useRef, useState } from "react";
 import { ArgoApplication } from "../../k8s/argocd";
 import styles from "./argo-application-sync-status-chart.module.scss";
-import stylesInline from "./argo-application-sync-status-chart.module.scss?inline";
 
 const {
   Component: { PieChart },
@@ -89,7 +88,6 @@ export const ArgoApplicationSyncStatusChart = observer(
     if (applications.length === 0 || Object.keys(filteredStatusCounts).length === 0) {
       return (
         <>
-          <style>{stylesInline}</style>
           <div className={`${styles.chartContainer} ${className || ""}`}>
             <h6 className={styles.title}>Application Sync Status</h6>
             <div className={styles.noData}>
@@ -102,7 +100,6 @@ export const ArgoApplicationSyncStatusChart = observer(
 
     return (
       <>
-        <style>{stylesInline}</style>
         <div
           ref={containerRef}
           className={`ArgoApplicationSyncStatusChart ${styles.chartContainer} ${className || ""}`}

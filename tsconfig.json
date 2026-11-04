@@ -1,13 +1,11 @@
 {
-  "extends": "@electron-toolkit/tsconfig/tsconfig.node.json",
-  "include": ["*.ts", "src/**/*"],
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "composite": true,
-    "esModuleInterop": true,
-    "jsx": "react-jsx",
-    "ignoreDeprecations": "6.0",
-    "types": ["vite/client", "electron-vite/node", "jest"],
-    "noUncheckedIndexedAccess": true,
-    "allowArbitraryExtensions": true
-  }
+    "lib": ["ES2024"],
+    "types": ["node"],
+    "allowJs": true,
+    "checkJs": true,
+    "noUncheckedIndexedAccess": false
+  },
+  "include": ["*.ts", "*.mjs", "build/**/*"]
 }

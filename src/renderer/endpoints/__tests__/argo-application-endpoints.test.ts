@@ -19,13 +19,15 @@ import {
   terminateApplicationOperation,
 } from "../argo-application-endpoints";
 
-jest.mock("../../argocd-api", () => ({
-  isArgoCdApiMode: jest.fn(() => false),
-  getArgoCdApiClient: jest.fn(),
+import type { MockedFunction } from "vitest";
+
+vi.mock("../../argocd-api", () => ({
+  isArgoCdApiMode: vi.fn(() => false),
+  getArgoCdApiClient: vi.fn(),
 }));
 
-const isArgoCdApiModeMock = isArgoCdApiMode as jest.MockedFunction<typeof isArgoCdApiMode>;
-const getArgoCdApiClientMock = getArgoCdApiClient as jest.MockedFunction<typeof getArgoCdApiClient>;
+const isArgoCdApiModeMock = isArgoCdApiMode as MockedFunction<typeof isArgoCdApiMode>;
+const getArgoCdApiClientMock = getArgoCdApiClient as MockedFunction<typeof getArgoCdApiClient>;
 
 describe("argo-application-endpoints", () => {
   beforeEach(() => {
@@ -120,7 +122,7 @@ describe("argo-application-endpoints", () => {
   });
 
   it("syncApplication patches application using merge strategy", async () => {
-    const patch = jest.fn().mockResolvedValueOnce(undefined);
+    const patch = vi.fn().mockResolvedValueOnce(undefined);
     const store = { patch } as any;
     const application = { getName: () => "demo-app" } as any;
 
@@ -130,7 +132,7 @@ describe("argo-application-endpoints", () => {
   });
 
   it("syncApplication passes selected options to patch payload", async () => {
-    const patch = jest.fn().mockResolvedValueOnce(undefined);
+    const patch = vi.fn().mockResolvedValueOnce(undefined);
     const store = { patch } as any;
     const application = { getName: () => "demo-app" } as any;
     const options = {
@@ -145,7 +147,7 @@ describe("argo-application-endpoints", () => {
   });
 
   it("terminateApplicationOperation patches application using json strategy", async () => {
-    const patch = jest.fn().mockResolvedValueOnce(undefined);
+    const patch = vi.fn().mockResolvedValueOnce(undefined);
     const store = { patch } as any;
     const application = { getName: () => "demo-app" } as any;
 
@@ -155,7 +157,7 @@ describe("argo-application-endpoints", () => {
   });
 
   it("requestApplicationRefresh patches application using merge strategy for chosen mode", async () => {
-    const patch = jest.fn().mockResolvedValueOnce(undefined);
+    const patch = vi.fn().mockResolvedValueOnce(undefined);
     const store = { patch } as any;
     const application = { getName: () => "demo-app" } as any;
 
@@ -165,7 +167,7 @@ describe("argo-application-endpoints", () => {
   });
 
   it("refreshApplication patches with normal refresh annotation", async () => {
-    const patch = jest.fn().mockResolvedValueOnce(undefined);
+    const patch = vi.fn().mockResolvedValueOnce(undefined);
     const store = { patch } as any;
     const application = { getName: () => "demo-app" } as any;
 
@@ -175,7 +177,7 @@ describe("argo-application-endpoints", () => {
   });
 
   it("hardRefreshApplication patches with hard refresh annotation", async () => {
-    const patch = jest.fn().mockResolvedValueOnce(undefined);
+    const patch = vi.fn().mockResolvedValueOnce(undefined);
     const store = { patch } as any;
     const application = { getName: () => "demo-app" } as any;
 
@@ -186,7 +188,7 @@ describe("argo-application-endpoints", () => {
 
   it("syncApplication propagates patch errors", async () => {
     const error = new Error("boom");
-    const store = { patch: jest.fn().mockRejectedValueOnce(error) } as any;
+    const store = { patch: vi.fn().mockRejectedValueOnce(error) } as any;
     const application = { getName: () => "demo-app" } as any;
 
     await expect(syncApplication(store, application)).rejects.toThrow("boom");
@@ -194,7 +196,7 @@ describe("argo-application-endpoints", () => {
 
   it("terminateApplicationOperation propagates patch errors", async () => {
     const error = new Error("boom");
-    const store = { patch: jest.fn().mockRejectedValueOnce(error) } as any;
+    const store = { patch: vi.fn().mockRejectedValueOnce(error) } as any;
     const application = { getName: () => "demo-app" } as any;
 
     await expect(terminateApplicationOperation(store, application)).rejects.toThrow("boom");
@@ -202,7 +204,7 @@ describe("argo-application-endpoints", () => {
 
   it("requestApplicationRefresh propagates patch errors", async () => {
     const error = new Error("boom");
-    const store = { patch: jest.fn().mockRejectedValueOnce(error) } as any;
+    const store = { patch: vi.fn().mockRejectedValueOnce(error) } as any;
     const application = { getName: () => "demo-app" } as any;
 
     await expect(requestApplicationRefresh(store, application, "hard")).rejects.toThrow("boom");
@@ -302,7 +304,7 @@ describe("argo-application-endpoints", () => {
   });
 
   it("rollbackApplication patches application using merge strategy", async () => {
-    const patch = jest.fn().mockResolvedValueOnce(undefined);
+    const patch = vi.fn().mockResolvedValueOnce(undefined);
     const store = { patch } as any;
     const application = {
       getName: () => "demo-app",
@@ -329,7 +331,7 @@ describe("argo-application-endpoints", () => {
 
   it("rollbackApplication propagates patch errors", async () => {
     const error = new Error("boom");
-    const store = { patch: jest.fn().mockRejectedValueOnce(error) } as any;
+    const store = { patch: vi.fn().mockRejectedValueOnce(error) } as any;
     const application = { getName: () => "demo-app", spec: {} } as any;
 
     await expect(
@@ -341,12 +343,12 @@ describe("argo-application-endpoints", () => {
   });
 
   it("routes application mutations through Argo CD API when API mode is enabled", async () => {
-    const syncApplicationApi = jest.fn().mockResolvedValue(undefined);
-    const refreshApplicationApi = jest.fn().mockResolvedValue(undefined);
-    const terminateApplicationOperationApi = jest.fn().mockResolvedValue(undefined);
-    const rollbackApplicationApi = jest.fn().mockResolvedValue(undefined);
-    const updateApplicationSpecApi = jest.fn().mockResolvedValue({ metadata: { name: "demo-app" } });
-    const patch = jest.fn();
+    const syncApplicationApi = vi.fn().mockResolvedValue(undefined);
+    const refreshApplicationApi = vi.fn().mockResolvedValue(undefined);
+    const terminateApplicationOperationApi = vi.fn().mockResolvedValue(undefined);
+    const rollbackApplicationApi = vi.fn().mockResolvedValue(undefined);
+    const updateApplicationSpecApi = vi.fn().mockResolvedValue({ metadata: { name: "demo-app" } });
+    const patch = vi.fn();
 
     isArgoCdApiModeMock.mockReturnValue(true);
     getArgoCdApiClientMock.mockReturnValue({
@@ -424,7 +426,7 @@ describe("argo-application-endpoints", () => {
       },
     });
 
-    const patch = jest.fn().mockResolvedValue(undefined);
+    const patch = vi.fn().mockResolvedValue(undefined);
     const store = { patch } as any;
 
     await setApplicationAutomatedSync(store, application, null);

@@ -26,7 +26,6 @@ import {
   summarizeNotificationsData,
 } from "../k8s/argocd";
 import styles from "./argo-config-page.module.scss";
-import stylesInline from "./argo-config-page.module.scss?inline";
 
 const {
   Component: { KubeObjectAge, KubeObjectListLayout, Tab, Tabs, WithTooltip },
@@ -350,7 +349,6 @@ export const ArgoConfigTabContent = observer(() => {
   if (source === "api") {
     return (
       <>
-        <style>{stylesInline}</style>
         <ArgoConnectionSourceBanner />
         <ArgoCdApiConfigClusterOnlyNotice />
       </>
@@ -369,7 +367,6 @@ export const ArgoConfigTabContent = observer(() => {
 
   return (
     <>
-      <style>{stylesInline}</style>
       <div className={styles.root}>
         <div className={styles.header}>
           <Tabs

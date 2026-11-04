@@ -1,7 +1,6 @@
 import { Common, type Renderer } from "@freelensapp/extensions";
 import React from "react";
 import styles from "./error-page.module.scss";
-import stylesInline from "./error-page.module.scss?inline";
 
 export interface ErrorPageProps {
   error?: unknown;
@@ -15,7 +14,6 @@ export function ErrorPage({ error, extension, children }: ErrorPageProps) {
   }
   return (
     <>
-      <style>{stylesInline}</style>
       <div className={styles.errorPage}>
         {error ? <p className={styles.errorMessage}>{String(error)}</p> : <></>}
         {children}
@@ -35,7 +33,7 @@ export function ErrorPage({ error, extension, children }: ErrorPageProps) {
  */
 export function withErrorPage<P extends { extension: Renderer.LensExtension }>(
   props: P,
-  wrapped: (props: P) => JSX.Element,
+  wrapped: (props: P) => React.JSX.Element,
 ) {
   try {
     return wrapped(props);

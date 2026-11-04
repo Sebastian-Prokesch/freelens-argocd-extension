@@ -1,16 +1,18 @@
 import { Renderer } from "@freelensapp/extensions";
 import { runGuardedArgoMutation } from "../guarded-mutation";
 
+import type { Mock } from "vitest";
+
 describe("runGuardedArgoMutation", () => {
   beforeEach(() => {
-    (Renderer.Component.ConfirmDialog.confirm as jest.Mock).mockReset();
-    (Renderer.Component.Notifications.ok as jest.Mock).mockReset();
-    (Renderer.Component.Notifications.error as jest.Mock).mockReset();
+    (Renderer.Component.ConfirmDialog.confirm as Mock).mockReset();
+    (Renderer.Component.Notifications.ok as Mock).mockReset();
+    (Renderer.Component.Notifications.error as Mock).mockReset();
   });
 
   it("runs destructive mutation when confirmed", async () => {
-    const run = jest.fn().mockResolvedValue(undefined);
-    (Renderer.Component.ConfirmDialog.confirm as jest.Mock).mockResolvedValueOnce(true);
+    const run = vi.fn().mockResolvedValue(undefined);
+    (Renderer.Component.ConfirmDialog.confirm as Mock).mockResolvedValueOnce(true);
 
     const result = await runGuardedArgoMutation({
       risk: "destructive",
@@ -35,8 +37,8 @@ describe("runGuardedArgoMutation", () => {
   });
 
   it("returns cancelled when destructive confirmation is rejected", async () => {
-    const run = jest.fn().mockResolvedValue(undefined);
-    (Renderer.Component.ConfirmDialog.confirm as jest.Mock).mockResolvedValueOnce(false);
+    const run = vi.fn().mockResolvedValue(undefined);
+    (Renderer.Component.ConfirmDialog.confirm as Mock).mockResolvedValueOnce(false);
 
     const result = await runGuardedArgoMutation({
       risk: "destructive",
@@ -58,8 +60,8 @@ describe("runGuardedArgoMutation", () => {
   });
 
   it("shows error message from thrown Error", async () => {
-    const run = jest.fn().mockRejectedValue(new Error("abort denied"));
-    (Renderer.Component.ConfirmDialog.confirm as jest.Mock).mockResolvedValueOnce(true);
+    const run = vi.fn().mockRejectedValue(new Error("abort denied"));
+    (Renderer.Component.ConfirmDialog.confirm as Mock).mockResolvedValueOnce(true);
 
     const result = await runGuardedArgoMutation({
       risk: "destructive",
@@ -75,8 +77,8 @@ describe("runGuardedArgoMutation", () => {
   });
 
   it("shows fallback for non-Error failures", async () => {
-    const run = jest.fn().mockRejectedValue({ code: 403 });
-    (Renderer.Component.ConfirmDialog.confirm as jest.Mock).mockResolvedValueOnce(true);
+    const run = vi.fn().mockRejectedValue({ code: 403 });
+    (Renderer.Component.ConfirmDialog.confirm as Mock).mockResolvedValueOnce(true);
 
     const result = await runGuardedArgoMutation({
       risk: "destructive",
@@ -92,8 +94,8 @@ describe("runGuardedArgoMutation", () => {
   });
 
   it("calls onErrorMessage with normalized message", async () => {
-    const run = jest.fn().mockRejectedValue({ code: 403 });
-    const onErrorMessage = jest.fn();
+    const run = vi.fn().mockRejectedValue({ code: 403 });
+    const onErrorMessage = vi.fn();
 
     const result = await runGuardedArgoMutation({
       risk: "low",
@@ -111,7 +113,7 @@ describe("runGuardedArgoMutation", () => {
   });
 
   it("skips confirmation for low risk mutations", async () => {
-    const run = jest.fn().mockResolvedValue(undefined);
+    const run = vi.fn().mockResolvedValue(undefined);
 
     const result = await runGuardedArgoMutation({
       risk: "low",

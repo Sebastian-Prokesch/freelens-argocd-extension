@@ -120,14 +120,12 @@ jobs:
 
       - name: Build extension
         run: pnpm build
-        env:
-          VITE_PRESERVE_MODULES: "false"
 
       - name: Upload build output
         uses: actions/upload-artifact@v7
         with:
-          name: extension-build-out
-          path: out/
+          name: extension-build-dist
+          path: dist/
           if-no-files-found: error
 
   pack:
@@ -152,8 +150,8 @@ jobs:
       - name: Download build output
         uses: actions/download-artifact@v8
         with:
-          name: extension-build-out
-          path: out/
+          name: extension-build-dist
+          path: dist/
 
       - name: Pack extension
         run: pnpm pack
@@ -163,6 +161,6 @@ jobs:
         with:
           name: extension-artifacts
           path: |
-            out/
+            dist/
             *.tgz
           if-no-files-found: error

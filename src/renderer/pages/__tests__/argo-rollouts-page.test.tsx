@@ -1,5 +1,4 @@
 import { render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
 import { ArgoRolloutsTabContent } from "../rollouts/rollouts-rollouts-page";
 
 const canaryRollout = {
@@ -54,7 +53,7 @@ const mockStore = {
   },
 };
 
-jest.mock("../../k8s/rollouts", () => ({
+vi.mock("../../k8s/rollouts", async () => ({
   ArgoRollout: {
     crd: {
       plural: "rollouts",
@@ -62,19 +61,19 @@ jest.mock("../../k8s/rollouts", () => ({
     },
   },
   getArgoRolloutStore: () => mockStore,
-  getRolloutStrategyLabel: jest.requireActual("../../k8s/rollouts/strategy").getRolloutStrategyLabel,
-  getBlueGreenPromotionLabel: jest.requireActual("../../k8s/rollouts/state").getBlueGreenPromotionLabel,
-  getBlueGreenTrafficTooltip: jest.requireActual("../../k8s/rollouts/state").getBlueGreenTrafficTooltip,
-  getRolloutStateLabel: jest.requireActual("../../k8s/rollouts/state").getRolloutStateLabel,
-  getRolloutStateReason: jest.requireActual("../../k8s/rollouts/state").getRolloutStateReason,
+  getRolloutStrategyLabel: (await vi.importActual<any>("../../k8s/rollouts/strategy")).getRolloutStrategyLabel,
+  getBlueGreenPromotionLabel: (await vi.importActual<any>("../../k8s/rollouts/state")).getBlueGreenPromotionLabel,
+  getBlueGreenTrafficTooltip: (await vi.importActual<any>("../../k8s/rollouts/state")).getBlueGreenTrafficTooltip,
+  getRolloutStateLabel: (await vi.importActual<any>("../../k8s/rollouts/state")).getRolloutStateLabel,
+  getRolloutStateReason: (await vi.importActual<any>("../../k8s/rollouts/state")).getRolloutStateReason,
 }));
 
 describe("ArgoRolloutsTabContent", () => {
   it("links rollout name to rollout details", () => {
     render(
-      <MemoryRouter>
+      <>
         <ArgoRolloutsTabContent />
-      </MemoryRouter>,
+      </>,
     );
 
     const nameLink = screen.getByRole("link", { name: "demo-rollout" });
@@ -84,9 +83,9 @@ describe("ArgoRolloutsTabContent", () => {
 
   it("links namespace to namespace details", () => {
     render(
-      <MemoryRouter>
+      <>
         <ArgoRolloutsTabContent />
-      </MemoryRouter>,
+      </>,
     );
 
     const namespaceLink = screen.getByRole("link", { name: "default" });
@@ -96,9 +95,9 @@ describe("ArgoRolloutsTabContent", () => {
 
   it("renders derived rollout state", () => {
     render(
-      <MemoryRouter>
+      <>
         <ArgoRolloutsTabContent />
-      </MemoryRouter>,
+      </>,
     );
 
     expect(screen.getByText("Healthy")).toBeInTheDocument();
@@ -106,9 +105,9 @@ describe("ArgoRolloutsTabContent", () => {
 
   it("renders blue-green traffic indicator", () => {
     render(
-      <MemoryRouter>
+      <>
         <ArgoRolloutsTabContent />
-      </MemoryRouter>,
+      </>,
     );
 
     expect(screen.getByText("N/A")).toBeInTheDocument();
@@ -116,9 +115,9 @@ describe("ArgoRolloutsTabContent", () => {
 
   it("passes blue-green traffic tooltip to WithTooltip on Traffic column", () => {
     render(
-      <MemoryRouter>
+      <>
         <ArgoRolloutsTabContent />
-      </MemoryRouter>,
+      </>,
     );
 
     const trafficTooltips = screen

@@ -1,5 +1,4 @@
 import { render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
 import { ArgoApplicationSetDetails } from "../argo-applicationset-details";
 
 const extension = { name: "argocd-test-extension" } as any;
@@ -7,7 +6,7 @@ const extension = { name: "argocd-test-extension" } as any;
 const formatUrlForNotListing = ({ namespace, name }: { namespace: string; name: string }) =>
   `/apis/argoproj.io/v1alpha1/namespaces/${namespace}/applications/${name}`;
 
-jest.mock("../../k8s/argocd", () => ({
+vi.mock("../../k8s/argocd", () => ({
   getArgoApplicationStore: () => ({
     api: {
       formatUrlForNotListing,
@@ -18,7 +17,7 @@ jest.mock("../../k8s/argocd", () => ({
 describe("ArgoApplicationSetDetails", () => {
   it("renders generated applications as links", () => {
     render(
-      <MemoryRouter>
+      <>
         <ArgoApplicationSetDetails
           extension={extension}
           object={
@@ -33,7 +32,7 @@ describe("ArgoApplicationSetDetails", () => {
             } as any
           }
         />
-      </MemoryRouter>,
+      </>,
     );
 
     expect(screen.getByRole("link", { name: "guestbook" })).toHaveAttribute(
@@ -50,7 +49,7 @@ describe("ArgoApplicationSetDetails", () => {
 
   it("uses generated application namespace in links", () => {
     render(
-      <MemoryRouter>
+      <>
         <ArgoApplicationSetDetails
           extension={extension}
           object={
@@ -65,7 +64,7 @@ describe("ArgoApplicationSetDetails", () => {
             } as any
           }
         />
-      </MemoryRouter>,
+      </>,
     );
 
     expect(screen.getByRole("link", { name: "guestbook" })).toHaveAttribute(
@@ -80,7 +79,7 @@ describe("ArgoApplicationSetDetails", () => {
 
   it("derives up-to-date from specific condition types and hides error row when false", () => {
     render(
-      <MemoryRouter>
+      <>
         <ArgoApplicationSetDetails
           extension={extension}
           object={
@@ -98,7 +97,7 @@ describe("ArgoApplicationSetDetails", () => {
             } as any
           }
         />
-      </MemoryRouter>,
+      </>,
     );
 
     const badgeValues = screen.getAllByTestId("BadgeBoolean").map((node) => node.textContent);
@@ -108,7 +107,7 @@ describe("ArgoApplicationSetDetails", () => {
 
   it("renders error message when ErrorOccurred is true", () => {
     render(
-      <MemoryRouter>
+      <>
         <ArgoApplicationSetDetails
           extension={extension}
           object={
@@ -130,7 +129,7 @@ describe("ArgoApplicationSetDetails", () => {
             } as any
           }
         />
-      </MemoryRouter>,
+      </>,
     );
 
     expect(screen.getByText("Error Occurred")).toBeInTheDocument();
@@ -140,7 +139,7 @@ describe("ArgoApplicationSetDetails", () => {
 
   it("renders detailed conditions table entries", () => {
     render(
-      <MemoryRouter>
+      <>
         <ArgoApplicationSetDetails
           extension={extension}
           object={
@@ -155,7 +154,7 @@ describe("ArgoApplicationSetDetails", () => {
             } as any
           }
         />
-      </MemoryRouter>,
+      </>,
     );
 
     expect(screen.getByText("Generator Types")).toBeInTheDocument();

@@ -77,14 +77,14 @@ describe("ArgoConfigTabContent", () => {
 
     namespaceStore.items = [{ getName: () => "argocd" }];
     namespaceStore.contextNamespaces = ["argocd"];
-    namespaceStore.loadAll = jest.fn(async () => {});
-    namespaceStore.subscribe = jest.fn(() => () => {});
-    namespaceStore.onContextChange = jest.fn(() => () => {});
+    namespaceStore.loadAll = vi.fn(async () => {});
+    namespaceStore.subscribe = vi.fn(() => () => {});
+    namespaceStore.onContextChange = vi.fn(() => () => {});
 
-    secretsStore.loadAll = jest.fn(async () => {});
-    secretsStore.subscribe = jest.fn(() => () => {});
+    secretsStore.loadAll = vi.fn(async () => {});
+    secretsStore.subscribe = vi.fn(() => () => {});
     secretsStore.api = {
-      list: jest.fn(async (_opts: { namespace: string }, query?: Record<string, string>) => {
+      list: vi.fn(async (_opts: { namespace: string }, query?: Record<string, string>) => {
         if (query?.labelSelector === ARGOCD_TYPED_SECRET_LABEL_SELECTOR) {
           return [repoSecret];
         }
@@ -97,10 +97,10 @@ describe("ArgoConfigTabContent", () => {
       }),
     };
 
-    configMapStore.loadAll = jest.fn(async () => {});
-    configMapStore.subscribe = jest.fn(() => () => {});
+    configMapStore.loadAll = vi.fn(async () => {});
+    configMapStore.subscribe = vi.fn(() => () => {});
     configMapStore.api = {
-      list: jest.fn(async (_opts: { namespace: string }, query?: Record<string, string>) => {
+      list: vi.fn(async (_opts: { namespace: string }, query?: Record<string, string>) => {
         expect(query?.labelSelector).toBe(ARGOCD_CONFIGMAP_LABEL_SELECTOR);
         return [notificationsCm];
       }),
@@ -143,11 +143,11 @@ describe("ArgoConfigTabContent", () => {
     const configMapStore = Renderer.K8sApi.configMapStore as any;
     const deferredNamespaces = createDeferred();
 
-    namespaceStore.loadAll = jest.fn(() => deferredNamespaces.promise);
-    namespaceStore.subscribe = jest.fn(() => () => {});
-    namespaceStore.onContextChange = jest.fn(() => () => {});
-    secretsStore.api = { list: jest.fn(async () => []) };
-    configMapStore.api = { list: jest.fn(async () => []) };
+    namespaceStore.loadAll = vi.fn(() => deferredNamespaces.promise);
+    namespaceStore.subscribe = vi.fn(() => () => {});
+    namespaceStore.onContextChange = vi.fn(() => () => {});
+    secretsStore.api = { list: vi.fn(async () => []) };
+    configMapStore.api = { list: vi.fn(async () => []) };
 
     const { unmount } = render(<ArgoConfigTabContent />);
     unmount();
