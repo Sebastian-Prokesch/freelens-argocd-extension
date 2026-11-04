@@ -6,7 +6,7 @@ Thanks for contributing to the Freelens ArgoCD Extension.
 
 - Node.js `>=24.0.0` (see [`.nvmrc`](.nvmrc); run `nvm use` if you manage Node versions with nvm)
 - pnpm `11.15.1` (pinned via `packageManager` in [`package.json`](package.json); run `corepack install` to get the exact version)
-- Freelens 2.x installation for manual validation (Freelens 1.x is no longer supported; see the `v1` npm dist-tag / `0.1.20`)
+- Freelens 2.x installation for manual validation (Freelens 1.x is no longer supported; see the `freelens-1` npm dist-tag / `0.1.20`)
 
 ## Local Verification Before Opening a PR
 

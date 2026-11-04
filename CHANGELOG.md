@@ -10,7 +10,7 @@ with pre-release identifiers for beta builds.
 
 ## [2.0.0-beta.1]
 
-First release for **Freelens 2**. The extension major version now follows the Freelens major version, so `2.x` targets Freelens `^2.0.0`. Freelens 1.x users stay on `0.1.20` (npm dist-tag `v1`); the 1.x line receives no further updates.
+First release for **Freelens 2**. The extension major version now follows the Freelens major version, so `2.x` targets Freelens `^2.0.0`. Freelens 1.x users stay on `0.1.20` (npm dist-tag `freelens-1`); the 1.x line receives no further updates.
 
 ### Changed
 
