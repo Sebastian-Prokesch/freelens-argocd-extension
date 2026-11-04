@@ -1,12 +1,12 @@
 import { Common, Renderer } from "@freelensapp/extensions";
 import { observer } from "mobx-react";
 import { useEffect } from "react";
-import { Link } from "react-router-dom";
 import { getArgoCdApiClient, getArgoCdDataSource, getArgoPreferences, useArgoCdApiQuery } from "../argocd-api";
 import { argoApiAppProjectDrawerStore } from "../components/argo-api-details";
 import { ArgoApiListToolbar, useArgoApiListFilters } from "../components/argo-api-list";
 import { ArgoCdApiMisconfiguredNotice, ArgoConnectionSourceBanner } from "../components/argo-connection-source";
 import { withErrorPage } from "../components/error-page";
+import { Link } from "../components/link";
 import {
   ArgoAppProject,
   type ArgoAppProjectApi,
@@ -15,9 +15,7 @@ import {
   getArgoAppProjectStore,
 } from "../k8s/argocd";
 import apiListStyles from "./argo-api-list.module.scss";
-import apiListStylesInline from "./argo-api-list.module.scss?inline";
 import styles from "./argo-appprojects-page.module.scss";
-import stylesInline from "./argo-appprojects-page.module.scss?inline";
 
 const {
   Component: { KubeObjectAge, KubeObjectListLayout, Table, TableCell, TableHead, TableRow, WithTooltip },
@@ -62,7 +60,6 @@ const ArgoAppProjectsClusterTabContent = observer(() => {
 
   return (
     <>
-      <style>{stylesInline}</style>
       <KubeObjectListLayout<ArgoAppProject, ArgoAppProjectApi>
         tableId={`${ArgoAppProject.crd.plural}Table`}
         isConfigurable
@@ -108,8 +105,6 @@ const ArgoAppProjectsApiTabContent = observer(() => {
 
   return (
     <>
-      <style>{stylesInline}</style>
-      <style>{apiListStylesInline}</style>
       <div className={apiListStyles.root}>
         <ArgoConnectionSourceBanner />
         {isLoading ? <div className={apiListStyles.loading}>Loading AppProjects from Argo CD API...</div> : null}

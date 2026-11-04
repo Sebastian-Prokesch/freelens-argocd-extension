@@ -6,7 +6,7 @@ Thanks for contributing to the Freelens ArgoCD Extension.
 
 - Node.js `>=24.0.0` (see [`.nvmrc`](.nvmrc); run `nvm use` if you manage Node versions with nvm)
 - pnpm `11.15.1` (pinned via `packageManager` in [`package.json`](package.json); run `corepack install` to get the exact version)
-- Freelens installation for manual validation
+- Freelens 2.x installation for manual validation (Freelens 1.x is no longer supported; see the `v1` npm dist-tag / `0.1.20`)
 
 ## Local Verification Before Opening a PR
 
@@ -19,6 +19,8 @@ pnpm test:unit
 pnpm build
 pnpm pack
 ```
+
+`pnpm type:check` runs one `tsc` program per process (`src/main`, `src/renderer`), plus the unit tests, the build tooling and the integration helpers. For a faster edit loop, `pnpm dev` rebuilds `dist/` on change; in Freelens 2 you can register the repository directory itself on the Extensions page, and a rebuild reloads the extension (per the Freelens 2 docs; not yet verified for this extension).
 
 Optional but recommended when environment is available:
 

@@ -24,7 +24,6 @@ import { createEnumFromKeys } from "../utils";
 import { ApplicationDiffPanel } from "./application-diff-panel";
 import { ApplicationDriftHotspotsTable } from "./application-drift-hotspots-table";
 import styles from "./argo-application-details.module.scss";
-import stylesInline from "./argo-application-details.module.scss?inline";
 
 const {
   Component: { Button, Checkbox, DrawerTitle, DrawerItem, Gutter, Table, TableHead, TableRow, TableCell, WithTooltip },
@@ -226,7 +225,6 @@ export const ArgoApplicationDetails = observer((props: ArgoApplicationDetailsPro
 
     return (
       <>
-        <style>{stylesInline}</style>
         <div className={styles.argoApplicationDetails}>
           <Gutter size="md" />
 
@@ -617,7 +615,7 @@ export const ArgoApplicationDetails = observer((props: ArgoApplicationDetailsPro
                         {safeEntry.initiatedBy?.username ??
                           (safeEntry.initiatedBy?.automated ? "Automated" : "Unknown")}
                       </TableCell>
-                      <TableCell>{safeEntry.source?.repoURL ?? safeEntry.source?.chart ?? "N/A"}</TableCell>
+                      <TableCell>{String(safeEntry.source?.repoURL ?? safeEntry.source?.chart ?? "N/A")}</TableCell>
                       <TableCell>
                         {rollbackDisabledReason ? (
                           <WithTooltip tooltip={rollbackDisabledReason}>

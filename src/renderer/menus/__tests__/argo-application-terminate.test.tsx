@@ -3,9 +3,11 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ArgoTerminateMenuItem } from "../argo-application-terminate";
 
-const patchMock = jest.fn();
+import type { Mock } from "vitest";
 
-jest.mock("../../k8s/argocd", () => ({
+const patchMock = vi.fn();
+
+vi.mock("../../k8s/argocd", () => ({
   getArgoApplicationStore: () => ({
     patch: patchMock,
   }),
@@ -16,9 +18,9 @@ const extension = { name: "argocd-test-extension" } as any;
 describe("ArgoTerminateMenuItem", () => {
   beforeEach(() => {
     patchMock.mockReset();
-    (Renderer.Component.ConfirmDialog.confirm as jest.Mock).mockReset();
-    (Renderer.Component.Notifications.ok as jest.Mock).mockReset();
-    (Renderer.Component.Notifications.error as jest.Mock).mockReset();
+    (Renderer.Component.ConfirmDialog.confirm as Mock).mockReset();
+    (Renderer.Component.Notifications.ok as Mock).mockReset();
+    (Renderer.Component.Notifications.error as Mock).mockReset();
   });
 
   it("renders when operation is in progress", () => {

@@ -1,5 +1,7 @@
 import { Renderer } from "@freelensapp/extensions";
 
+import type React from "react";
+
 export function createKubeObjectDetailRegistration<TProps extends { extension: Renderer.LensExtension }>({
   kind,
   apiVersions,
@@ -10,7 +12,7 @@ export function createKubeObjectDetailRegistration<TProps extends { extension: R
   kind: string;
   apiVersions: string[];
   extension: Renderer.LensExtension;
-  Details: (props: TProps) => JSX.Element | null;
+  Details: (props: TProps) => React.JSX.Element | null;
   priority?: number;
 }) {
   type PropsWithoutExtension = Omit<TProps, "extension">;
@@ -34,7 +36,7 @@ export function createKubeObjectMenuRegistration<TProps extends { extension: Ren
   kind: string;
   apiVersions: string[];
   extension: Renderer.LensExtension;
-  MenuItem: (props: TProps) => JSX.Element | null;
+  MenuItem: (props: TProps) => React.JSX.Element | null;
 }) {
   type PropsWithoutExtension = Omit<TProps, "extension">;
 

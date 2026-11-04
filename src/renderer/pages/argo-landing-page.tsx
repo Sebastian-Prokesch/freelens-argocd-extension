@@ -1,5 +1,6 @@
 import { observer } from "mobx-react";
-import { Link } from "react-router-dom";
+import { ArgoPageLink } from "../components/link";
+import { ArgoPageIds } from "../routes/argo-page-ids";
 import styles from "./argo-landing-page.module.scss";
 
 /**
@@ -12,15 +13,15 @@ export const ArgoLandingPage = observer(() => {
       <p className={styles.lead}>Choose a product area to open its cluster pages.</p>
       <ul className={styles.list}>
         <li>
-          <Link to="argocd">ArgoCD</Link>
+          <ArgoPageLink pageId={ArgoPageIds.argocdOverview}>ArgoCD</ArgoPageLink>
           <span className={styles.hint}> — Applications, AppProjects, config, overview</span>
         </li>
         <li>
-          <Link to="workflows">Argo Workflows</Link>
+          <ArgoPageLink pageId={ArgoPageIds.workflowsRoot}>Argo Workflows</ArgoPageLink>
           <span className={styles.hint}> — Workflows, CronWorkflows, and templates</span>
         </li>
         <li>
-          <Link to="rollouts">Argo Rollouts</Link>
+          <ArgoPageLink pageId={ArgoPageIds.rolloutsOverview}>Argo Rollouts</ArgoPageLink>
           <span className={styles.hint}>
             {" "}
             — Rollouts overview, Rollouts, AnalysisRuns, AnalysisTemplates, ClusterAnalysisTemplates, and Experiments

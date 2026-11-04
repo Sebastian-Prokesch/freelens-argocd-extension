@@ -3,13 +3,15 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ArgoRolloutRetryMenuItem } from "../argo-rollout-retry";
 
-const patchMock = jest.fn();
+import type { Mock } from "vitest";
 
-jest.mock("../../k8s/rollouts", () => ({
+const patchMock = vi.fn();
+
+vi.mock("../../k8s/rollouts", async () => ({
   getArgoRolloutStore: () => ({
     patch: patchMock,
   }),
-  canRetryRollout: jest.requireActual("../../k8s/rollouts/state").canRetryRollout,
+  canRetryRollout: (await vi.importActual<any>("../../k8s/rollouts/state")).canRetryRollout,
 }));
 
 const extension = { name: "argocd-test-extension" } as any;
@@ -17,8 +19,8 @@ const extension = { name: "argocd-test-extension" } as any;
 describe("ArgoRolloutRetryMenuItem", () => {
   beforeEach(() => {
     patchMock.mockReset();
-    (Renderer.Component.Notifications.ok as jest.Mock).mockReset();
-    (Renderer.Component.Notifications.error as jest.Mock).mockReset();
+    (Renderer.Component.Notifications.ok as Mock).mockReset();
+    (Renderer.Component.Notifications.error as Mock).mockReset();
   });
 
   it("renders when rollout is degraded", () => {

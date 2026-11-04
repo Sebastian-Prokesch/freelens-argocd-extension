@@ -95,8 +95,8 @@ describe("argo-config-endpoints", () => {
   });
 
   it("createConfigMapConfig calls store.create with expected args", async () => {
-    const create = jest.fn().mockResolvedValueOnce(undefined);
-    const store = { create, patch: jest.fn() } as any;
+    const create = vi.fn().mockResolvedValueOnce(undefined);
+    const store = { create, patch: vi.fn() } as any;
 
     await createConfigMapConfig(store, configMapInput);
 
@@ -107,8 +107,8 @@ describe("argo-config-endpoints", () => {
   });
 
   it("updateConfigMapConfig calls store.patch with merge strategy", async () => {
-    const patch = jest.fn().mockResolvedValueOnce(undefined);
-    const store = { create: jest.fn(), patch } as any;
+    const patch = vi.fn().mockResolvedValueOnce(undefined);
+    const store = { create: vi.fn(), patch } as any;
     const object = makeConfigMap({ "application.instanceLabelKey": "old-value" });
 
     await updateConfigMapConfig(store, object, configMapInput);
@@ -253,8 +253,8 @@ describe("argo-config-endpoints", () => {
   });
 
   it("createArgoSecretConfig calls store.create with expected args", async () => {
-    const create = jest.fn().mockResolvedValueOnce(undefined);
-    const store = { create, patch: jest.fn() } as any;
+    const create = vi.fn().mockResolvedValueOnce(undefined);
+    const store = { create, patch: vi.fn() } as any;
 
     await createArgoSecretConfig(store, secretInput);
 
@@ -265,8 +265,8 @@ describe("argo-config-endpoints", () => {
   });
 
   it("updateArgoSecretConfig calls store.patch with json strategy", async () => {
-    const patch = jest.fn().mockResolvedValueOnce(undefined);
-    const store = { create: jest.fn(), patch } as any;
+    const patch = vi.fn().mockResolvedValueOnce(undefined);
+    const store = { create: vi.fn(), patch } as any;
     const object = makeSecret({ password: "c2VjcmV0" });
     const intent = { set: { url: "https://github.com/example/repo.git" }, remove: [] };
 
@@ -277,7 +277,7 @@ describe("argo-config-endpoints", () => {
 
   it("propagates store errors", async () => {
     const error = new Error("boom");
-    const store = { create: jest.fn().mockRejectedValueOnce(error), patch: jest.fn() } as any;
+    const store = { create: vi.fn().mockRejectedValueOnce(error), patch: vi.fn() } as any;
 
     await expect(createConfigMapConfig(store, configMapInput)).rejects.toThrow("boom");
   });

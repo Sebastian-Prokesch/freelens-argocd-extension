@@ -118,7 +118,8 @@ export const decodeBase64 = (value?: string): string | undefined => {
   }
 
   try {
-    return Buffer.from(value, "base64").toString("utf8");
+    const binary = atob(value);
+    return new TextDecoder().decode(Uint8Array.from(binary, (char) => char.charCodeAt(0)));
   } catch {
     return undefined;
   }

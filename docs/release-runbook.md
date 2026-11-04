@@ -17,12 +17,12 @@ Push tag v*  →  verify  →  publish-npm (npm)  +  github-release (draft + .tg
 
 ## 1. Prepare release commit
 
-1. Bump `version` in [`package.json`](../package.json) (beta: `0.1.0-beta.x`; stable: `0.1.0`, etc.).
+1. Bump `version` in [`package.json`](../package.json) (beta: `2.0.0-beta.x`; stable: `2.0.0`, etc.). The major version follows the Freelens major version (`2.x` targets Freelens `^2.0.0`); `engines.freelens` is what Freelens enforces.
 2. Update [`CHANGELOG.md`](../CHANGELOG.md): move items from `[Unreleased]` into a dated section for this version.
 3. Confirm [`README.md`](../README.md) reflects current beta/stable status and install instructions.
 4. Commit and push to `main` (or the branch you tag from).
 
-**Tag rule:** the git tag must be `v` + exact `package.json` version (e.g. version `0.1.0-beta.4` → tag `v0.1.0-beta.4`). CI fails if they differ.
+**Tag rule:** the git tag must be `v` + exact `package.json` version (e.g. version `2.0.0-beta.1` → tag `v2.0.0-beta.1`). CI fails if they differ.
 
 ## 2. Pre-tag checks (local)
 
@@ -33,7 +33,7 @@ pnpm install --frozen-lockfile
 pnpm type:check
 pnpm lint:check
 pnpm test:unit
-VITE_PRESERVE_MODULES=false pnpm build
+pnpm build
 pnpm pack
 tar -tzf sebastian-prokesch-freelens-argo-extension-*.tgz   # optional: inspect bundle contents
 ```
@@ -43,8 +43,8 @@ Optional: `pnpm test:integration` when Freelens and cluster paths are configured
 ## 3. Push tag (starts release)
 
 ```sh
-git tag v0.1.0-beta.4          # must match package.json
-git push origin v0.1.0-beta.4
+git tag v2.0.0-beta.1          # must match package.json
+git push origin v2.0.0-beta.1
 ```
 
 GitHub Actions runs [`.github/workflows/release.yml`](../.github/workflows/release.yml):
@@ -52,9 +52,7 @@ GitHub Actions runs [`.github/workflows/release.yml`](../.github/workflows/relea
 ### Job: `verify`
 
 - Typecheck, lint, unit tests, build
-- Build runs with `VITE_PRESERVE_MODULES=false` for release-safe output
-- Fails fast if `out/` still contains `.vite_external` references
-- Uploads `out/` as artifact `extension-build-out`
+- Uploads `dist/` as artifact `extension-build-dist`
 
 ### Job: `publish-npm` (tag pushes only)
 
@@ -92,10 +90,18 @@ Publishing the draft does **not** republish npm; it only makes the GitHub releas
 
 | Version example | Git tag | npm dist-tag | GitHub draft flags |
 |-----------------|---------|--------------|-------------------|
-| `0.1.0-beta.4` | `v0.1.0-beta.4` | `next` | Pre-release, not latest |
-| `0.1.0` | `v0.1.0` | `latest` | Latest stable |
+| `2.0.0-beta.1` | `v2.0.0-beta.1` | `next` | Pre-release, not latest |
+| `2.0.0` | `v2.0.0` | `latest` | Latest stable |
 
-Typical sequence: ship beta tags while iterating, then bump to `0.1.0` and tag `v0.1.0` when ready for the first stable public release (same codebase, updated changelog only).
+Typical sequence: ship beta tags while iterating, then bump to `2.0.0` and tag `v2.0.0` when ready for the first stable public release (same codebase, updated changelog only).
+
+## Freelens 1.x users (`v1` dist-tag)
+
+`0.1.20` is the last build for Freelens 1.x. Before the first `2.x` release goes to `latest`, point a `v1` dist-tag at it so Freelens 1 users can still install a working build (the README tells them to use `@v1`). This needs an npm login with publish rights, so it is run by hand:
+
+```sh
+npm dist-tag add @sebastian-prokesch/freelens-argo-extension@0.1.20 v1
+```
 
 ## Troubleshooting
 

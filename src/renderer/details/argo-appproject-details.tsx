@@ -3,7 +3,6 @@ import { observer } from "mobx-react";
 import { withErrorPage } from "../components/error-page";
 import { ArgoAppProject } from "../k8s/argocd";
 import styles from "./argo-appproject-details.module.scss";
-import stylesInline from "./argo-appproject-details.module.scss?inline";
 
 const {
   Component: { DrawerItem, DrawerTitle, Gutter, Table, TableCell, TableHead, TableRow },
@@ -56,7 +55,6 @@ export const ArgoAppProjectDetails = observer((props: ArgoAppProjectDetailsProps
 
     return (
       <>
-        <style>{stylesInline}</style>
         <div className={styles.argoAppProjectDetails}>
           <DrawerTitle>General</DrawerTitle>
           <DrawerItem name="Description">{spec.description ?? "None"}</DrawerItem>

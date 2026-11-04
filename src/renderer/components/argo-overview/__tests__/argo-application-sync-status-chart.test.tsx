@@ -2,8 +2,10 @@ import { Renderer } from "@freelensapp/extensions";
 import { render, screen } from "@testing-library/react";
 import { ArgoApplicationSyncStatusChart } from "../argo-application-sync-status-chart";
 
+import type { Mock } from "vitest";
+
 describe("ArgoApplicationSyncStatusChart", () => {
-  const consoleLogSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+  const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
   afterAll(() => {
     consoleLogSpy.mockRestore();
@@ -25,7 +27,7 @@ describe("ArgoApplicationSyncStatusChart", () => {
 
     render(<ArgoApplicationSyncStatusChart applications={apps as any} />);
 
-    const pieChart = (Renderer.Component as any).PieChart as jest.Mock;
+    const pieChart = (Renderer.Component as any).PieChart as Mock;
     expect(pieChart).toHaveBeenCalled();
 
     const callArgs = pieChart.mock.calls[0]?.[0];

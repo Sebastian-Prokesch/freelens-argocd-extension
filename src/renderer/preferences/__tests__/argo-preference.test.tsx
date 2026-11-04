@@ -3,12 +3,12 @@ import userEvent from "@testing-library/user-event";
 import { ArgoPreferencesStore } from "../../../common/store";
 import { ArgoPreferenceInput } from "../argo-preference";
 
-jest.mock("../../argocd-api", () => {
-  const actual = jest.requireActual("../../argocd-api");
+vi.mock("../../argocd-api", async () => {
+  const actual = await vi.importActual<any>("../../argocd-api");
   return {
     ...actual,
     getArgoCdApiClient: () => ({
-      testConnection: jest.fn(async () => ({ username: "admin", version: "v3.5.0" })),
+      testConnection: vi.fn(async () => ({ username: "admin", version: "v3.5.0" })),
     }),
   };
 });

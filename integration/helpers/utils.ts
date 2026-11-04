@@ -34,10 +34,12 @@ export async function start(): Promise<StartResult> {
 
   const app = await electron.launch({
     executablePath,
+    // Note: Freelens 2 ignores `--user-data-dir` and `HOME`, so this runs against the real profile
+    // (installed extensions included). Quit any running Freelens first: a second instance exits at once.
     args: [],
-    env: {
-      ...process.env,
-    },
+    env: Object.fromEntries(
+      Object.entries(process.env).filter((entry): entry is [string, string] => entry[1] !== undefined),
+    ),
   });
 
   const firstWindow = await app.firstWindow();
@@ -93,7 +95,7 @@ export async function navigateToExtensionsPage(app: ElectronApplication): Promis
 }
 
 export async function installExtension(window: Page, extensionPath: string): Promise<void> {
-  const textbox = window.getByPlaceholder("Name or file path or URL");
+  const textbox = window.getByPlaceholder(/Name, URL, or path to a package or directory/);
   await textbox.waitFor({ state: "visible", timeout: 30_000 });
   await textbox.fill(extensionPath);
 
@@ -118,7 +120,7 @@ export async function closeNotifications(window: Page): Promise<void> {
 }
 
 export function getWorkspaceExtensionName(): string {
-  const packageJsonPath = join(__dirname, "..", "..", "package.json");
+  const packageJsonPath = join(import.meta.dirname, "..", "..", "package.json");
   const raw = readFileSync(packageJsonPath, "utf8");
   const parsed = JSON.parse(raw) as { name?: string };
 

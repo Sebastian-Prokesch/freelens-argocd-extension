@@ -11,9 +11,7 @@ export const ArgoPageIds = {
   workflowsCron: "argo-workflows-cron-workflows",
   workflowsTemplates: "argo-workflows-templates",
   workflowsClusterTemplates: "argo-workflows-cluster-templates",
-  legacyArgocdRoot: "argocd-root-legacy",
-  legacyArgocdOverview: "argocd-overview-legacy",
-  legacyArgocdConfig: "argocd-config-legacy",
+  rolloutsOverview: "argo-rollouts-overview",
 } as const;
 
 export type ArgoProductTab = "argocd" | "workflows" | "rollouts";

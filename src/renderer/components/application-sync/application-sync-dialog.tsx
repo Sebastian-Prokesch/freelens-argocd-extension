@@ -17,7 +17,6 @@ import { syncApplication } from "../../endpoints/argo-application-endpoints";
 import { getArgoApplicationStore } from "../../k8s/argocd";
 import { runGuardedArgoMutation } from "../../mutations";
 import styles from "./application-sync-dialog.module.scss";
-import stylesInline from "./application-sync-dialog.module.scss?inline";
 import { applicationSyncDialogStore } from "./application-sync-dialog-store";
 
 import type { ArgoApplication } from "../../k8s/argocd/applications";
@@ -114,7 +113,6 @@ export const ApplicationSyncDialog = observer(() => {
   return (
     <Dialog isOpen={isOpen} close={() => applicationSyncDialogStore.close()}>
       <>
-        <style>{stylesInline}</style>
         <div className={styles.dialogContent}>
           <h3 className={styles.dialogHeader}>Sync with options — {appName}</h3>
 

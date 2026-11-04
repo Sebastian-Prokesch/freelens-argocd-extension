@@ -6,7 +6,7 @@ import {
 import { ApplicationDiffPanel } from "../application-diff-panel";
 
 describe("ApplicationDiffPanel", () => {
-  const scrollIntoViewMock = jest.fn();
+  const scrollIntoViewMock = vi.fn();
 
   beforeEach(() => {
     scrollIntoViewMock.mockReset();

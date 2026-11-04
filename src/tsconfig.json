@@ -1,0 +1,10 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2024", "DOM", "DOM.Iterable"],
+    "types": ["node", "vite/client", "vitest/globals"],
+    "jsx": "react-jsx",
+    "allowArbitraryExtensions": true
+  },
+  "include": ["./**/__tests__/**/*", "./test/**/*"]
+}

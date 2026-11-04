@@ -1,5 +1,4 @@
 import { render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
 import { ArgoWorkflowDetails } from "../argo-workflow-details";
 
 const extension = { name: "argocd-test-extension" } as any;
@@ -18,9 +17,9 @@ describe("ArgoWorkflowDetails", () => {
     } as any;
 
     render(
-      <MemoryRouter>
+      <>
         <ArgoWorkflowDetails object={object} extension={extension} />
-      </MemoryRouter>,
+      </>,
     );
 
     expect(screen.getAllByText("Suspended")).toHaveLength(2);
@@ -51,9 +50,9 @@ describe("ArgoWorkflowDetails", () => {
     } as any;
 
     render(
-      <MemoryRouter>
+      <>
         <ArgoWorkflowDetails object={object} extension={extension} />
-      </MemoryRouter>,
+      </>,
     );
 
     expect(screen.queryByRole("button", { name: "Suspend" })).not.toBeInTheDocument();
