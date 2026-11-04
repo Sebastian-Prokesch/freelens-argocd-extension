@@ -1,14 +1,13 @@
 import { Common, Renderer } from "@freelensapp/extensions";
 import { observer } from "mobx-react";
-import { Link } from "react-router-dom";
 import { withErrorPage } from "../../components/error-page";
+import { Link } from "../../components/link";
 import {
   ArgoClusterAnalysisTemplate,
   type ArgoClusterAnalysisTemplateApi,
   getArgoClusterAnalysisTemplateStore,
 } from "../../k8s/rollouts";
 import styles from "./argo-rollouts-page.module.scss";
-import stylesInline from "./argo-rollouts-page.module.scss?inline";
 
 const {
   Component: { KubeObjectAge, KubeObjectListLayout, WithTooltip },
@@ -49,7 +48,6 @@ export const ArgoRolloutsClusterAnalysisTemplatesTabContent = observer(() => {
 
   return (
     <>
-      <style>{stylesInline}</style>
       <KubeObjectListLayout<ArgoClusterAnalysisTemplate, ArgoClusterAnalysisTemplateApi>
         tableId={`${ArgoClusterAnalysisTemplate.crd.plural}Table`}
         isConfigurable

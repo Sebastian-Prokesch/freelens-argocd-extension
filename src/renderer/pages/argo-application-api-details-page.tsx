@@ -1,11 +1,12 @@
-import { Renderer } from "@freelensapp/extensions";
+import { type Common, Renderer } from "@freelensapp/extensions";
 import { observer } from "mobx-react";
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
 import { getArgoCdApiClient } from "../argocd-api";
 import { ArgoConnectionSourceBanner } from "../components/argo-connection-source";
 import { withErrorPage } from "../components/error-page";
+import { ArgoPageLink } from "../components/link";
 import { ArgoApplicationDetails } from "../details/argo-application-details";
+import { ArgoApplication } from "../k8s/argocd";
 import {
   ArgoHardRefreshMenuItem,
   ArgoRefreshMenuItem,
@@ -13,22 +14,19 @@ import {
   ArgoSyncWithOptionsMenuItem,
   ArgoTerminateMenuItem,
 } from "../menus";
-import { ArgoRoutes } from "../routes/argo-routes";
 import styles from "./argo-application-api-details-page.module.scss";
-import stylesInline from "./argo-application-api-details-page.module.scss?inline";
-
-import type { ArgoApplication } from "../k8s/argocd";
 
 export interface ArgoApiApplicationDetailsPageProps {
   extension: Renderer.LensExtension;
+  /** Page params declared at registration: `namespace` ("_" for none) and `name`. */
+  params: Common.Types.PageComponentProps["params"];
 }
 
 export const ArgoApiApplicationDetailsPage = observer((props: ArgoApiApplicationDetailsPageProps) =>
   withErrorPage(props, () => {
-    const { extension } = props;
-    const params = useParams<{ namespace?: string; name?: string }>();
-    const namespaceParam = params.namespace ?? "_";
-    const name = params.name ?? "";
+    const { extension, params } = props;
+    const namespaceParam: string = params.namespace?.get() ?? "_";
+    const name: string = params.name?.get() ?? "";
     const appNamespace = namespaceParam === "_" ? undefined : namespaceParam;
     const [application, setApplication] = useState<ArgoApplication | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -69,13 +67,12 @@ export const ArgoApiApplicationDetailsPage = observer((props: ArgoApiApplication
 
     return (
       <>
-        <style>{stylesInline}</style>
         <div className={styles.root}>
           <ArgoConnectionSourceBanner />
           <div className={styles.header}>
-            <Link className={styles.backLink} to={ArgoRoutes.argocd.applications}>
+            <ArgoPageLink className={styles.backLink} pageId={ArgoApplication.crd.plural}>
               ← Applications
-            </Link>
+            </ArgoPageLink>
             <h5 className={styles.title}>{name || "Application"}</h5>
             {application ? (
               <div className={styles.actions}>

@@ -3,6 +3,8 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { ArgoConfigDialog } from "../argo-config-dialog";
 import { argoConfigDialogStore } from "../argo-config-dialog-store";
 
+import type { Mock } from "vitest";
+
 const setInputValue = (placeholder: string, value: string) => {
   fireEvent.change(screen.getByPlaceholderText(placeholder), { target: { value } });
 };
@@ -36,13 +38,13 @@ const makeArgoConfigMap = (data: Record<string, string>) =>
 describe("ArgoConfigDialog", () => {
   beforeEach(() => {
     argoConfigDialogStore.close();
-    (Renderer.K8sApi.secretsStore.create as jest.Mock).mockReset();
-    (Renderer.K8sApi.secretsStore.patch as jest.Mock).mockReset();
-    (Renderer.K8sApi.configMapStore.create as jest.Mock).mockReset();
-    (Renderer.K8sApi.configMapStore.patch as jest.Mock).mockReset();
-    (Renderer.Component.Notifications.ok as jest.Mock).mockReset();
-    (Renderer.Component.Notifications.error as jest.Mock).mockReset();
-    (Renderer.Component.ConfirmDialog.confirm as jest.Mock).mockClear();
+    (Renderer.K8sApi.secretsStore.create as Mock).mockReset();
+    (Renderer.K8sApi.secretsStore.patch as Mock).mockReset();
+    (Renderer.K8sApi.configMapStore.create as Mock).mockReset();
+    (Renderer.K8sApi.configMapStore.patch as Mock).mockReset();
+    (Renderer.Component.Notifications.ok as Mock).mockReset();
+    (Renderer.Component.Notifications.error as Mock).mockReset();
+    (Renderer.Component.ConfirmDialog.confirm as Mock).mockClear();
   });
 
   it("creates repository secret in create mode", async () => {
@@ -92,7 +94,7 @@ describe("ArgoConfigDialog", () => {
 
     await waitFor(() => expect(Renderer.K8sApi.secretsStore.patch).toHaveBeenCalled());
 
-    const [, ops, strategy] = (Renderer.K8sApi.secretsStore.patch as jest.Mock).mock.calls[0];
+    const [, ops, strategy] = (Renderer.K8sApi.secretsStore.patch as Mock).mock.calls[0]!;
     expect(strategy).toBe("json");
 
     const touchedPaths = ops.map((op: { path: string }) => op.path);
@@ -123,13 +125,13 @@ describe("ArgoConfigDialog", () => {
 
     await waitFor(() => expect(Renderer.K8sApi.secretsStore.patch).toHaveBeenCalled());
 
-    const [, ops] = (Renderer.K8sApi.secretsStore.patch as jest.Mock).mock.calls[0];
+    const [, ops] = (Renderer.K8sApi.secretsStore.patch as Mock).mock.calls[0]!;
     expect(ops).toContainEqual({ op: "remove", path: "/data/password" });
     expect(ops.map((op: { path: string }) => op.path)).not.toContain("/data/username");
   });
 
   it("confirms auth method change and removes old credentials", async () => {
-    (Renderer.Component.ConfirmDialog.confirm as jest.Mock).mockResolvedValueOnce(true);
+    (Renderer.Component.ConfirmDialog.confirm as Mock).mockResolvedValueOnce(true);
     argoConfigDialogStore.openEdit(
       makeRepoSecret({
         url: b64("https://example.com/repo.git"),
@@ -150,7 +152,7 @@ describe("ArgoConfigDialog", () => {
       expect.objectContaining({ labelOk: "Change Auth Method" }),
     );
 
-    const [, ops] = (Renderer.K8sApi.secretsStore.patch as jest.Mock).mock.calls[0];
+    const [, ops] = (Renderer.K8sApi.secretsStore.patch as Mock).mock.calls[0]!;
     expect(ops).toContainEqual({ op: "remove", path: "/data/username" });
     expect(ops).toContainEqual({ op: "remove", path: "/data/password" });
     expect(ops).toContainEqual({
@@ -161,7 +163,7 @@ describe("ArgoConfigDialog", () => {
   });
 
   it("aborts save when auth method change is not confirmed", async () => {
-    (Renderer.Component.ConfirmDialog.confirm as jest.Mock).mockResolvedValueOnce(false);
+    (Renderer.Component.ConfirmDialog.confirm as Mock).mockResolvedValueOnce(false);
     argoConfigDialogStore.openEdit(
       makeRepoSecret({
         url: b64("https://example.com/repo.git"),
@@ -324,7 +326,7 @@ describe("ArgoConfigDialog", () => {
   });
 
   it("shows save error notification and inline error when request fails", async () => {
-    (Renderer.K8sApi.secretsStore.create as jest.Mock).mockRejectedValueOnce(new Error("forbidden"));
+    (Renderer.K8sApi.secretsStore.create as Mock).mockRejectedValueOnce(new Error("forbidden"));
     argoConfigDialogStore.openCreate("repository");
 
     render(<ArgoConfigDialog />);
@@ -339,7 +341,7 @@ describe("ArgoConfigDialog", () => {
   });
 
   it("shows fallback save error notification and inline error for non-Error failures", async () => {
-    (Renderer.K8sApi.secretsStore.create as jest.Mock).mockRejectedValueOnce({ code: 403 });
+    (Renderer.K8sApi.secretsStore.create as Mock).mockRejectedValueOnce({ code: 403 });
     argoConfigDialogStore.openCreate("repository");
 
     render(<ArgoConfigDialog />);

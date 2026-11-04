@@ -5,18 +5,18 @@ import { act, render, screen, waitFor } from "@testing-library/react";
 const applicationStoreMock = {
   items: [],
   contextItems: [] as any[],
-  loadAll: jest.fn(async () => {}),
-  subscribe: jest.fn(() => () => {}),
+  loadAll: vi.fn(async () => {}),
+  subscribe: vi.fn(() => () => {}),
 };
 
 const appProjectStoreMock = {
   items: [],
   contextItems: [] as any[],
-  loadAll: jest.fn(async () => {}),
-  subscribe: jest.fn(() => () => {}),
+  loadAll: vi.fn(async () => {}),
+  subscribe: vi.fn(() => () => {}),
 };
 
-jest.mock("../../k8s/argocd", () => {
+vi.mock("../../k8s/argocd", () => {
   return {
     getArgoApplicationStore: () => applicationStoreMock,
     getArgoAppProjectStore: () => appProjectStoreMock,
@@ -34,14 +34,14 @@ describe("ArgoOverviewTabContent", () => {
     return { promise, resolve: resolve! };
   };
 
-  const consoleLogSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+  const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
   beforeEach(() => {
     const namespaceStore = Renderer.K8sApi.namespaceStore as any;
 
     namespaceStore.items = [{ getName: () => "argocd" }];
-    namespaceStore.loadAll = jest.fn(async () => {});
-    namespaceStore.subscribe = jest.fn(() => () => {});
+    namespaceStore.loadAll = vi.fn(async () => {});
+    namespaceStore.subscribe = vi.fn(() => () => {});
 
     applicationStoreMock.loadAll.mockImplementation(async () => {});
     applicationStoreMock.subscribe.mockImplementation(() => () => {});
@@ -89,7 +89,7 @@ describe("ArgoOverviewTabContent", () => {
   it("renders loading placeholders in overview status cards while data is loading", () => {
     const namespaceStore = Renderer.K8sApi.namespaceStore as any;
     const deferredNamespaces = createDeferred();
-    namespaceStore.loadAll = jest.fn(() => deferredNamespaces.promise);
+    namespaceStore.loadAll = vi.fn(() => deferredNamespaces.promise);
 
     render(<ArgoOverviewTabContent />);
 
@@ -102,8 +102,8 @@ describe("ArgoOverviewTabContent", () => {
     const namespaceStore = Renderer.K8sApi.namespaceStore as any;
     const deferredNamespaces = createDeferred();
 
-    namespaceStore.loadAll = jest.fn(() => deferredNamespaces.promise);
-    namespaceStore.subscribe = jest.fn(() => () => {});
+    namespaceStore.loadAll = vi.fn(() => deferredNamespaces.promise);
+    namespaceStore.subscribe = vi.fn(() => () => {});
     applicationStoreMock.subscribe.mockImplementation(() => () => {});
     appProjectStoreMock.subscribe.mockImplementation(() => () => {});
 

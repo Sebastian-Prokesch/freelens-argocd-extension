@@ -3,9 +3,7 @@ import { observer } from "mobx-react";
 import { useEffect, useRef, useState } from "react";
 import { type ArgoRollout, getArgoRolloutStore } from "../../k8s/rollouts";
 import styles from "../argo-overview-page.module.scss";
-import stylesInline from "../argo-overview-page.module.scss?inline";
 import chartStyles from "./rollouts-overview-page.module.scss";
-import chartStylesInline from "./rollouts-overview-page.module.scss?inline";
 
 const {
   Component: { NamespaceSelectFilter, PieChart },
@@ -119,8 +117,6 @@ export const ArgoRolloutsOverviewTabContent = observer(() => {
 
   return (
     <>
-      <style>{stylesInline}</style>
-      <style>{chartStylesInline}</style>
       <div className={styles.root}>
         <div className={styles.header}>
           <h5 className={styles.title}>Argo Rollouts Overview</h5>

@@ -1,7 +1,7 @@
 import { Common, Renderer } from "@freelensapp/extensions";
 import { observer } from "mobx-react";
-import { Link } from "react-router-dom";
 import { withErrorPage } from "../../components/error-page";
+import { Link } from "../../components/link";
 import {
   ArgoCronWorkflow,
   type ArgoCronWorkflowApi,

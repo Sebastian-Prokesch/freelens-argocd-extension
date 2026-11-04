@@ -1,5 +1,4 @@
 import { render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
 import { ArgoAppProjectsTabContent } from "../argo-appprojects-page";
 
 const mockItems = [
@@ -31,7 +30,7 @@ const mockStore = {
   },
 };
 
-jest.mock("../../k8s/argocd", () => ({
+vi.mock("../../k8s/argocd", () => ({
   ArgoAppProject: {
     crd: {
       plural: "appprojects",
@@ -48,9 +47,9 @@ jest.mock("../../k8s/argocd", () => ({
 describe("ArgoAppProjectsTabContent", () => {
   it("links appproject name to appproject details", () => {
     render(
-      <MemoryRouter>
+      <>
         <ArgoAppProjectsTabContent />
-      </MemoryRouter>,
+      </>,
     );
 
     const nameLink = screen.getByRole("link", { name: "default" });
@@ -60,9 +59,9 @@ describe("ArgoAppProjectsTabContent", () => {
 
   it("renders description fallback", () => {
     render(
-      <MemoryRouter>
+      <>
         <ArgoAppProjectsTabContent />
-      </MemoryRouter>,
+      </>,
     );
 
     expect(screen.getByText("Default project")).toBeInTheDocument();
@@ -71,9 +70,9 @@ describe("ArgoAppProjectsTabContent", () => {
 
   it("renders destinations and sync-window signal columns with fallbacks", () => {
     render(
-      <MemoryRouter>
+      <>
         <ArgoAppProjectsTabContent />
-      </MemoryRouter>,
+      </>,
     );
 
     expect(screen.getByText("2")).toBeInTheDocument();

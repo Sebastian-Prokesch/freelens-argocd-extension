@@ -10,7 +10,6 @@ import {
 } from "../../menus";
 import { argoApiApplicationDrawerStore } from "./argo-api-application-drawer-store";
 import styles from "./argo-api-details-drawer.module.scss";
-import stylesInline from "./argo-api-details-drawer.module.scss?inline";
 
 export const ArgoApiApplicationDrawer = observer(() => {
   const { isOpen, application } = argoApiApplicationDrawerStore;
@@ -24,7 +23,6 @@ export const ArgoApiApplicationDrawer = observer(() => {
 
   return (
     <>
-      <style>{stylesInline}</style>
       <div className={styles.overlay} role="presentation" onClick={() => argoApiApplicationDrawerStore.close()} />
       <aside className={styles.panel} role="dialog" aria-label={`Application ${name}`}>
         <div className={styles.header}>

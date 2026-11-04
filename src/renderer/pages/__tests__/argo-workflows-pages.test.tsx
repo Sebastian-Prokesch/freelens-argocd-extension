@@ -1,5 +1,4 @@
 import { render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
 import {
   ArgoWorkflowsClusterTemplatesTabContent,
   ArgoWorkflowsCronWorkflowsTabContent,
@@ -72,7 +71,7 @@ const clusterWorkflowTemplateStore = {
   },
 };
 
-jest.mock("../../k8s/workflows", () => ({
+vi.mock("../../k8s/workflows", () => ({
   ArgoWorkflow: {
     crd: { plural: "workflows", title: "Workflows" },
   },
@@ -102,9 +101,9 @@ jest.mock("../../k8s/workflows", () => ({
 describe("Argo Workflows list pages", () => {
   it("links workflow name to workflow details", () => {
     render(
-      <MemoryRouter>
+      <>
         <ArgoWorkflowsTabContent />
-      </MemoryRouter>,
+      </>,
     );
 
     expect(screen.getByRole("link", { name: "wf-demo" })).toHaveAttribute(
@@ -115,9 +114,9 @@ describe("Argo Workflows list pages", () => {
 
   it("links cron workflow name to cron workflow details", () => {
     render(
-      <MemoryRouter>
+      <>
         <ArgoWorkflowsCronWorkflowsTabContent />
-      </MemoryRouter>,
+      </>,
     );
 
     expect(screen.getByRole("link", { name: "cron-demo" })).toHaveAttribute(
@@ -128,9 +127,9 @@ describe("Argo Workflows list pages", () => {
 
   it("links workflow template name to template details", () => {
     render(
-      <MemoryRouter>
+      <>
         <ArgoWorkflowsTemplatesTabContent />
-      </MemoryRouter>,
+      </>,
     );
 
     expect(screen.getByRole("link", { name: "tmpl-demo" })).toHaveAttribute(
@@ -141,9 +140,9 @@ describe("Argo Workflows list pages", () => {
 
   it("links cluster workflow template name to cluster template details", () => {
     render(
-      <MemoryRouter>
+      <>
         <ArgoWorkflowsClusterTemplatesTabContent />
-      </MemoryRouter>,
+      </>,
     );
 
     expect(screen.getByRole("link", { name: "cluster-tmpl-demo" })).toHaveAttribute(

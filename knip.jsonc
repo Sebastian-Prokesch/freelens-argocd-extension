@@ -1,22 +1,36 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema-jsonc.json",
 
-  "entry": ["out/{main,renderer}/index.js!", "src/main/index.ts", "src/renderer/index.tsx"],
-  "project": ["*.{js,mjs,ts}", "out/**/*.js!", "src/**/*.{ts,tsx}"],
+  "entry": [
+    "dist/{main,renderer}.js!",
+    "src/main/index.ts",
+    "src/renderer/index.tsx",
+    "vitest.config.ts",
+    "vitest.integration.config.ts"
+  ],
+  "project": ["*.{js,mjs,ts}", "build/**/*.mjs", "dist/**/*.js!", "src/**/*.{ts,tsx}", "integration/**/*.ts"],
 
   "ignoreBinaries": ["build:.*"],
   "ignoreDependencies": [
-    // used as vite plugin
-    "@babel/plugin-proposal-decorators",
     // provided by the application
-    "@freelensapp/extensions"
+    "@freelensapp/extensions",
+    // host-provided singletons: marked external at build time, installed for types and unit tests
+    "react",
+    "react-dom",
+    "mobx",
+    "mobx-react",
+    "electron",
+    // used by build/vite-plugin-standard-decorators.mjs
+    "esbuild",
+    // CSS modules are compiled by Vite
+    "sass-embedded"
   ],
 
   "typescript": {
     "config": ["tsconfig.json"]
   },
   "vite": {
-    "config": ["electron.vite.config.ts"]
+    "config": ["vite.config.mjs"]
   },
 
   "exclude": ["exports"]

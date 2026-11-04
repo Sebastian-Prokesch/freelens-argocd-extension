@@ -32,7 +32,7 @@ const KubeObjectListLayout = ({ store, items, renderTableContents }: AnyRecord) 
 };
 
 // Jest-callable components we want to introspect in tests if needed
-export const PieChart = jest.fn(({ data }: AnyRecord) => (
+export const PieChart = vi.fn(({ data }: AnyRecord) => (
   <div data-testid="PieChart" data-labels={JSON.stringify(data?.labels ?? [])}>
     PieChart
   </div>
@@ -51,7 +51,7 @@ export const Renderer = {
     Tabs: ({ children, onChange }: AnyRecord) => (
       <div data-testid="Tabs">
         {React.Children.map(children, (child) =>
-          React.isValidElement(child) ? React.cloneElement(child, { onSelect: onChange }) : child,
+          React.isValidElement<AnyRecord>(child) ? React.cloneElement(child, { onSelect: onChange }) : child,
         )}
       </div>
     ),
@@ -118,11 +118,11 @@ export const Renderer = {
       </label>
     ),
     Notifications: {
-      ok: jest.fn(),
-      error: jest.fn(),
+      ok: vi.fn(),
+      error: vi.fn(),
     },
     ConfirmDialog: {
-      confirm: jest.fn(async () => true),
+      confirm: vi.fn(async () => true),
     },
 
     // menu
@@ -132,6 +132,13 @@ export const Renderer = {
       </button>
     ),
     Icon: passthrough("Icon"),
+
+    // links (Freelens 2 provides MaybeLink instead of react-router-dom's Link)
+    MaybeLink: ({ to, children, onClick, className }: AnyRecord) => (
+      <a href={typeof to === "string" ? to : undefined} onClick={onClick} className={className}>
+        {children}
+      </a>
+    ),
   },
 
   // minimal K8sApi bits for pages using stores
@@ -152,18 +159,18 @@ export const Renderer = {
       contextItems: [],
       loadAll: async () => {},
       subscribe: () => noop,
-      create: jest.fn(),
-      patch: jest.fn(),
-      remove: jest.fn(),
+      create: vi.fn(),
+      patch: vi.fn(),
+      remove: vi.fn(),
     },
     secretsStore: {
       items: [],
       contextItems: [],
       loadAll: async () => {},
       subscribe: () => noop,
-      create: jest.fn(),
-      patch: jest.fn(),
-      remove: jest.fn(),
+      create: vi.fn(),
+      patch: vi.fn(),
+      remove: vi.fn(),
     },
     KubeObjectMetadata: class {},
     LensExtensionKubeObject: class {},
@@ -177,9 +184,13 @@ export const Renderer = {
 
   Ipc: class {
     constructor(_extension: any) {}
-    invoke = jest.fn(async () => ({ status: 200, bodyText: "{}" }));
-    listen = jest.fn(() => noop);
-    handle = jest.fn();
+    static createInstance(this: any, extension: any) {
+      return new this(extension);
+    }
+    static resetInstance() {}
+    invoke = vi.fn(async () => ({ status: 200, bodyText: "{}" }));
+    listen = vi.fn(() => noop);
+    handle = vi.fn();
   },
 } as const;
 
@@ -187,9 +198,13 @@ export const Main = {
   LensExtension: class {},
   Ipc: class {
     constructor(_extension: any) {}
-    invoke = jest.fn(async () => ({ status: 200, bodyText: "{}" }));
-    listen = jest.fn(() => noop);
-    handle = jest.fn();
+    static createInstance(this: any, extension: any) {
+      return new this(extension);
+    }
+    static resetInstance() {}
+    invoke = vi.fn(async () => ({ status: 200, bodyText: "{}" }));
+    listen = vi.fn(() => noop);
+    handle = vi.fn();
   },
 } as const;
 

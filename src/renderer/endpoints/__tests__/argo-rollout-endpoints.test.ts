@@ -38,8 +38,8 @@ describe("argo-rollout-endpoints", () => {
   });
 
   it("abortRollout patches rollout /status with merge patch content type", async () => {
-    const requestPatch = jest.fn().mockResolvedValue({});
-    const patch = jest.fn().mockResolvedValueOnce(undefined);
+    const requestPatch = vi.fn().mockResolvedValue({});
+    const patch = vi.fn().mockResolvedValueOnce(undefined);
     const store = {
       patch,
       api: {
@@ -62,8 +62,8 @@ describe("argo-rollout-endpoints", () => {
   });
 
   it("retryRollout patches rollout /status with merge patch content type", async () => {
-    const requestPatch = jest.fn().mockResolvedValue({});
-    const patch = jest.fn().mockResolvedValueOnce(undefined);
+    const requestPatch = vi.fn().mockResolvedValue({});
+    const patch = vi.fn().mockResolvedValueOnce(undefined);
     const store = {
       patch,
       api: {
@@ -88,10 +88,10 @@ describe("argo-rollout-endpoints", () => {
   it("abortRollout propagates non-404 /status errors", async () => {
     const error = new Error("boom");
     const store = {
-      patch: jest.fn(),
+      patch: vi.fn(),
       api: {
         formatUrlForNotListing: () => rolloutApiUrl,
-        request: { patch: jest.fn().mockRejectedValueOnce(error) },
+        request: { patch: vi.fn().mockRejectedValueOnce(error) },
       },
     } as any;
     const rollout = mockRollout();
@@ -102,10 +102,10 @@ describe("argo-rollout-endpoints", () => {
   it("retryRollout propagates non-404 /status errors", async () => {
     const error = new Error("boom");
     const store = {
-      patch: jest.fn(),
+      patch: vi.fn(),
       api: {
         formatUrlForNotListing: () => rolloutApiUrl,
-        request: { patch: jest.fn().mockRejectedValueOnce(error) },
+        request: { patch: vi.fn().mockRejectedValueOnce(error) },
       },
     } as any;
     const rollout = mockRollout();
@@ -114,12 +114,12 @@ describe("argo-rollout-endpoints", () => {
   });
 
   it("abortRollout falls back to store.patch on 404 /status", async () => {
-    const patch = jest.fn().mockResolvedValue(undefined);
+    const patch = vi.fn().mockResolvedValue(undefined);
     const store = {
       patch,
       api: {
         formatUrlForNotListing: () => rolloutApiUrl,
-        request: { patch: jest.fn().mockRejectedValueOnce({ code: 404 }) },
+        request: { patch: vi.fn().mockRejectedValueOnce({ code: 404 }) },
       },
     } as any;
     const rollout = mockRollout();
@@ -130,7 +130,7 @@ describe("argo-rollout-endpoints", () => {
   });
 
   it("retryRollout falls back to store.patch on missing request.patch", async () => {
-    const patch = jest.fn().mockResolvedValue(undefined);
+    const patch = vi.fn().mockResolvedValue(undefined);
     const store = {
       patch,
       api: {
@@ -286,8 +286,8 @@ describe("buildPromotePatches", () => {
 
 describe("requestRolloutPromotion", () => {
   it("sends merge patch body under JsonApi { data } for /status", async () => {
-    const requestPatch = jest.fn().mockResolvedValue({});
-    const patch = jest.fn().mockResolvedValue(undefined);
+    const requestPatch = vi.fn().mockResolvedValue({});
+    const patch = vi.fn().mockResolvedValue(undefined);
     const store = {
       patch,
       api: {
@@ -314,8 +314,8 @@ describe("requestRolloutPromotion", () => {
   });
 
   it("applies unifiedPatch on main resource when status returns 404", async () => {
-    const requestPatch = jest.fn().mockRejectedValue({ code: 404 });
-    const patch = jest.fn().mockResolvedValue(undefined);
+    const requestPatch = vi.fn().mockRejectedValue({ code: 404 });
+    const patch = vi.fn().mockResolvedValue(undefined);
     const store = {
       patch,
       api: {
@@ -335,8 +335,8 @@ describe("requestRolloutPromotion", () => {
   });
 
   it("applies inconclusive unifiedPatch on main resource when /status returns 404", async () => {
-    const requestPatch = jest.fn().mockRejectedValue({ code: 404 });
-    const patch = jest.fn().mockResolvedValue(undefined);
+    const requestPatch = vi.fn().mockRejectedValue({ code: 404 });
+    const patch = vi.fn().mockResolvedValue(undefined);
     const store = {
       patch,
       api: {
@@ -374,9 +374,9 @@ describe("requestRolloutPromotion", () => {
   });
 
   it("propagates non-404 errors from status patch", async () => {
-    const requestPatch = jest.fn().mockRejectedValue({ code: 403 });
+    const requestPatch = vi.fn().mockRejectedValue({ code: 403 });
     const store = {
-      patch: jest.fn(),
+      patch: vi.fn(),
       api: {
         formatUrlForNotListing: () => rolloutApiUrl,
         request: { patch: requestPatch },
@@ -392,8 +392,8 @@ describe("requestRolloutPromotion", () => {
   });
 
   it("runs spec patch after successful status when spec.paused", async () => {
-    const requestPatch = jest.fn().mockResolvedValue({});
-    const patch = jest.fn().mockResolvedValue(undefined);
+    const requestPatch = vi.fn().mockResolvedValue({});
+    const patch = vi.fn().mockResolvedValue(undefined);
     const store = {
       patch,
       api: {
@@ -413,7 +413,7 @@ describe("requestRolloutPromotion", () => {
   });
 
   it("uses unified patch when request.patch is missing", async () => {
-    const patch = jest.fn().mockResolvedValue(undefined);
+    const patch = vi.fn().mockResolvedValue(undefined);
     const store = {
       patch,
       api: {
@@ -432,8 +432,8 @@ describe("requestRolloutPromotion", () => {
   });
 
   it("full promote sends promoteFull on /status when hashes match and spec not paused", async () => {
-    const requestPatch = jest.fn().mockResolvedValue({});
-    const patch = jest.fn().mockResolvedValue(undefined);
+    const requestPatch = vi.fn().mockResolvedValue({});
+    const patch = vi.fn().mockResolvedValue(undefined);
     const store = {
       patch,
       api: {

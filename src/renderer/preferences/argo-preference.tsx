@@ -4,7 +4,6 @@ import { useState } from "react";
 import { ArgoPreferencesStore } from "../../common/store";
 import { getArgoCdApiClient } from "../argocd-api";
 import styles from "./argo-preference.module.scss";
-import stylesInline from "./argo-preference.module.scss?inline";
 
 const {
   Component: { Button, Checkbox, Input },
@@ -53,7 +52,6 @@ export const ArgoPreferenceInput = observer(() => {
 
   return (
     <>
-      <style>{stylesInline}</style>
       <div className={styles.root}>
         <div className={styles.field}>
           <div className={styles.label}>Data source</div>

@@ -2,8 +2,10 @@ import { Renderer } from "@freelensapp/extensions";
 import { render, screen } from "@testing-library/react";
 import { ArgoApplicationStatusChart } from "../argo-application-status-chart";
 
+import type { Mock } from "vitest";
+
 describe("ArgoApplicationStatusChart", () => {
-  const consoleLogSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+  const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
   afterAll(() => {
     consoleLogSpy.mockRestore();
@@ -26,7 +28,7 @@ describe("ArgoApplicationStatusChart", () => {
     render(<ArgoApplicationStatusChart applications={apps as any} />);
 
     // our Jest mock renders a stub, but we assert the props sent to PieChart
-    const pieChart = (Renderer.Component as any).PieChart as jest.Mock;
+    const pieChart = (Renderer.Component as any).PieChart as Mock;
     expect(pieChart).toHaveBeenCalled();
 
     const callArgs = pieChart.mock.calls[0]?.[0];

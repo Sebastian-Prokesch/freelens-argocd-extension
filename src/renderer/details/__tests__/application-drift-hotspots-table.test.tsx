@@ -15,7 +15,7 @@ describe("ApplicationDriftHotspotsTable", () => {
   });
 
   it("shows View diff only for OutOfSync hotspots when onViewDiff is provided", () => {
-    const onViewDiff = jest.fn();
+    const onViewDiff = vi.fn();
 
     render(<ApplicationDriftHotspotsTable resources={resources} onViewDiff={onViewDiff} />);
 
