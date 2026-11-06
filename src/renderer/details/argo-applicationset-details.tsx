@@ -2,7 +2,7 @@ import { Renderer } from "@freelensapp/extensions";
 import { observer } from "mobx-react";
 import { withErrorPage } from "../components/error-page";
 import { Link } from "../components/link";
-import { ConditionsList, ResourceEventsSection, StatusBadge } from "../components/shared";
+import { ConditionsList, StatusBadge } from "../components/shared";
 import { ArgoApplicationSet, getArgoApplicationStore } from "../k8s/argocd";
 
 const {
@@ -242,16 +242,6 @@ export const ArgoApplicationSetDetails = observer((props: ArgoApplicationSetDeta
         <DrawerItem name="Resources Up-to-date">
           <BadgeBoolean value={resourcesUpToDate} />
         </DrawerItem>
-        <Gutter size="md" />
-        <ResourceEventsSection
-          resource={{
-            uid: object.metadata?.uid,
-            name: object.getName?.() ?? object.metadata?.name,
-            namespace: object.getNs?.() ?? object.metadata?.namespace,
-            kind: object.kind,
-            apiVersion: object.apiVersion,
-          }}
-        />
       </>
     );
   }),
