@@ -8,9 +8,9 @@ with pre-release identifiers for beta builds.
 
 ## [Unreleased]
 
-## [2.0.0-beta.1]
+## [2.0.0]
 
-First release for **Freelens 2**. The extension major version now follows the Freelens major version, so `2.x` targets Freelens `^2.0.0`. Freelens 1.x users stay on `0.1.20` (npm dist-tag `v1`); the 1.x line receives no further updates.
+First stable release for **Freelens 2** (builds on `2.0.0-beta.1`, which was published under the `next` dist-tag). The extension major version now follows the Freelens major version, so `2.x` targets Freelens `^2.0.0`. Freelens 1.x users stay on `0.1.20` (npm dist-tag `freelens-1`); the 1.x line receives no further updates.
 
 ### Changed
 
@@ -21,6 +21,10 @@ First release for **Freelens 2**. The extension major version now follows the Fr
 - Component styles are plain CSS Modules extracted into `renderer.css`, which Freelens 2 links next to the renderer entry (no more inline `<style>` elements).
 - The Node-only Argo CD HTTP client moved from `src/common` to `src/main`; the renderer no longer references Node built-ins (`Buffer` replaced with `atob` / `TextDecoder`).
 - Tooling: Vitest replaces Jest, TypeScript 7, one `tsc` program per process (`src/main`, `src/renderer`, tests, tooling, integration), `esbuild`-based standard decorator lowering and the CSS-module declaration generator from the official Freelens extension template.
+
+### Fixed
+
+- Details panels (Application, ApplicationSet, Rollout, AnalysisRun) no longer show a second, very tall Events list that left a long empty area to scroll past when a resource had no events. Freelens 2 already adds its own compact Events section to every details panel, so the extension's duplicate was removed.
 
 ### Removed
 

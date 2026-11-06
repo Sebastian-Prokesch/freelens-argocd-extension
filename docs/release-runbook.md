@@ -95,12 +95,12 @@ Publishing the draft does **not** republish npm; it only makes the GitHub releas
 
 Typical sequence: ship beta tags while iterating, then bump to `2.0.0` and tag `v2.0.0` when ready for the first stable public release (same codebase, updated changelog only).
 
-## Freelens 1.x users (`v1` dist-tag)
+## Freelens 1.x users (`freelens-1` dist-tag)
 
-`0.1.20` is the last build for Freelens 1.x. Before the first `2.x` release goes to `latest`, point a `v1` dist-tag at it so Freelens 1 users can still install a working build (the README tells them to use `@v1`). This needs an npm login with publish rights, so it is run by hand:
+`0.1.20` is the last build for Freelens 1.x. Before the first `2.x` release goes to `latest`, point a `freelens-1` dist-tag at it so Freelens 1 users can still install a working build (the README tells them to use `@freelens-1`). The tag name cannot be `v1`: npm rejects dist-tag names that are valid semver ranges. This needs an npm login with publish rights, so it is run by hand:
 
 ```sh
-npm dist-tag add @sebastian-prokesch/freelens-argo-extension@0.1.20 v1
+npm dist-tag add @sebastian-prokesch/freelens-argo-extension@0.1.20 freelens-1
 ```
 
 ## Troubleshooting

@@ -2,7 +2,7 @@ import { Renderer } from "@freelensapp/extensions";
 import { observer } from "mobx-react";
 import { useRef, useState } from "react";
 import { withErrorPage } from "../components/error-page";
-import { ConditionsList, ResourceEventsSection, StatusBadge } from "../components/shared";
+import { ConditionsList, StatusBadge } from "../components/shared";
 import {
   type ApplicationAutomatedSyncPolicy,
   type ApplicationHistoryEntry,
@@ -633,17 +633,6 @@ export const ArgoApplicationDetails = observer((props: ArgoApplicationDetailsPro
               </Table>
             </>
           )}
-
-          <Gutter size="md" />
-          <ResourceEventsSection
-            resource={{
-              uid: object.metadata?.uid,
-              name: object.getName?.() ?? object.metadata?.name,
-              namespace: object.getNs?.() ?? object.metadata?.namespace,
-              kind: object.kind,
-              apiVersion: object.apiVersion,
-            }}
-          />
         </div>
       </>
     );

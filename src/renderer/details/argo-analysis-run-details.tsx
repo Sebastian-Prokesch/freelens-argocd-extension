@@ -1,7 +1,7 @@
 import { Renderer } from "@freelensapp/extensions";
 import { observer } from "mobx-react";
 import { withErrorPage } from "../components/error-page";
-import { ConditionsList, ResourceEventsSection, StatusBadge } from "../components/shared";
+import { ConditionsList, StatusBadge } from "../components/shared";
 import {
   type ArgoAnalysisRun,
   getAnalysisRunConditionSummary,
@@ -74,17 +74,6 @@ export const ArgoAnalysisRunDetails = observer((props: ArgoAnalysisRunDetailsPro
         <Gutter size="md" />
         <DrawerTitle>Conditions</DrawerTitle>
         <ConditionsList conditions={conditions} mode="compact" />
-
-        <Gutter size="md" />
-        <ResourceEventsSection
-          resource={{
-            uid: object.metadata?.uid,
-            name: object.getName?.() ?? object.metadata?.name,
-            namespace: object.getNs?.() ?? object.metadata?.namespace,
-            kind: object.kind,
-            apiVersion: object.apiVersion,
-          }}
-        />
       </>
     );
   }),
