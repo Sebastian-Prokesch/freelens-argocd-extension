@@ -3,7 +3,7 @@ import { observer } from "mobx-react";
 import { useEffect, useRef } from "react";
 import { withErrorPage } from "../components/error-page";
 import { Link } from "../components/link";
-import { ConditionsList, ResourceEventsSection, StatusBadge } from "../components/shared";
+import { ConditionsList, StatusBadge } from "../components/shared";
 import { abortRollout, requestRolloutPromotion, retryRollout } from "../endpoints/argo-rollout-endpoints";
 import {
   type ArgoAnalysisRun,
@@ -238,17 +238,6 @@ export const ArgoRolloutDetails = observer((props: ArgoRolloutDetailsProps) => {
             );
           })
         )}
-
-        <Gutter size="md" />
-        <ResourceEventsSection
-          resource={{
-            uid: object.metadata?.uid,
-            name: object.getName?.() ?? object.metadata?.name,
-            namespace: object.getNs?.() ?? object.metadata?.namespace,
-            kind: object.kind,
-            apiVersion: object.apiVersion,
-          }}
-        />
       </>
     );
   });
