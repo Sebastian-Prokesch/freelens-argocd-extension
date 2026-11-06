@@ -58,7 +58,7 @@ Known limitations:
 
 ## Requirements
 
-- Freelens `^2.0.0` (Freelens 2 is required; Freelens 1.x users should install `@sebastian-prokesch/freelens-argo-extension@v1`, which is frozen at `0.1.20`)
+- Freelens `^2.0.0` (Freelens 2 is required; Freelens 1.x users should install `@sebastian-prokesch/freelens-argo-extension@freelens-1`, which is frozen at `0.1.20`)
 - Kubernetes >= 1.32
 - The cluster must have the Argo APIs you want to manage installed (Argo CD for Applications; Rollouts and Workflows only if those controllers are present).
 - Argo CD `3.4` and `3.5` are the versions this extension is validated against (see [dev-cluster](dev-cluster/README.md), pinned to chart `10.3.0` / app `v3.5.0`). Argo CD 3.5's Helm 4 OCI flags (`enableOCI`, `insecureOCIForceHttp`) are supported in the Config page's repository secret details, including a warning when `insecure` and `insecureOCIForceHttp` conflict. Other versions likely work but aren't actively tested.
